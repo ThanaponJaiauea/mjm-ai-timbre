@@ -34,9 +34,7 @@ export function NavHeader({
               : () => router.push("/mjm-ai/chat")
           }
           title={state === "collapsed" ? "Expand Sidebar" : "New Chat"}
-        >
-          no name
-        </Button>
+        ></Button>
 
         <SidebarTrigger
           className={state === "collapsed" ? "hidden" : "flex cursor-pointer"}
