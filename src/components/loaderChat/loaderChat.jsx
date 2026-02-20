@@ -12,13 +12,6 @@ export default function LoaderChat({ loadPreview, mode }) {
       <div className={styles.loader}></div>
 
       <div className="absolute inset-0 flex items-center justify-center z-[2000]">
-        <Image
-          src="../../images/icon/icon_loader.png"
-          alt="Icon MJM"
-          width={32}
-          height={32}
-          className="rounded-full"
-        />
         {!loadPreview ? (
           <p
             className={`bg-gradient-to-r from-[#6F6F6F] to-[#FFFFFF] bg-clip-text text-transparent font-medium ${

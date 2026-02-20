@@ -35,6 +35,9 @@ importers:
       ai:
         specifier: ^6.0.94
         version: 6.0.94(zod@4.3.6)
+      ai-elements:
+        specifier: ^1.8.4
+        version: 1.8.4
       ansi-to-react:
         specifier: ^6.2.6
         version: 6.2.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -71,6 +74,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      ollama-ai-provider-v2:
+        specifier: ^3.3.1
+        version: 3.3.1(ai@6.0.94(zod@4.3.6))(zod@4.3.6)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1929,6 +1935,10 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
+
+  ai-elements@1.8.4:
+    resolution: {integrity: sha512-B0Y4KDxKX9wsQkaHb6jzAkFJqeOkvMwAHVcizINGaMX4JIlN6egjezros0N1QUVwNH3Pu2injFmCvamHxxdEmw==}
+    hasBin: true
 
   ai@6.0.94:
     resolution: {integrity: sha512-/F9wh262HbK05b/5vILh38JvPiheonT+kBj1L97712E7VPchqmcx7aJuZN3QSk5Pj6knxUJLm2FFpYJI1pHXUA==}
@@ -3962,6 +3972,13 @@ packages:
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
+
+  ollama-ai-provider-v2@3.3.1:
+    resolution: {integrity: sha512-j4BBqqQnvf/uDz+aPYcgU4/MQZERw087Fn1DMGtViA/PgahBq36jHKHVoZfx8mxj+w8cxsKd3eYaDgyZPhE6YA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ai: ^5.0.0 || ^6.0.0
+      zod: ^4.0.16
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -6864,6 +6881,8 @@ snapshots:
 
   agent-base@7.1.4: {}
 
+  ai-elements@1.8.4: {}
+
   ai@6.0.94(zod@4.3.6):
     dependencies:
       '@ai-sdk/gateway': 3.0.52(zod@4.3.6)
@@ -9343,6 +9362,13 @@ snapshots:
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
+
+  ollama-ai-provider-v2@3.3.1(ai@6.0.94(zod@4.3.6))(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
+      ai: 6.0.94(zod@4.3.6)
+      zod: 4.3.6
 
   on-finished@2.4.1:
     dependencies:

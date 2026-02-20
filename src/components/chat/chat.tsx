@@ -2,11 +2,7 @@
 
 "use client";
 import { useLanguage } from "@/hooks/LanguageProvider";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
   PromptInput,
@@ -42,6 +38,8 @@ export function Chat({ id, initialMessages }: Props) {
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages }) => {
         const lastMessage = messages[messages.length - 1];
+        console.log("lastMessage", lastMessage);
+
         return {
           body: {
             message: lastMessage,
@@ -56,7 +54,7 @@ export function Chat({ id, initialMessages }: Props) {
         loadChatHistory();
       }
     },
-    onError: (error) => {
+    onError: error => {
       console.error("Error:", error);
       toast("Error: " + error);
     },
@@ -89,8 +87,7 @@ export function Chat({ id, initialMessages }: Props) {
 
   const lastMessage = messages[messages.length - 1];
   const assistantHasStartedTyping =
-    lastMessage?.role === "assistant" &&
-    lastMessage.parts.some((part) => part.type === "text" && part.text);
+    lastMessage?.role === "assistant" && lastMessage.parts.some(part => part.type === "text" && part.text);
 
   return (
     <div className="p-6 relative size-full h-screen">
@@ -99,12 +96,14 @@ export function Chat({ id, initialMessages }: Props) {
           <ConversationContent>
             {chatMode === "chat" && messages.length === 0 && <ChatUiPage />}
 
-            {messages.map((message) => {
+            {messages.map(message => {
+              console.log("message", message);
+
               // Do not render assistant messages that have no renderable parts.
               // This prevents an empty message bubble from appearing while waiting for tool output.
-              const hasRenderableParts = message.parts.some((part) => {
+              const hasRenderableParts = message.parts.some(part => {
                 if (part.type === "text" && part.text) {
-                  return true; // Text has content
+                  return true;
                 }
                 if (
                   (part.type === "tool-webSearch" ||
@@ -114,6 +113,7 @@ export function Chat({ id, initialMessages }: Props) {
                 ) {
                   return true; // Tool has output
                 }
+
                 return false;
               });
 
@@ -133,10 +133,7 @@ export function Chat({ id, initialMessages }: Props) {
                         switch (part.type) {
                           case "text":
                             return (
-                              <Response
-                                key={`${message.id}-text-${i}`}
-                                shikiTheme={["dark-plus"]}
-                              >
+                              <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
                                 {part.text}
                               </Response>
                             );
@@ -159,19 +156,15 @@ export function Chat({ id, initialMessages }: Props) {
           <ConversationScrollButton />
         </Conversation>
 
-        <PromptInput
-          onSubmit={handleSubmit}
-          className="mt-4 w-[70%] m-auto relative bg-[#3D3D3D] h-[56px] mb-4"
-        >
+        <PromptInput onSubmit={handleSubmit} className="mt-4 w-[70%] m-auto relative bg-[#3D3D3D] h-[56px] mb-4">
           <PromptInputTextarea
             value={text}
             placeholder={t.placeholder}
-            onChange={(e) => setText(e.currentTarget.value)}
+            onChange={e => setText(e.currentTarget.value)}
           />
           <PromptInputSubmit
             status={status === "streaming" ? "streaming" : "ready"}
             disabled={!text.trim() || isSubmitting || status === "streaming"}
-            hasText={text.trim().length > 0}
             className="absolute bottom-2 right-3 rounded-full cursor-pointer w-[40px] h-[40px] bg-[#292929]"
           />
         </PromptInput>
