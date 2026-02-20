@@ -1,21 +1,9 @@
 /** @format */
 
 "use client";
-import Image from "next/image";
 import Link from "next/link";
-import {
-  ChevronRight,
-  Clock4,
-  EllipsisIcon,
-  Trash,
-  type LucideIcon,
-} from "lucide-react";
+import { Clock4, EllipsisIcon, Trash, type LucideIcon } from "lucide-react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -24,9 +12,6 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
 import {
@@ -83,17 +68,13 @@ export function NavMain({
         <SidebarMenuButton
           size="lg"
           tooltip={t.newchat}
-          className={`h-[40px] ${
-            state === "collapsed" && "flex items-center justify-center"
-          } `}
+          className={`h-[40px] ${state === "collapsed" && "flex items-center justify-center"} `}
           onClick={() => {
             handleNewChat();
             openToggleSidebar();
           }}
         >
-          <span className={`${state === "collapsed" && "hidden"}`}>
-            {t.newchat.trim()}
-          </span>
+          <span className={`${state === "collapsed" && "hidden"}`}>{t.newchat.trim()}</span>
         </SidebarMenuButton>
       </SidebarMenu>
 
@@ -103,17 +84,13 @@ export function NavMain({
           size="lg"
           isActive={pathname === "/mjm-ai/chat/vocal" || false}
           tooltip={t.vocal}
-          className={`h-[40px] ${
-            state === "collapsed" && "flex items-center justify-center"
-          }`}
+          className={`h-[40px] ${state === "collapsed" && "flex items-center justify-center"}`}
           onClick={() => {
             handleChatVocal();
             openToggleSidebar();
           }}
         >
-          <span className={`${state === "collapsed" && "hidden"}`}>
-            {t.vocal}
-          </span>
+          <span className={`${state === "collapsed" && "hidden"}`}>{t.vocal}</span>
         </SidebarMenuButton>
       </SidebarMenu>
 
@@ -130,20 +107,14 @@ export function NavMain({
               {chatHistoryLoading ? (
                 <NavChatHistorySkeleton />
               ) : (
-                chatHistory.map((el) => {
+                chatHistory.map(el => {
                   const isActive = el.id === pathname.split("/")[3];
 
                   return (
                     <SidebarMenuItem key={el.id}>
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        aria-current={isActive ? "page" : undefined}
-                        asChild
-                      >
+                      <SidebarMenuButton isActive={isActive} aria-current={isActive ? "page" : undefined} asChild>
                         <Link href={`/mjm-ai/chat/${el.id}`}>
-                          <span className="w-[180px] text-[14px] truncate">
-                            {el.title}
-                          </span>
+                          <span className="w-[180px] text-[14px] truncate">{el.title}</span>
                         </Link>
                       </SidebarMenuButton>
                       <DropdownMenu>
@@ -153,10 +124,7 @@ export function NavMain({
                           </SidebarMenuAction>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="right" align="start">
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => handDeleteChat(el.id, isActive)}
-                          >
+                          <DropdownMenuItem variant="destructive" onClick={() => handDeleteChat(el.id, isActive)}>
                             <Trash />
                             {t.delete}
                           </DropdownMenuItem>

@@ -3,9 +3,9 @@
 "use client";
 
 import * as React from "react";
-import {NavMain} from "./nav-main";
-import {NavFooter} from "./nav-footer";
-import {NavHeader} from "./nav-header";
+import { NavMain } from "@/components/layout_chatSidebar/nav-main";
+import { NavFooter } from "@/components/layout_chatSidebar/nav-footer";
+import { NavHeader } from "@/components/layout_chatSidebar/nav-header";
 import {
   Sidebar,
   SidebarContent,
@@ -15,18 +15,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import {useLanguage} from "@/hooks/LanguageProvider";
-import {usePathname, useRouter} from "next/navigation";
-import {useChatContext} from "@/hooks/ChatContext";
-import {useEffect} from "react";
-import {deleteChat} from "@/api/chatHistory";
+import { useLanguage } from "@/hooks/LanguageProvider";
+import { usePathname, useRouter } from "next/navigation";
+import { useChatContext } from "@/hooks/ChatContext";
+import { useEffect } from "react";
+import { deleteChat } from "@/api/chatHistory";
 
-export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
-  const {t, lang, setLang} = useLanguage();
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { t, lang, setLang } = useLanguage();
 
   const languages = [
-    {code: "en", label: "English", flag: "/icon/en.png"},
-    {code: "zh", label: "中文", flag: "/icon/zh.png"},
+    { code: "en", label: "English", flag: "/icon/en.png" },
+    { code: "zh", label: "中文", flag: "/icon/zh.png" },
   ];
 
   const data = {
@@ -74,13 +74,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
     ],
   };
 
-  const {
-    chatHistory,
-    loadChatHistory,
-    chatHistoryLoading,
-    setChatMode,
-    setChatHistory,
-  } = useChatContext();
+  const { chatHistory, loadChatHistory, chatHistoryLoading, setChatMode, setChatHistory } = useChatContext();
 
   useEffect(() => {
     loadChatHistory();
@@ -89,7 +83,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const {toggleSidebar, state} = useSidebar();
+  const { toggleSidebar, state } = useSidebar();
 
   const handleNewChat = async () => {
     router.push(`/mjm-ai/chat`);
@@ -104,7 +98,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
   const handDeleteChat = async (id: string, isCurrentPage: boolean) => {
     try {
       await deleteChat(id);
-      setChatHistory((prev) => prev.filter((chat) => chat.id !== id));
+      setChatHistory(prev => prev.filter(chat => chat.id !== id));
       if (!isCurrentPage) handleNewChat();
     } catch (error) {
       console.error("Failed to delete chat:", error);
@@ -118,15 +112,9 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar
-      collapsible="icon"
-      {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="bg-[#232323]">
-        <NavHeader
-          state={state}
-          toggleSidebar={toggleSidebar}
-          router={router}
-        />
+        <NavHeader state={state} toggleSidebar={toggleSidebar} router={router} />
       </SidebarHeader>
 
       <SidebarContent>
@@ -145,11 +133,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavFooter
-          languages={languages}
-          currentLang={lang}
-          setLang={setLang}
-        />
+        <NavFooter languages={languages} currentLang={lang} setLang={setLang} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
