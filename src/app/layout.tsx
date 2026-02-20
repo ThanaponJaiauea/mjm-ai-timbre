@@ -34,14 +34,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable}  ${interFont.className} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          disableTransitionOnChange
-        >
+      <body className={`${geistSans.variable} ${geistMono.variable}  ${interFont.className} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <PlaybackProvider>
             <LanguageProvider>{children}</LanguageProvider>
           </PlaybackProvider>
