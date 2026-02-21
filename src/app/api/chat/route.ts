@@ -1,7 +1,3 @@
-/** @format */
-
-import { saveChat } from "@/api/chatHistory";
-import { loadChat } from "@/utils/chat-utils";
 import {
   UIMessage,
   convertToModelMessages,
@@ -20,15 +16,12 @@ const ollama = createOllama({
 });
 
 export async function POST(req: Request) {
-  const { message, chatId }: { message: UIMessage; chatId: string } = await req.json();
+  const { message }: { message: UIMessage } = await req.json();
 
-  await saveChat({ chatId, messages: [message], mode: "CHAT_AI" });
-  const messages = await loadChat(chatId);
-  console.log("messages===", JSON.stringify(messages, null, 2));
+  const modelMessages = await convertToModelMessages([message]);
 
-  // --- Stream response ---
   const stream = createUIMessageStream({
-    execute: ({ writer }) => {
+    execute: async ({ writer }) => {
       if (message.role === "user") {
         writer.write({ type: "start", messageId: generateId() });
         writer.write({ type: "start-step" });
@@ -36,22 +29,19 @@ export async function POST(req: Request) {
 
       const result = streamText({
         model: ollama("gpt-oss:20b"),
-        messages: convertToModelMessages(messages),
+        messages: modelMessages,
         stopWhen: stepCountIs(20),
+        system:
+          "You are a friendly and intelligent AI assistant specialized in MUSIC, SONGS, ARTISTS, YOUTUBE music search, and VOCAL creation.",
       });
 
       result.consumeStream();
       writer.merge(result.toUIMessageStream({ sendStart: false }));
     },
+
     onError: error => (error instanceof Error ? error.message : String(error)),
-    originalMessages: messages,
-    onFinish: async ({ responseMessage }) => {
-      try {
-        saveChat({ chatId, messages: [responseMessage], mode: "CHAT_AI" });
-      } catch (error) {
-        console.error(error);
-      }
-    },
+
+    originalMessages: [message],
   });
 
   return createUIMessageStreamResponse({ stream });

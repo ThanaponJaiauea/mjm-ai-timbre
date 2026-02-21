@@ -105,12 +105,7 @@ export function Chat({ id, initialMessages }: Props) {
                 if (part.type === "text" && part.text) {
                   return true;
                 }
-                if (
-                  (part.type === "tool-webSearch" ||
-                    part.type === "tool-songSearch" ||
-                    part.type === "tool-playSongDemo") &&
-                  part.output
-                ) {
+                if (part.type === "tool-ai-recommend" && part.output) {
                   return true; // Tool has output
                 }
 
