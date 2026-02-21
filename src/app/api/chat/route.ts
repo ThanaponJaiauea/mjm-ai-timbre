@@ -1,3 +1,6 @@
+/** @format */
+
+import { tools } from "@/ai_tools/tools_recommend";
 import {
   UIMessage,
   convertToModelMessages,
@@ -31,8 +34,8 @@ export async function POST(req: Request) {
         model: ollama("gpt-oss:20b"),
         messages: modelMessages,
         stopWhen: stepCountIs(20),
-        system:
-          "You are a friendly and intelligent AI assistant specialized in MUSIC, SONGS, ARTISTS, YOUTUBE music search, and VOCAL creation.",
+        tools: tools,
+        system: "You need to use toolsRecommend constantly.",
       });
 
       result.consumeStream();

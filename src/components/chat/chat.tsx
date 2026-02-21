@@ -38,7 +38,6 @@ export function Chat({ id, initialMessages }: Props) {
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages }) => {
         const lastMessage = messages[messages.length - 1];
-        console.log("lastMessage", lastMessage);
 
         return {
           body: {

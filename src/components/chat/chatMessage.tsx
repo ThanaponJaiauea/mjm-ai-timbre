@@ -3,6 +3,7 @@
 import { UIDataTypes, UIMessagePart, UITools } from "ai";
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
+import { ChordRecommend } from "@/components/chordRecommend/ChordRecommend";
 
 export function ChatMessage({ part, role }: { part: UIMessagePart<UIDataTypes, UITools>; role: string }) {
   // ข้อความปกติ
@@ -30,6 +31,15 @@ export function ChatMessage({ part, role }: { part: UIMessagePart<UIDataTypes, U
         >
           {part.text}
         </ReactMarkdown>
+      </div>
+    );
+  }
+
+  // แสดงผล toolsRecommend
+  if (part.type === "tool-toolsRecommend") {
+    return (
+      <div className="flex flex-col md:flex-row items-start gap-4 self-start w-full">
+        <ChordRecommend />
       </div>
     );
   }
