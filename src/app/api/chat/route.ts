@@ -11,6 +11,7 @@ import {
   streamText,
 } from "ai";
 import { createOllama } from "ollama-ai-provider-v2";
+import { saveChat } from "@/api/chatHistory";
 
 export const maxDuration = 30;
 
@@ -19,8 +20,9 @@ const ollama = createOllama({
 });
 
 export async function POST(req: Request) {
-  const { message }: { message: UIMessage } = await req.json();
+  const { message, chatId }: { message: UIMessage; chatId: string } = await req.json();
 
+  await saveChat({ chatId, messages: [message], mode: "CHAT_AI" });
   const modelMessages = await convertToModelMessages([message]);
 
   const stream = createUIMessageStream({
@@ -45,6 +47,13 @@ export async function POST(req: Request) {
     onError: error => (error instanceof Error ? error.message : String(error)),
 
     originalMessages: [message],
+    onFinish: async ({ responseMessage }) => {
+      try {
+        saveChat({ chatId, messages: [responseMessage], mode: "CHAT_AI" });
+      } catch (error) {
+        console.error(error);
+      }
+    },
   });
 
   return createUIMessageStreamResponse({ stream });

@@ -43,40 +43,39 @@ export const mapDBPartToUIMessagePart = (part: any): MyUIMessagePart => {
       return {
         type: part.type,
       };
-    case "tool-ai-recommend":
+    case "tool-aiRecommend":
       if (!part.tool_state) {
-        throw new Error("webSearch_state is undefined");
+        throw new Error("tool_state is undefined");
       }
+
+      const base = {
+        type: "tool-ai-recommend" as const,
+        toolCallId: part.tool_tool_call_id!,
+        state: part.tool_state,
+      };
+
       switch (part.tool_state) {
         case "input-streaming":
-          return {
-            type: "tool-ai-recommend",
-            state: "input-streaming",
-            toolCallId: part.tool_toolCallId!,
-            input: part.tool_aiRecommend_input!,
-          };
+          return base;
+
         case "input-available":
           return {
-            type: "tool-ai-recommend",
-            state: "input-available",
-            toolCallId: part.tool_toolCallId!,
-            input: part.tool_aiRecommend_input!,
+            ...base,
+            input: part.tool_ai_recommend_input ?? {},
           };
+
         case "output-available":
           return {
-            type: "tool-ai-recommend",
-            state: "output-available",
-            toolCallId: part.tool_toolCallId!,
-            input: part.tool_aiRecommend_input!,
-            output: part.tool_aiRecommend_output!,
+            ...base,
+            input: part.tool_ai_recommend_input ?? {},
+            output: part.tool_ai_recommend_output,
           };
+
         case "output-error":
           return {
-            type: "tool-ai-recommend",
-            state: "output-error",
-            toolCallId: part.tool_toolCallId!,
-            input: part.tool_aiRecommend_input!,
-            errorText: part.tool_errorText!,
+            ...base,
+            input: part.tool_ai_recommend_input ?? {},
+            errorText: part.tool_ai_recommend_errorText,
           };
       }
 
