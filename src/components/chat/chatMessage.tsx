@@ -36,7 +36,7 @@ export function ChatMessage({ part, role }: { part: UIMessagePart<UIDataTypes, U
   }
 
   // แสดงผล toolsRecommend
-  if (part.type === "tool-toolsRecommend") {
+  if (part.type === "tool-aiRecommend") {
     return (
       <div className="flex flex-col md:flex-row items-start gap-4 self-start w-full">
         <ChordRecommend />

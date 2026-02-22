@@ -17,6 +17,7 @@ import { DefaultChatTransport } from "ai";
 import { useEffect, useState } from "react";
 import LoaderChat from "@/components/loaderChat/loaderChat";
 import ChatUiPage from "@/components/chat/ChatUiPage";
+import ChordRecommend from "@/components/ChordRecommend";
 
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
@@ -104,38 +105,43 @@ export function Chat({ id, initialMessages }: Props) {
                 if (part.type === "text" && part.text) {
                   return true;
                 }
-                if (part.type === "tool-ai-recommend" && part.output) {
+                if (part.type === "tool-aiRecommend" && part.output) {
                   return true; // Tool has output
                 }
 
                 return false;
               });
 
-              if (message.role === "assistant" && !hasRenderableParts) {
-                return null;
-              }
-
               return (
                 <Message from={message.role} key={message.id}>
                   <MessageContent className={`${inter.className}`}>
-                    {message.parts
-                      .sort((a, b) => {
-                        const order = ["tool-playSongDemo"];
-                        return order.indexOf(a.type) - order.indexOf(b.type);
-                      })
-                      .map((part, i) => {
-                        switch (part.type) {
-                          case "text":
-                            return (
-                              <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
-                                {part.text}
-                              </Response>
-                            );
+                    {message.parts.map((part, i) => {
+                      switch (part.type) {
+                        case "text":
+                          return (
+                            <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
+                              {part.text}
+                            </Response>
+                          );
 
-                          default:
-                            return null;
-                        }
-                      })}
+                        case "reasoning":
+                          return (
+                            <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
+                              {part.text}
+                            </Response>
+                          );
+
+                        case "tool-aiRecommend":
+                          return (
+                            <div>
+                              <ChordRecommend />
+                            </div>
+                          );
+
+                        default:
+                          return null;
+                      }
+                    })}
                   </MessageContent>
                 </Message>
               );

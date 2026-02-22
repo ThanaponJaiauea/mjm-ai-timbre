@@ -35,9 +35,14 @@ export async function POST(req: Request) {
       const result = streamText({
         model: ollama("gpt-oss:20b"),
         messages: modelMessages,
+        tools,
         stopWhen: stepCountIs(20),
-        tools: tools,
-        system: "You need to use toolsRecommend constantly.",
+        system: `
+IMPORTANT:
+- Always respond with a visible text message
+- Then call aiRecommend
+- Never return empty text
+`,
       });
 
       result.consumeStream();
