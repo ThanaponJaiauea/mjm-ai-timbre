@@ -132,9 +132,18 @@ export function Chat({ id, initialMessages }: Props) {
                           );
 
                         case "tool-aiRecommend":
+                          const toolData = part.input;
+                          console.log("toolData", toolData);
+
                           return (
-                            <div>
-                              <ChordRecommend />
+                            <div key={`${message.id}-tool-${i}`} className="my-4">
+                              {/* ส่ง data ที่ AI สรุปได้เข้าไปใน Component */}
+                              <ChordRecommend
+                                initialData={{
+                                  key: toolData?.key || "C",
+                                  mood: toolData?.mood || "Pop",
+                                }}
+                              />
                             </div>
                           );
 

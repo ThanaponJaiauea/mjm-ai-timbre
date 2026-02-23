@@ -38,10 +38,12 @@ export async function POST(req: Request) {
         tools,
         stopWhen: stepCountIs(20),
         system: `
-IMPORTANT:
-- Always respond with a visible text message
-- Then call aiRecommend
-- Never return empty text
+คุณคือผู้ช่วยอัจฉริยะด้านดนตรี (Music Assistant)
+หน้าที่ของคุณ:
+1. ตอบคำถามผู้ใช้ด้วยข้อความสั้นๆ ที่เป็นมิตร
+2. หากผู้ใช้ต้องการคอร์ดหรือแนะนำเพลง ให้เรียกใช้เครื่องมือ "tool-aiRecommend" เสมอ
+3. สกัด 'key' (เช่น C, Am, G#) และ 'mood' (เช่น สดใส, เศร้า, Rock) จากข้อความผู้ใช้มาเป็นพารามิเตอร์
+- ตัวอย่าง: "ขอเพลงเศร้าคีย์ C" -> เรียก tool-aiRecommend(key: "C", mood: "เศร้า")
 `,
       });
 
