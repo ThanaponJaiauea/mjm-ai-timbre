@@ -144,7 +144,6 @@ export default function ChordRecommend({ initialData }) {
 
   return (
     <div className="my-4">
-      {/* 1. Loading State (Skeleton) */}
       {loading && (
         <div className="bg-[#1e1e1e] p-6 rounded-xl border-l-4 border-gray-600 animate-pulse">
           <div className="flex items-center gap-2 mb-4 text-gray-500">
@@ -166,7 +165,6 @@ export default function ChordRecommend({ initialData }) {
         </div>
       )}
 
-      {/* 2. Success State */}
       {!loading && recommendedChords.length > 0 && (
         <div className="bg-[#1e1e1e] p-6 rounded-xl border-l-4 border-green-500 animate-in fade-in slide-in-from-right duration-500 relative overflow-hidden">
           <div className="text-xs text-gray-400 mb-4 flex items-center gap-2 font-mono">
