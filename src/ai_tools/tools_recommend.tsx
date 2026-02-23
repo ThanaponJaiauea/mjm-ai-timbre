@@ -2,11 +2,13 @@
 import { tool } from "ai";
 import { z } from "zod";
 
+const keys = ["A", "Ab", "B", "Bb", "C", "D", "Db", "E", "Eb", "F", "F#", "G"] as const;
+
 export const aiRecommend = tool({
-  description: "Summarize the key and mood of the song based on the user's request, in order to suggest chords.",
+  description: "Summarize the key and mood into English terms supported by the database.",
   parameters: z.object({
-    key: z.string().describe("คีย์ของเพลง เช่น C, Am, G, F#m"),
-    mood: z.string().describe("อารมณ์หรือแนวเพลง เช่น Pop, Jazz, Rock, Sad, Happy"),
+    key: z.enum(keys).describe("The musical key (Must be one of the allowed keys)"),
+    mood: z.string().describe("The mood in English that best matches the user's request"),
   }),
   execute: async ({ key, mood }) => {
     return { key, mood };

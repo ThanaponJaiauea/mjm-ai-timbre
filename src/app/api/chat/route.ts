@@ -19,6 +19,8 @@ const ollama = createOllama({
   baseURL: process.env.OLLAMA_SERVER,
 });
 
+const ALLOWED_KEYS = ["A", "Ab", "B", "Bb", "C", "D", "Db", "E", "Eb", "F", "F#", "G"];
+
 export async function POST(req: Request) {
   const { message, chatId }: { message: UIMessage; chatId: string } = await req.json();
 
@@ -36,15 +38,21 @@ export async function POST(req: Request) {
         model: ollama("gpt-oss:20b"),
         messages: modelMessages,
         tools,
-        stopWhen: stepCountIs(20),
-        system: `
-คุณคือผู้ช่วยอัจฉริยะด้านดนตรี (Music Assistant)
-หน้าที่ของคุณ:
-1. ตอบคำถามผู้ใช้ด้วยข้อความสั้นๆ ที่เป็นมิตร
-2. หากผู้ใช้ต้องการคอร์ดหรือแนะนำเพลง ให้เรียกใช้เครื่องมือ "tool-aiRecommend" เสมอ
-3. สกัด 'key' (เช่น C, Am, G#) และ 'mood' (เช่น สดใส, เศร้า, Rock) จากข้อความผู้ใช้มาเป็นพารามิเตอร์
-- ตัวอย่าง: "ขอเพลงเศร้าคีย์ C" -> เรียก tool-aiRecommend(key: "C", mood: "เศร้า")
-`,
+        toolChoice: "auto",
+        system: `คุณคือ Music Assistant
+หน้าที่: สกัด Key และ Mood จาก User แล้วส่งเข้าเครื่องมือ 'aiRecommend' **ทันที**
+
+กฎข้อบังคับ:
+1. เมื่อได้รับคำขอ ต้องใช้ tool 'aiRecommend' เสมอ
+2. พารามิเตอร์ 'key':
+   - หาก User ระบุมา ให้ใช้คีย์นั้น
+   - หาก User **ไม่ระบุ** คีย์มา ให้คุณเลือกคีย์จาก [A, Ab, B, Bb, C, D, Db, E, Eb, F, F#, G] มา 1 คีย์ (แนะนำให้เลือกคีย์ที่เข้ากับ Mood เช่น C หรือ G สำหรับเพลงสนุก และ Am หรือ Em สำหรับเพลงเศร้า) **ห้ามปล่อยว่าง**
+3. พารามิเตอร์ 'mood': ให้สรุปเป็นภาษาอังกฤษสั้นๆ
+4. ห้ามตอบเป็นข้อความเปล่าๆ โดยไม่เรียกใช้ tool 'aiRecommend'
+
+ตัวอย่างขั้นตอน:
+User: "ขอเพลงแนวสดใสหน่อย"
+Assistant: (วิเคราะห์แล้วเลือกคีย์ C ให้) -> เรียก aiRecommend(key: "C", mood: "Bright, Happy")`,
       });
 
       result.consumeStream();
