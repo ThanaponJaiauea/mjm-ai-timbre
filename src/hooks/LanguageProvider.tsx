@@ -2,12 +2,12 @@
 
 "use client";
 
-import React, {createContext, useContext, useState, useEffect} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import en from "../locales/en.json";
 import zh from "../locales/zh.json";
 
 type Locale = "en" | "zh";
-const texts: Record<Locale, typeof en> = {en, zh};
+const texts: Record<Locale, typeof en> = { en, zh };
 
 type LanguageContextType = {
   lang: Locale;
@@ -15,13 +15,9 @@ type LanguageContextType = {
   t: typeof en;
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
-);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider: React.FC<{children: React.ReactNode}> = ({
-  children,
-}) => {
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // ตั้งค่าเริ่มต้นเป็น "zh"
   const [lang, setLang] = useState<Locale>("zh");
   const [ready, setReady] = useState(false);
@@ -50,11 +46,7 @@ export const LanguageProvider: React.FC<{children: React.ReactNode}> = ({
 
   if (!ready) return null;
 
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };
 
 export const useLanguage = () => {

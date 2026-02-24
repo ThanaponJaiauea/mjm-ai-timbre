@@ -16,12 +16,8 @@ interface SpeechRecognition extends EventTarget {
   stop(): void;
   onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
   onend: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onresult:
-    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void)
-    | null;
-  onerror:
-    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void)
-    | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
 }
 
 interface SpeechRecognitionEvent extends Event {
@@ -103,11 +99,8 @@ export const SpeechInput = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const onTranscriptionChangeRef = useRef<
-    SpeechInputProps["onTranscriptionChange"]
-  >(onTranscriptionChange);
-  const onAudioRecordedRef =
-    useRef<SpeechInputProps["onAudioRecorded"]>(onAudioRecorded);
+  const onTranscriptionChangeRef = useRef<SpeechInputProps["onTranscriptionChange"]>(onTranscriptionChange);
+  const onAudioRecordedRef = useRef<SpeechInputProps["onAudioRecorded"]>(onAudioRecorded);
 
   // Keep refs in sync
   onTranscriptionChangeRef.current = onTranscriptionChange;
@@ -119,8 +112,7 @@ export const SpeechInput = ({
       return;
     }
 
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const speechRecognition = new SpeechRecognition();
 
     speechRecognition.continuous = true;
@@ -139,11 +131,7 @@ export const SpeechInput = ({
       const speechEvent = event as SpeechRecognitionEvent;
       let finalTranscript = "";
 
-      for (
-        let i = speechEvent.resultIndex;
-        i < speechEvent.results.length;
-        i += 1
-      ) {
+      for (let i = speechEvent.resultIndex; i < speechEvent.results.length; i += 1) {
         const result = speechEvent.results[i];
         if (result.isFinal) {
           finalTranscript += result[0]?.transcript ?? "";
@@ -291,7 +279,7 @@ export const SpeechInput = ({
     <div className="relative inline-flex items-center justify-center">
       {/* Animated pulse rings */}
       {isListening &&
-        [0, 1, 2].map((index) => (
+        [0, 1, 2].map(index => (
           <div
             className="absolute inset-0 animate-ping rounded-full border-2 border-red-400/30"
             key={index}

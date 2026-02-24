@@ -10,11 +10,7 @@ export default function ChatUiPage() {
   return (
     <section className="flex flex-col items-center gap-8">
       <div>
-        <h1
-          className={`font-bold text-[70px] uppercase  ${montserrat.className}`}
-        >
-          {t.musicalai}
-        </h1>
+        <h1 className={`font-bold text-[70px] uppercase  ${montserrat.className}`}>{t.musicalai}</h1>
       </div>
     </section>
   );

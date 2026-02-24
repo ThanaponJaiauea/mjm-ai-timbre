@@ -1,6 +1,6 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import * as Tone from 'tone';
+import React, { createContext, useContext, useState, useCallback } from "react";
+import * as Tone from "tone";
 
 interface PlaybackContextType {
   playingInstance: Tone.GrainPlayer | null;
@@ -17,12 +17,15 @@ export const usePlayback = () => useContext(PlaybackContext);
 export const PlaybackProvider = ({ children }: { children: React.ReactNode }) => {
   const [playingInstance, setPlayingInstance] = useState<Tone.GrainPlayer | null>(null);
 
-  const setInstance = useCallback((instance: Tone.GrainPlayer | null) => {
-    if (playingInstance && playingInstance !== instance) {
-      playingInstance.stop();
-    }
-    setPlayingInstance(instance);
-  }, [playingInstance]);
+  const setInstance = useCallback(
+    (instance: Tone.GrainPlayer | null) => {
+      if (playingInstance && playingInstance !== instance) {
+        playingInstance.stop();
+      }
+      setPlayingInstance(instance);
+    },
+    [playingInstance]
+  );
 
   return (
     <PlaybackContext.Provider value={{ playingInstance, setPlayingInstance: setInstance }}>

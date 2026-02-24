@@ -7,15 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CopyIcon, EyeIcon, EyeOffIcon } from "lucide-react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 interface EnvironmentVariablesContextType {
   showValues: boolean;
@@ -26,11 +18,10 @@ interface EnvironmentVariablesContextType {
 // oxlint-disable-next-line eslint(no-empty-function)
 const noop = () => {};
 
-const EnvironmentVariablesContext =
-  createContext<EnvironmentVariablesContextType>({
-    setShowValues: noop,
-    showValues: false,
-  });
+const EnvironmentVariablesContext = createContext<EnvironmentVariablesContextType>({
+  setShowValues: noop,
+  showValues: false,
+});
 
 export type EnvironmentVariablesProps = HTMLAttributes<HTMLDivElement> & {
   showValues?: boolean;
@@ -46,8 +37,7 @@ export const EnvironmentVariables = ({
   children,
   ...props
 }: EnvironmentVariablesProps) => {
-  const [internalShowValues, setInternalShowValues] =
-    useState(defaultShowValues);
+  const [internalShowValues, setInternalShowValues] = useState(defaultShowValues);
   const showValues = controlledShowValues ?? internalShowValues;
 
   const setShowValues = useCallback(
@@ -58,17 +48,11 @@ export const EnvironmentVariables = ({
     [onShowValuesChange]
   );
 
-  const contextValue = useMemo(
-    () => ({ setShowValues, showValues }),
-    [setShowValues, showValues]
-  );
+  const contextValue = useMemo(() => ({ setShowValues, showValues }), [setShowValues, showValues]);
 
   return (
     <EnvironmentVariablesContext.Provider value={contextValue}>
-      <div
-        className={cn("rounded-lg border bg-background", className)}
-        {...props}
-      >
+      <div className={cn("rounded-lg border bg-background", className)} {...props}>
         {children}
       </div>
     </EnvironmentVariablesContext.Provider>
@@ -77,29 +61,15 @@ export const EnvironmentVariables = ({
 
 export type EnvironmentVariablesHeaderProps = HTMLAttributes<HTMLDivElement>;
 
-export const EnvironmentVariablesHeader = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariablesHeaderProps) => (
-  <div
-    className={cn(
-      "flex items-center justify-between border-b px-4 py-3",
-      className
-    )}
-    {...props}
-  >
+export const EnvironmentVariablesHeader = ({ className, children, ...props }: EnvironmentVariablesHeaderProps) => (
+  <div className={cn("flex items-center justify-between border-b px-4 py-3", className)} {...props}>
     {children}
   </div>
 );
 
 export type EnvironmentVariablesTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
-export const EnvironmentVariablesTitle = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariablesTitleProps) => (
+export const EnvironmentVariablesTitle = ({ className, children, ...props }: EnvironmentVariablesTitleProps) => (
   <h3 className={cn("font-medium text-sm", className)} {...props}>
     {children ?? "Environment Variables"}
   </h3>
@@ -107,10 +77,7 @@ export const EnvironmentVariablesTitle = ({
 
 export type EnvironmentVariablesToggleProps = ComponentProps<typeof Switch>;
 
-export const EnvironmentVariablesToggle = ({
-  className,
-  ...props
-}: EnvironmentVariablesToggleProps) => {
+export const EnvironmentVariablesToggle = ({ className, ...props }: EnvironmentVariablesToggleProps) => {
   const { showValues, setShowValues } = useContext(EnvironmentVariablesContext);
 
   return (
@@ -118,23 +85,14 @@ export const EnvironmentVariablesToggle = ({
       <span className="text-muted-foreground text-xs">
         {showValues ? <EyeIcon size={14} /> : <EyeOffIcon size={14} />}
       </span>
-      <Switch
-        aria-label="Toggle value visibility"
-        checked={showValues}
-        onCheckedChange={setShowValues}
-        {...props}
-      />
+      <Switch aria-label="Toggle value visibility" checked={showValues} onCheckedChange={setShowValues} {...props} />
     </div>
   );
 };
 
 export type EnvironmentVariablesContentProps = HTMLAttributes<HTMLDivElement>;
 
-export const EnvironmentVariablesContent = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariablesContentProps) => (
+export const EnvironmentVariablesContent = ({ className, children, ...props }: EnvironmentVariablesContentProps) => (
   <div className={cn("divide-y", className)} {...props}>
     {children}
   </div>
@@ -145,35 +103,22 @@ interface EnvironmentVariableContextType {
   value: string;
 }
 
-const EnvironmentVariableContext =
-  createContext<EnvironmentVariableContextType>({
-    name: "",
-    value: "",
-  });
+const EnvironmentVariableContext = createContext<EnvironmentVariableContextType>({
+  name: "",
+  value: "",
+});
 
 export type EnvironmentVariableProps = HTMLAttributes<HTMLDivElement> & {
   name: string;
   value: string;
 };
 
-export const EnvironmentVariable = ({
-  name,
-  value,
-  className,
-  children,
-  ...props
-}: EnvironmentVariableProps) => {
+export const EnvironmentVariable = ({ name, value, className, children, ...props }: EnvironmentVariableProps) => {
   const envVarContextValue = useMemo(() => ({ name, value }), [name, value]);
 
   return (
     <EnvironmentVariableContext.Provider value={envVarContextValue}>
-      <div
-        className={cn(
-          "flex items-center justify-between gap-4 px-4 py-3",
-          className
-        )}
-        {...props}
-      >
+      <div className={cn("flex items-center justify-between gap-4 px-4 py-3", className)} {...props}>
         {children ?? (
           <>
             <div className="flex items-center gap-2">
@@ -189,11 +134,7 @@ export const EnvironmentVariable = ({
 
 export type EnvironmentVariableGroupProps = HTMLAttributes<HTMLDivElement>;
 
-export const EnvironmentVariableGroup = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariableGroupProps) => (
+export const EnvironmentVariableGroup = ({ className, children, ...props }: EnvironmentVariableGroupProps) => (
   <div className={cn("flex items-center gap-2", className)} {...props}>
     {children}
   </div>
@@ -201,11 +142,7 @@ export const EnvironmentVariableGroup = ({
 
 export type EnvironmentVariableNameProps = HTMLAttributes<HTMLSpanElement>;
 
-export const EnvironmentVariableName = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariableNameProps) => {
+export const EnvironmentVariableName = ({ className, children, ...props }: EnvironmentVariableNameProps) => {
   const { name } = useContext(EnvironmentVariableContext);
 
   return (
@@ -217,35 +154,20 @@ export const EnvironmentVariableName = ({
 
 export type EnvironmentVariableValueProps = HTMLAttributes<HTMLSpanElement>;
 
-export const EnvironmentVariableValue = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariableValueProps) => {
+export const EnvironmentVariableValue = ({ className, children, ...props }: EnvironmentVariableValueProps) => {
   const { value } = useContext(EnvironmentVariableContext);
   const { showValues } = useContext(EnvironmentVariablesContext);
 
-  const displayValue = showValues
-    ? value
-    : "•".repeat(Math.min(value.length, 20));
+  const displayValue = showValues ? value : "•".repeat(Math.min(value.length, 20));
 
   return (
-    <span
-      className={cn(
-        "font-mono text-muted-foreground text-sm",
-        !showValues && "select-none",
-        className
-      )}
-      {...props}
-    >
+    <span className={cn("font-mono text-muted-foreground text-sm", !showValues && "select-none", className)} {...props}>
       {children ?? displayValue}
     </span>
   );
 };
 
-export type EnvironmentVariableCopyButtonProps = ComponentProps<
-  typeof Button
-> & {
+export type EnvironmentVariableCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
@@ -314,11 +236,7 @@ export const EnvironmentVariableCopyButton = ({
 
 export type EnvironmentVariableRequiredProps = ComponentProps<typeof Badge>;
 
-export const EnvironmentVariableRequired = ({
-  className,
-  children,
-  ...props
-}: EnvironmentVariableRequiredProps) => (
+export const EnvironmentVariableRequired = ({ className, children, ...props }: EnvironmentVariableRequiredProps) => (
   <Badge className={cn("text-xs", className)} variant="secondary" {...props}>
     {children ?? "Required"}
   </Badge>

@@ -184,5 +184,6 @@
   "saveSuccessMessage": "Your music has been saved successfully.",
   "PleaseSamples": "Please wait for audio samples to load.",
   "deleteInstrumentSound": "Delete Instrument Sound",
-  "confirmDelete": "Are you sure you want to delete"
+  "confirmDelete": "Are you sure you want to delete",
+  "downloadApp": "Download App"
 }

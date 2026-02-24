@@ -10,10 +10,7 @@ import { memo, useMemo } from "react";
 type MotionHTMLProps = MotionProps & Record<string, unknown>;
 
 // Cache motion components at module level to avoid creating during render
-const motionComponentCache = new Map<
-  keyof JSX.IntrinsicElements,
-  React.ComponentType<MotionHTMLProps>
->();
+const motionComponentCache = new Map<keyof JSX.IntrinsicElements, React.ComponentType<MotionHTMLProps>>();
 
 const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
   let component = motionComponentCache.get(element);
@@ -32,21 +29,10 @@ export interface TextShimmerProps {
   spread?: number;
 }
 
-const ShimmerComponent = ({
-  children,
-  as: Component = "p",
-  className,
-  duration = 2,
-  spread = 2,
-}: TextShimmerProps) => {
-  const MotionComponent = getMotionComponent(
-    Component as keyof JSX.IntrinsicElements
-  );
+const ShimmerComponent = ({ children, as: Component = "p", className, duration = 2, spread = 2 }: TextShimmerProps) => {
+  const MotionComponent = getMotionComponent(Component as keyof JSX.IntrinsicElements);
 
-  const dynamicSpread = useMemo(
-    () => (children?.length ?? 0) * spread,
-    [children, spread]
-  );
+  const dynamicSpread = useMemo(() => (children?.length ?? 0) * spread, [children, spread]);
 
   return (
     <MotionComponent
@@ -60,8 +46,7 @@ const ShimmerComponent = ({
       style={
         {
           "--spread": `${dynamicSpread}px`,
-          backgroundImage:
-            "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
+          backgroundImage: "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
         } as CSSProperties
       }
       transition={{

@@ -1,6 +1,6 @@
 /** @format */
 
-import {InferUITools, JSONValue, UIMessage, UIMessagePart} from "ai";
+import { InferUITools, JSONValue, UIMessage, UIMessagePart } from "ai";
 import z from "zod";
 
 export const metadataSchema = z.object({});

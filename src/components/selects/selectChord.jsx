@@ -5,7 +5,7 @@ export default function SelectChord({ value, onChange, data }) {
       value={value}
       onChange={onChange}
     >
-      {data.map((el) => (
+      {data.map(el => (
         <option key={el} value={el}>
           {el}
         </option>

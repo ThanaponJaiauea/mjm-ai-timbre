@@ -13,12 +13,8 @@ export default function ModalSubstitution({
       <div className="bg-[#1a1c23] border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-200">
         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#111827]">
           <div>
-            <h3 className="text-xl font-bold text-white">
-              Select Substitution
-            </h3>
-            <p className="text-sm text-gray-400 font-mono">
-              Degree: {currentRomanNumerals[selectedIndex]}
-            </p>
+            <h3 className="text-xl font-bold text-white">Select Substitution</h3>
+            <p className="text-sm text-gray-400 font-mono">Degree: {currentRomanNumerals[selectedIndex]}</p>
           </div>
           <button
             onClick={() => setIsModalOpen(false)}
@@ -37,19 +33,11 @@ export default function ModalSubstitution({
               className="flex items-center justify-between p-4 rounded-xl bg-[#262730] hover:bg-green-900/30 border border-transparent hover:border-green-500/50 transition-all group text-left"
             >
               <div>
-                <span className="text-2xl font-black text-green-500 group-hover:text-green-400">
-                  {sub.chord}
-                </span>
-                <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">
-                  {sub.vibe || "Variation"}
-                </p>
+                <span className="text-2xl font-black text-green-500 group-hover:text-green-400">{sub.chord}</span>
+                <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">{sub.vibe || "Variation"}</p>
               </div>
               <div className="bg-gray-800 p-2 rounded-full group-hover:bg-green-500/20 transition-colors">
-                <Play
-                  size={14}
-                  className="text-gray-500 group-hover:text-green-400"
-                  fill="currentColor"
-                />
+                <Play size={14} className="text-gray-500 group-hover:text-green-400" fill="currentColor" />
               </div>
             </button>
           ))}

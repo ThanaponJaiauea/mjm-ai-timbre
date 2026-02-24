@@ -1,8 +1,8 @@
 /** @format */
 "use client";
 
-import {getChatHistory} from "@/api/chatHistory";
-import React, {createContext, useContext, useState} from "react";
+import { getChatHistory } from "@/api/chatHistory";
+import React, { createContext, useContext, useState } from "react";
 
 interface ChatContextType {
   chatMode: string;
@@ -30,15 +30,14 @@ const ChatContext = createContext<ChatContextType>({
   setLoadData: () => {},
 });
 
-export function ChatProvider({children}: {children: React.ReactNode}) {
+export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chatMode, setChatMode] = useState("chat");
   const [chatHistory, setChatHistory] = useState<any[]>([]);
 
   const [selectedItem, setSelectedItem] = useState(null);
 
   const [chatHistoryLoading, setChatHistoryLoading] = useState<boolean>(false);
-  const [chatHistoryFirstLoad, setChatHistoryFirstLoad] =
-    useState<boolean>(true);
+  const [chatHistoryFirstLoad, setChatHistoryFirstLoad] = useState<boolean>(true);
 
   const [loadPreview, setLoadPreview] = useState<boolean>(true);
   const [loadData, setLoadData] = useState<boolean>(false);
@@ -69,7 +68,8 @@ export function ChatProvider({children}: {children: React.ReactNode}) {
         setLoadData,
         selectedItem,
         setSelectedItem,
-      }}>
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

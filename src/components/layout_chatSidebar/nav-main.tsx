@@ -68,7 +68,7 @@ export function NavMain({
         <SidebarMenuButton
           size="lg"
           tooltip={t.newchat}
-          className={`h-[40px] ${state === "collapsed" && "flex items-center justify-center"} `}
+          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
           onClick={() => {
             handleNewChat();
             openToggleSidebar();
@@ -84,13 +84,28 @@ export function NavMain({
           size="lg"
           isActive={pathname === "/mjm-ai/chat/vocal" || false}
           tooltip={t.vocal}
-          className={`h-[40px] ${state === "collapsed" && "flex items-center justify-center"}`}
+          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
           onClick={() => {
             handleChatVocal();
             openToggleSidebar();
           }}
         >
           <span className={`${state === "collapsed" && "hidden"}`}>{t.vocal}</span>
+        </SidebarMenuButton>
+      </SidebarMenu>
+
+      {/* Download App */}
+      <SidebarMenu>
+        <SidebarMenuButton
+          size="lg"
+          isActive={pathname === "/mjm-ai/chat/download"}
+          tooltip={t.downloadApp}
+          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
+          asChild
+        >
+          <Link href="/mjm-ai/chat/download" onClick={openToggleSidebar}>
+            <span className={`${state === "collapsed" && "hidden"}`}>{t.downloadApp}</span>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenu>
 
@@ -114,7 +129,7 @@ export function NavMain({
                     <SidebarMenuItem key={el.id}>
                       <SidebarMenuButton isActive={isActive} aria-current={isActive ? "page" : undefined} asChild>
                         <Link href={`/mjm-ai/chat/${el.id}`}>
-                          <span className="w-[180px] text-[14px] truncate">{el.title}</span>
+                          <span className="w-45 text-[14px] truncate">{el.title}</span>
                         </Link>
                       </SidebarMenuButton>
                       <DropdownMenu>
