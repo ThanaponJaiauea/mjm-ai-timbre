@@ -16,7 +16,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useState } from "react";
 import LoaderChat from "@/components/loaderChat/loaderChat";
-import ChatUiPage from "@/components/chat/ChatUiPage";
+import ChatFirstPage from "@/components/chat/ChatFirstPage";
 import ChordRecommend from "@/components/ChordRecommend";
 
 import { Inter } from "next/font/google";
@@ -94,7 +94,7 @@ export function Chat({ id, initialMessages }: Props) {
       <div className="flex flex-col h-full">
         <Conversation>
           <ConversationContent>
-            {chatMode === "chat" && messages.length === 0 && <ChatUiPage />}
+            {chatMode === "chat" && messages.length === 0 && <ChatFirstPage />}
 
             {messages.map(message => {
               console.log("message", message);
@@ -164,7 +164,7 @@ export function Chat({ id, initialMessages }: Props) {
           <ConversationScrollButton />
         </Conversation>
 
-        <PromptInput onSubmit={handleSubmit} className="mt-4 w-[70%] m-auto relative bg-[#3D3D3D] h-[56px] mb-4">
+        {/* <PromptInput onSubmit={handleSubmit} className="mt-4 w-[70%] m-auto relative bg-[#3D3D3D] h-[56px] mb-4">
           <PromptInputTextarea
             value={text}
             placeholder={t.placeholder}
@@ -175,7 +175,7 @@ export function Chat({ id, initialMessages }: Props) {
             disabled={!text.trim() || isSubmitting || status === "streaming"}
             className="absolute bottom-2 right-3 rounded-full cursor-pointer w-[40px] h-[40px] bg-[#292929]"
           />
-        </PromptInput>
+        </PromptInput> */}
       </div>
     </div>
   );
