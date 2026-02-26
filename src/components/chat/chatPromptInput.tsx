@@ -31,7 +31,10 @@ export default function ChatPromptInput({
   status = "ready",
 }: Props) {
   return (
-    <PromptInput onSubmit={onSubmit} className="relative bg-[#1A1A1A] border-[#2A2A2A] rounded-[24px] overflow-hidden">
+    <PromptInput
+      onSubmit={onSubmit}
+      className="relative bg-[#1A1A1A] border border-[#2A2A2A] rounded-[24px] overflow-hidden w-full max-w-[1400px] mx-auto transition-all"
+    >
       <PromptInputBody className="p-2">
         <PromptInputTextarea
           value={value}
@@ -39,9 +42,8 @@ export default function ChatPromptInput({
           placeholder={placeholder}
           className="pl-4 pt-4 text-gray-300 min-h-[40px]"
         />
-
         {showOptions && (
-          <div className="flex gap-2 px-3 pt-2 items-center">
+          <div className="flex gap-2 px-3 items-center border-r border-[#2A2A2A] mr-2 shrink-0">
             <BadgeButton label="Style" onClick={() => onSelectOption?.("genre")} />
             <BadgeButton label="Key" onClick={() => onSelectOption?.("key")} />
             <BadgeButton label="Instrumental" onClick={() => onSelectOption?.("instrumental")} />

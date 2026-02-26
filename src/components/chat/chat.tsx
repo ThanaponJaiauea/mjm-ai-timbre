@@ -108,7 +108,7 @@ export function Chat({ id, initialMessages }: Props) {
   const assistantTyping = lastMessage?.role === "assistant" && lastMessage.parts.some(p => p.type === "text" && p.text);
 
   return (
-    <div className="p-6 size-full h-screen">
+    <div className="relative flex flex-col w-full h-screen bg-black overflow-hidden z-0">
       <Conversation>
         <ConversationContent>
           {chatMode === "chat" && messages.length === 0 && (
@@ -165,17 +165,19 @@ export function Chat({ id, initialMessages }: Props) {
         <ConversationScrollButton />
       </Conversation>
 
-      {status === "ready" && messages.length > 0 && (
-        <ChatPromptInput
-          showOptions
-          value={text}
-          onChange={setText}
-          onSubmit={handleSubmit}
-          onSelectOption={handleSelectOption}
-          submitting={isSubmitting}
-          status={status === "streaming" ? "streaming" : "ready"}
-          placeholder={t.placeholder}
-        />
+      {messages.length > 0 && (
+        <div className="w-full pb-10">
+          <ChatPromptInput
+            showOptions
+            value={text}
+            onChange={setText}
+            onSubmit={handleSubmit}
+            onSelectOption={handleSelectOption}
+            submitting={isSubmitting}
+            status={status === "streaming" ? "streaming" : "ready"}
+            placeholder="Ask me anything about music..."
+          />
+        </div>
       )}
 
       <ModelSelected

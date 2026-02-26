@@ -166,7 +166,7 @@ export default function ChordRecommend({ initialData }) {
       )}
 
       {!loading && recommendedChords.length > 0 && (
-        <div className="bg-[#1e1e1e] p-6 rounded-xl border-l-4 border-green-500 animate-in fade-in slide-in-from-right duration-500 relative overflow-hidden">
+        <div className="bg-[#1e1e1e] p-6 rounded-xl border-l-4 border-green-500 relative overflow-hidden">
           <div className="text-xs text-gray-400 mb-4 flex items-center gap-2 font-mono">
             <Music4 size={14} /> AI RECOMMENDED PROGRESSION
           </div>

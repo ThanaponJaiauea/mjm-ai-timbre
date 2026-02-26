@@ -4,7 +4,7 @@ import { Montserrat } from "next/font/google";
 import { ButtonSign } from "../button/button_sign";
 import Image from "next/image";
 import ChatPromptInput from "./chatPromptInput";
-import { image_style_hip_hop } from "@/images/index";
+import { image_style_hip_hop, bg_ChatFirstPage } from "@/images/index";
 
 const montserrat = Montserrat();
 
@@ -26,7 +26,11 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
   };
 
   return (
-    <section className="flex flex-col items-center">
+    <section className="flex flex-col items-center relative w-full">
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <Image src={bg_ChatFirstPage} alt="Background" fill priority className="object-cover" />
+      </div>
+
       <div className="flex justify-end w-full gap-4">
         <ButtonSign title="Sign In" onClick={() => handleSignIn()} />
         <ButtonSign title="Sign Up" onClick={() => handleSignUp()} />
@@ -35,7 +39,10 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
       <div className="mt-20 flex flex-col items-center gap-10">
         <div>
           <h1 className={`font-bold text-[70px] ${montserrat.className}`}>CREATIVE AI MUSIC</h1>
-          <p className="text-center text-sm">Create unique sounds instantly with AI</p>
+          <p className="text-center text-sm">
+            Create unique sounds instantly with AI and turn your creative ideas into <br /> original, personalized music
+            in just seconds.
+          </p>
         </div>
 
         <ChatPromptInput
