@@ -3,12 +3,13 @@
 
 import { Play, RefreshCw, Loader2, Music4 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { recommend_chords } from "../api/music";
+import { recommend_chords, change_chords } from "../api/music";
 import * as Tone from "tone";
 import { Chord } from "@tonaljs/tonal";
 
 export default function ChordRecommend({ initialData }) {
   const [recommendedChords, setRecommendedChords] = useState([]);
+  const [recommendedKey, setRecommendedKey] = useState("");
   const [currentRomanNumerals, setCurrentRomanNumerals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
@@ -128,13 +129,28 @@ export default function ChordRecommend({ initialData }) {
       }));
 
       combined.sort((a, b) => a.weight - b.weight);
-
+      setRecommendedKey(response.data.key);
       setRecommendedChords(combined.map(item => item.chord));
       setCurrentRomanNumerals(combined.map(item => item.roman));
     } catch (error) {
       console.error("Error fetching chords:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChangeSingleChord = async index => {
+    const currentDegree = currentRomanNumerals[index];
+    const targetKey = recommendedKey;
+
+    try {
+      const res = await change_chords({
+        degree: currentDegree,
+        target_key: targetKey,
+      });
+      console.log("res", res.data.results);
+    } catch (err) {
+      console.error("Error fetching substitutions:", err);
     }
   };
 
@@ -150,6 +166,7 @@ export default function ChordRecommend({ initialData }) {
             <Loader2 className="animate-spin" size={18} />
             <span className="text-sm font-mono">AI กำลังเลือกคอร์ดที่เหมาะสมที่สุด...</span>
           </div>
+
           <div className="flex flex-wrap gap-3 mb-6">
             {[1, 2, 3, 4].map(i => (
               <div
@@ -192,7 +209,10 @@ export default function ChordRecommend({ initialData }) {
                 <span className="text-[10px] text-gray-500 font-mono uppercase">{currentRomanNumerals[idx]}</span>
 
                 {idx !== 0 && (
-                  <button className="cursor-pointer absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-green-400 p-1">
+                  <button
+                    onClick={() => handleChangeSingleChord(idx, chord)}
+                    className="cursor-pointer absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-green-400 p-1"
+                  >
                     <RefreshCw size={14} />
                   </button>
                 )}
