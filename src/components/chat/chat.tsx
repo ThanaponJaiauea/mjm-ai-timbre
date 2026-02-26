@@ -1,15 +1,10 @@
 /** @format */
-
 "use client";
+
 import { useLanguage } from "@/hooks/LanguageProvider";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
-import {
-  PromptInput,
-  PromptInputMessage,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from "@/components/ai-elements/prompt-input";
+import { PromptInputMessage } from "@/components/ai-elements/prompt-input";
 import { Response } from "@/components/ai-elements/response";
 import { useChatContext } from "@/hooks/ChatContext";
 import { useChat } from "@ai-sdk/react";
@@ -18,6 +13,9 @@ import { useEffect, useState } from "react";
 import LoaderChat from "@/components/loaderChat/loaderChat";
 import ChatFirstPage from "@/components/chat/ChatFirstPage";
 import ChordRecommend from "@/components/ChordRecommend";
+import ChatPromptInput from "./chatPromptInput";
+import { ModelSelected } from "@/components/modal/model_selected";
+import { get_all_by_type } from "@/api/music";
 
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
@@ -25,53 +23,46 @@ import { toast } from "sonner";
 const inter = Inter({});
 
 interface Props {
-  id?: string | undefined;
+  id?: string;
   initialMessages?: any[];
 }
 
 export function Chat({ id, initialMessages }: Props) {
   const { loadChatHistory, chatMode } = useChatContext();
   const { t } = useLanguage();
+
+  /* -------------------- CHAT SDK -------------------- */
   const { messages, sendMessage, status, setMessages } = useChat({
     id,
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages }) => {
-        const lastMessage = messages[messages.length - 1];
-
-        return {
-          body: {
-            message: lastMessage,
-            chatId: id,
-          },
-        };
-      },
+      prepareSendMessagesRequest: ({ messages }) => ({
+        body: {
+          message: messages[messages.length - 1],
+          chatId: id,
+        },
+      }),
     }),
     onFinish: ({ messages }) => {
-      console.log(messages.length);
-      if (messages.length <= 2) {
-        loadChatHistory();
-      }
+      if (messages.length <= 2) loadChatHistory();
     },
     onError: error => {
-      console.error("Error:", error);
+      console.error(error);
       toast("Error: " + error);
     },
   });
 
-  console.log("messages", messages);
+  console.log("messages:", messages);
 
+  /* -------------------- INPUT -------------------- */
   const [text, setText] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (message: PromptInputMessage) => {
-    // ถ้าไม่มีข้อความ หรือกำลังส่งอยู่ ให้ return
     if (!message.text.trim() || isSubmitting || status === "streaming") return;
-
     setIsSubmitting(true);
-    sendMessage({ text });
+    sendMessage({ text: message.text });
     setText("");
   };
 
@@ -80,103 +71,121 @@ export function Chat({ id, initialMessages }: Props) {
   }, [status]);
 
   useEffect(() => {
-    if (initialMessages && initialMessages.length > 0) {
-      setMessages(initialMessages);
-    }
+    if (initialMessages?.length) setMessages(initialMessages);
   }, [initialMessages, setMessages]);
 
+  /* -------------------- MODEL SELECTED -------------------- */
+  const [openModel, setOpenModel] = useState(false);
+  const [selectModel, setSelectModel] = useState<string | null>(null);
+  const [dataType, setDataType] = useState<any>(null);
+
+  const handleSelectOption = async (option: string) => {
+    setSelectModel(option);
+
+    if (["genre", "key", "instrumental"].includes(option)) {
+      setOpenModel(true);
+
+      if (option === "genre" || option === "key") {
+        const res = await get_all_by_type(option);
+        setDataType(res.data);
+      }
+    }
+  };
+
+  const handleSelectValue = (value: string) => {
+    setText(prev => (prev ? `${prev}, ${value}` : value));
+    clearModel();
+  };
+
+  const clearModel = () => {
+    setOpenModel(false);
+    setSelectModel(null);
+    setDataType(null);
+  };
+
+  /* -------------------- RENDER -------------------- */
   const lastMessage = messages[messages.length - 1];
-  const assistantHasStartedTyping =
-    lastMessage?.role === "assistant" && lastMessage.parts.some(part => part.type === "text" && part.text);
+  const assistantTyping = lastMessage?.role === "assistant" && lastMessage.parts.some(p => p.type === "text" && p.text);
 
   return (
-    <div className="p-6 relative size-full h-screen">
-      <div className="flex flex-col h-full">
-        <Conversation>
-          <ConversationContent>
-            {chatMode === "chat" && messages.length === 0 && <ChatFirstPage />}
+    <div className="p-6 size-full h-screen">
+      <Conversation>
+        <ConversationContent>
+          {chatMode === "chat" && messages.length === 0 && (
+            <ChatFirstPage
+              value={text}
+              onChange={setText}
+              onSubmit={handleSubmit}
+              onSelectOption={handleSelectOption}
+              isStreaming={status === "streaming"}
+            />
+          )}
 
-            {messages.map(message => {
-              console.log("message", message);
+          {messages.map(msg => {
+            const hasRenderable = msg.parts.some(
+              p => (p.type === "text" && p.text) || (p.type === "tool-aiRecommend" && p.output)
+            );
+            if (msg.role === "assistant" && !hasRenderable) return null;
 
-              // Do not render assistant messages that have no renderable parts.
-              // This prevents an empty message bubble from appearing while waiting for tool output.
-              const hasRenderableParts = message.parts.some(part => {
-                if (part.type === "text" && part.text) {
-                  return true;
-                }
-                if (part.type === "tool-aiRecommend" && part.output) {
-                  return true; // Tool has output
-                }
+            return (
+              <Message from={msg.role} key={msg.id}>
+                <MessageContent className={inter.className}>
+                  {msg.parts.map((part, i) => {
+                    if (part.type === "text") {
+                      return (
+                        <Response key={i} shikiTheme={["dark-plus"]}>
+                          {part.text}
+                        </Response>
+                      );
+                    }
 
-                return false;
-              });
+                    if (part.type === "tool-aiRecommend") {
+                      const d = part.args || part.input;
+                      return (
+                        <ChordRecommend
+                          key={i}
+                          initialData={{
+                            key: d?.key ?? "C",
+                            mood: d?.mood ?? "Pop",
+                          }}
+                        />
+                      );
+                    }
 
-              return (
-                <Message from={message.role} key={message.id}>
-                  <MessageContent className={`${inter.className}`}>
-                    {message.parts.map((part, i) => {
-                      switch (part.type) {
-                        case "text":
-                          return (
-                            <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
-                              {part.text}
-                            </Response>
-                          );
+                    return null;
+                  })}
+                </MessageContent>
+              </Message>
+            );
+          })}
 
-                        case "reasoning":
-                          return (
-                            <Response key={`${message.id}-text-${i}`} shikiTheme={["dark-plus"]}>
-                              {part.text}
-                            </Response>
-                          );
+          {status === "streaming" && !assistantTyping && <LoaderChat />}
+        </ConversationContent>
 
-                        case "tool-aiRecommend":
-                          const toolData = part.args || part.input;
-                          const hasData = toolData && Object.keys(toolData).length > 0;
+        <ConversationScrollButton />
+      </Conversation>
 
-                          return (
-                            <div key={`${message.id}-tool-${i}`} className="my-4">
-                              <ChordRecommend
-                                initialData={{
-                                  key: hasData ? toolData.key : "C",
-                                  mood: hasData ? toolData.mood : "Pop",
-                                }}
-                              />
-                            </div>
-                          );
+      {status === "ready" && messages.length > 0 && (
+        <ChatPromptInput
+          showOptions
+          value={text}
+          onChange={setText}
+          onSubmit={handleSubmit}
+          onSelectOption={handleSelectOption}
+          submitting={isSubmitting}
+          status={status === "streaming" ? "streaming" : "ready"}
+          placeholder={t.placeholder}
+        />
+      )}
 
-                        default:
-                          return null;
-                      }
-                    })}
-                  </MessageContent>
-                </Message>
-              );
-            })}
-
-            {status === "streaming" && !assistantHasStartedTyping && (
-              <div className="mb-8">
-                <LoaderChat />
-              </div>
-            )}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-
-        {/* <PromptInput onSubmit={handleSubmit} className="mt-4 w-[70%] m-auto relative bg-[#3D3D3D] h-[56px] mb-4">
-          <PromptInputTextarea
-            value={text}
-            placeholder={t.placeholder}
-            onChange={e => setText(e.currentTarget.value)}
-          />
-          <PromptInputSubmit
-            status={status === "streaming" ? "streaming" : "ready"}
-            disabled={!text.trim() || isSubmitting || status === "streaming"}
-            className="absolute bottom-2 right-3 rounded-full cursor-pointer w-[40px] h-[40px] bg-[#292929]"
-          />
-        </PromptInput> */}
-      </div>
+      <ModelSelected
+        model={openModel}
+        data={dataType}
+        instrumentalOptions={["Arp", "Bassline"]}
+        onClose={clearModel}
+        onSelect={handleSelectValue}
+        title={selectModel === "genre" ? "genre" : selectModel === "key" ? "Key" : "Instrumental"}
+      />
     </div>
   );
 }

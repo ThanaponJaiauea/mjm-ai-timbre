@@ -29,13 +29,13 @@ export function NavFooter({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="justify-start">
-              <Image
+              {/* <Image
                 src={languages.find(l => l.code === currentLang)?.flag || ""}
                 alt={currentLang}
                 width={24}
                 height={24}
                 className="h-6 w-6 rounded-full"
-              />
+              /> */}
               <span className="ml-2">{languages.find(l => l.code === currentLang)?.label}</span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>

@@ -34,7 +34,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chatMode, setChatMode] = useState("chat");
   const [chatHistory, setChatHistory] = useState<any[]>([]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedModelItem] = useState(null);
 
   const [chatHistoryLoading, setChatHistoryLoading] = useState<boolean>(false);
   const [chatHistoryFirstLoad, setChatHistoryFirstLoad] = useState<boolean>(true);
@@ -67,7 +67,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         loadData,
         setLoadData,
         selectedItem,
-        setSelectedItem,
+        setSelectedModelItem,
       }}
     >
       {children}

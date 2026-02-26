@@ -32,6 +32,6 @@
     "src/components/button/button_sign.jsx",
     "src/components/button/badgeButton.jsx",
     "src/images/index.js"
-  ],
+, "src/components/chat/ChatFirstPage.jsx"  ],
   "exclude": ["node_modules"]
 }

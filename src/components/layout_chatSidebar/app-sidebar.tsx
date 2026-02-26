@@ -25,8 +25,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t, lang, setLang } = useLanguage();
 
   const languages = [
-    { code: "en", label: "English", flag: "/icon/en.png" },
-    { code: "zh", label: "中文", flag: "/icon/zh.png" },
+    { code: "en", label: "English", flag: null },
+    { code: "zh", label: "中文", flag: null },
   ];
 
   const data = {
