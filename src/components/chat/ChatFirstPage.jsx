@@ -1,10 +1,13 @@
 "use client";
 
+import { bg_ChatFirstPage, image_style_hip_hop } from "@/images/index";
+import { useAuthStore } from "@/store/use-auth-store";
 import { Montserrat } from "next/font/google";
-import { ButtonSign } from "../button/button_sign";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { UserMenu } from "../auth/user-menu";
+import { ButtonSign } from "../button/button_sign";
 import ChatPromptInput from "./chatPromptInput";
-import { image_style_hip_hop, bg_ChatFirstPage } from "@/images/index";
 
 const montserrat = Montserrat();
 
@@ -17,12 +20,15 @@ const listStyleDataMoc = [
 ];
 
 export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOption, isStreaming }) {
+const router = useRouter();
+const user = useAuthStore(state => state.user);
+
   const handleSignIn = () => {
-    console.log("Sign In clicked");
+    router.push("?auth=signin");
   };
 
   const handleSignUp = () => {
-    console.log("Sign Up clicked");
+    router.push("?auth=signup");
   };
 
   return (
@@ -32,8 +38,14 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
       </div>
 
       <div className="flex justify-end w-full gap-4">
-        <ButtonSign title="Sign In" onClick={() => handleSignIn()} />
-        <ButtonSign title="Sign Up" onClick={() => handleSignUp()} />
+        {user ? (
+          <UserMenu />
+        ) : (
+          <>
+            <ButtonSign title="Sign In" onClick={() => handleSignIn()} />
+            <ButtonSign title="Sign Up" onClick={() => handleSignUp()} />
+          </>
+        )}
       </div>
 
       <div className="mt-20 flex flex-col items-center gap-10">
