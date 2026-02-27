@@ -40,7 +40,7 @@ const genreCards = [
 ];
 
 export function MjmPadTab() {
-  const [activeFunction, setActiveFunction] = useState<ActiveFunctionType>("ai-sound-pad");
+  const [activeFunction, setActiveFunction] = useState<ActiveFunctionType | undefined>();
 
   function handleClickActiveShowFunction(name: ActiveFunctionType) {
     setActiveFunction(name);
@@ -48,57 +48,79 @@ export function MjmPadTab() {
 
   return (
     <div className="flex flex-col gap-4 p-2 w-full">
-      <Card className="flex items-center bg-transparent border-none shadow-none">
-        <CardContent className="text-muted-foreground text-sm">
-          <Image src="/images/mjm-pad-app.png" alt={"MJM Pad"} width={600} height={500} />
-        </CardContent>
-        <CardFooter>
-          <CardAction>
-            <div className="flex  gap-4">
-              <Link target="_blank" href="https://apps.apple.com/us/app/mjm-pad/id6751707171">
-                <Image src="/images/appstore.png" alt="Apple Store Logo" width={150} height={200} />
-              </Link>
-              <Link target="_blank" href="https://apps.apple.com/us/app/mjm-pad/id6751707171">
-                <Image src="/images/googleplay.png" alt="Apple Store Logo" width={150} height={200} />
-              </Link>
+      <section>
+        <Card className="flex items-center bg-transparent border-none shadow-none">
+          <CardContent className="text-muted-foreground text-sm">
+            <Image src="/images/pad-app.png" alt={"MJM Pad"} width={900} height={500} />
+          </CardContent>
+          <CardFooter>
+            <CardAction>
+              <div className="flex  gap-16">
+                <Link
+                  target="_blank"
+                  href="https://apps.apple.com/us/app/mjm-pad/id6751707171"
+                  className="cursor-pointer hover:scale-105 transition-all duration-300"
+                >
+                  <Image src="/images/appstore.png" alt="Apple Store Logo" width={200} height={200} />
+                </Link>
+                <Link
+                  target="_blank"
+                  href="https://play.google.com/store/apps/details?id=com.yojoies.mjmpad_android&hl=th"
+                  className="cursor-pointer hover:scale-105 transition-all duration-300"
+                >
+                  <Image src="/images/googleplay.png" alt="Google play Logo" width={200} height={200} />
+                </Link>
+              </div>
+            </CardAction>
+          </CardFooter>
+        </Card>
+      </section>
+      <section className="flex flex-col items-start">
+        <p className="text-5xl font-bold ml-38 mt-8">FUNCTIONAL HIGHLIGHTS</p>
+        <p className="ml-38 mt-8">
+          Powerful AI tools for seamless music creation. <br />
+          AI Pad, Create, record, and generate covers instantly.
+        </p>
+      </section>
+      <section>
+        <Card className="flex justify-center items-center bg-transparent border-none shadow-none">
+          <CardContent className="text-muted-foreground text-sm  mt-6">
+            <div className="flex flex-1 gap-4">
+              {mjmPadImageData.map(app => (
+                <Image
+                  key={app.name}
+                  onClick={() => handleClickActiveShowFunction(app.name as ActiveFunctionType)}
+                  className={`object-cover hover:cursor-pointer transition-all duration-300 ease-in-out border-2 rounded-2xl ${
+                    activeFunction === app.name
+                      ? "border-purple-500 scale-105 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                      : "border-transparent hover:border-purple-500/50 hover:scale-105"
+                  }`}
+                  src={app.path}
+                  alt={app.name}
+                  width={270}
+                  height={400}
+                />
+              ))}
             </div>
-          </CardAction>
-        </CardFooter>
-      </Card>
-      <Card className="flex justify-center items-center bg-transparent border-none shadow-none">
-        <p className="text-2xl font-bold">FUNCTIONAL HIGHLIGHTS</p>
-        <CardContent className="text-muted-foreground text-sm ">
-          <div className="flex flex-1 gap-4">
-            {mjmPadImageData.map(app => (
-              <Image
-                key={app.name}
-                onClick={() => handleClickActiveShowFunction(app.name as ActiveFunctionType)}
-                className={`hover:cursor-pointer transition-all duration-300 ease-in-out border-2 rounded-3xl active:scale-95 ${
-                  activeFunction === app.name
-                    ? "border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] scale-105"
-                    : "border-transparent hover:border-blue-500/50 hover:scale-105"
-                }`}
-                src={app.path}
-                alt={app.name}
-                width={300}
-                height={400}
-              />
-            ))}
-          </div>
-          <div className="flex justify-center">
-            <Image
-              key={activeFunction}
-              className="p-4 m-2 animate-in fade-in zoom-in-95 duration-700 ease-in-out slide-in-from-bottom-4 "
-              src={activeFunctions[activeFunction]}
-              alt="{MJM Pad}"
-              width={700}
-              height={700}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      <p className="flex justify-center text-2xl font-bold text-center mt-8">UNLOCK LIMITLESS MUSICAL</p>
-      <p className="flex justify-center text-2xl font-bold text-center mb-2">POSSIBILITIES</p>
+            <div className="flex justify-center">
+              {activeFunction && (
+                <Image
+                  key={activeFunction}
+                  className="p-4 m-2 animate-in fade-in zoom-in-95 duration-700 ease-in-out slide-in-from-bottom-4 "
+                  src={activeFunctions[activeFunction]}
+                  alt="{MJM Pad}"
+                  width={700}
+                  height={700}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+      <section>
+        <p className="flex justify-center text-5xl font-bold text-center mt-8">UNLOCK LIMITLESS MUSICAL</p>
+        <p className="flex justify-center text-5xl font-bold text-center mb-2">POSSIBILITIES</p>
+      </section>
       <Card className="bg-transparent border-none shadow-none w-full">
         <CardContent className="p-0">
           {/* Desktop View (Scattered Layout) */}
@@ -118,7 +140,6 @@ export function MjmPadTab() {
               />
             ))}
           </div>
-
           {/* Mobile/Tablet View (Grid Layout) */}
           <div className="md:hidden grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 px-2">
             {genreCards.map((genre, index) => (
@@ -139,7 +160,7 @@ export function MjmPadTab() {
           </div>
         </CardContent>
       </Card>
-      <div className="flex flex-col items-center mt-4 mb-4 justify-center text-sm font-light">
+      <div className="flex flex-col items-center mb-4 justify-center  font-light">
         <p>Explore Endless Genres, Styles, And Creative Directions With The Power Of Advanced AI.</p>
         <p>Turn Your ideas into Fully Produced, Professional-Quality Tracks in Just Seconds.</p>
       </div>
