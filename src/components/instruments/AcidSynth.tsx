@@ -185,6 +185,24 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
     const [scale, setScale] = useState<keyof typeof SCALES>(initialScale as keyof typeof SCALES);
     const [root, setRoot] = useState(initialRoot);
 
+    // ตั้งค่า initialRoot และ initialScale เมื่อเปลี่ยน props
+    useEffect(() => {
+        console.log('[AcidSynth] Updating initialRoot:', initialRoot, 'initialScale:', initialScale);
+        setRoot(initialRoot);
+        setScale(initialScale as keyof typeof SCALES);
+    }, [initialRoot, initialScale]);
+
+    // Cleanup เมื่อ unmount
+    useEffect(() => {
+        return () => {
+            console.log('[AcidSynth] Component unmounting, cleaning up');
+            // Stop playback if playing
+            if (isPlaying) {
+                setIsPlaying(false);
+            }
+        };
+    }, [isPlaying]);
+
     // Pattern State
     const [pattern, setPattern] = useState<Step[]>([]);
     const [currentStep, setCurrentStep] = useState(-1);

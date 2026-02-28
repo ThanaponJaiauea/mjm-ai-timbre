@@ -723,7 +723,6 @@ export default function Arpeggiator({
 
     const pressedKeysRef = useRef(new Set<string>());
     const scheduledEventsRef = useRef<number[]>([]);
-    const workerRef = useRef<Worker | null>(null);
 
     const loadSettings = useCallback((settings: ArpSettings) => {
         setWaveform(settings.waveform);
@@ -766,6 +765,38 @@ export default function Arpeggiator({
         onPresetChange?.(settings.name || '');
     }, [onPresetChange]);
 
+    // Log เมื่อ component mount/unmount
+    useEffect(() => {
+        // Initialize audio บน mount (ต้องเกิดจาก user gesture)
+        const handleUserGesture = () => {
+            initializeAudio();
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('keydown', handleUserGesture);
+        };
+        
+        document.addEventListener('click', handleUserGesture);
+        document.addEventListener('keydown', handleUserGesture);
+        
+        return () => {
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('keydown', handleUserGesture);
+            if (audioContextRef.current) {
+                audioContextRef.current.close();
+            }
+        };
+    }, []);
+
+    // ตั้งค่า initialKey และ initialScale สำหรับ transpose
+    const [initialKey, setInitialKey] = useState<MusicalKey | null>(null);
+    
+    useEffect(() => {
+        if (initialSettings?.musicalKey) {
+            setMusicalKey(initialSettings.musicalKey);
+            setInitialKey(initialSettings.musicalKey);
+        }
+        if (initialSettings?.scale) setScale(initialSettings.scale);
+    }, []);
+
     useEffect(() => {
         try {
             const saved = localStorage.getItem('savedMidis');
@@ -779,24 +810,39 @@ export default function Arpeggiator({
         } catch (e) { console.warn("LocalStorage write failed", e); }
     }, [savedMidis]);
 
-    // คำนวณ activeMidiNotes จาก heldRoots + scale
+    // คำนวณ activeMidiNotes จาก heldRoots + KEY + SCALE (transpose ตาม key)
     useEffect(() => {
-        if (heldRoots.length === 0) { setActiveMidiNotes([]); return; }
-        
-        const scaleIntervals = SCALE_INTERVALS[scale];
-        const keyRootMidi = ROOT_NOTES[musicalKey];
+        if (heldRoots.length === 0) {
+            setActiveMidiNotes([]);
+            return;
+        }
 
-        // ใช้โน๊ตตรงๆ จาก heldRoots แล้วปรับให้อยู่ใน scale
-        const adjustedNotes = heldRoots.map(keyMidi => {
-            const transposedNote = keyMidi; // ไม่ transpose แล้ว ใช้โน๊ตที่กดเลย
-            const rawInterval = (transposedNote - keyRootMidi + 1200) % 12;
+        // ถ้าไม่มี initialKey ให้ใช้โน๊ตตรงๆ
+        if (!initialKey) {
+            setActiveMidiNotes([...heldRoots]);
+            return;
+        }
+
+        const scaleIntervals = SCALE_INTERVALS[scale];
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const initialKeyRootMidi = ROOT_NOTES[initialKey];
+        
+        // คำนวณ interval จาก initialKey แล้ว transpose ไป currentKey
+        const transposedNotes = heldRoots.map(keyMidi => {
+            // คำนวณ interval จาก initialKey
+            const initialInterval = (keyMidi - initialKeyRootMidi + 1200) % 12;
+            const octaveOffset = Math.floor((keyMidi - initialKeyRootMidi) / 12) * 12;
             
-            // ถ้าโน๊ตอยู่ใน scale แล้ว ใช้ได้เลย
+            // Transpose ไปยัง currentKey
+            const transposedNote = currentKeyRootMidi + initialInterval + octaveOffset;
+            
+            // ปรับให้อยู่ใน scale (ถ้าไม่อยู่ใน scale ให้หาโน๊ตที่ใกล้ที่สุด)
+            const rawInterval = (transposedNote - currentKeyRootMidi + 1200) % 12;
             if (scaleIntervals.includes(rawInterval)) {
                 return transposedNote;
             }
             
-            // ถ้าไม่อยู่ใน scale ให้หาโน๊ตที่ใกล้ที่สุดใน scale
+            // หาโน๊ตที่ใกล้ที่สุดใน scale
             let closestInterval = scaleIntervals[0];
             let minDiff = 12;
             for (const interval of scaleIntervals) {
@@ -808,12 +854,11 @@ export default function Arpeggiator({
                 }
             }
             
-            const octaveOffset = Math.floor((transposedNote - keyRootMidi) / 12) * 12;
-            return keyRootMidi + closestInterval + octaveOffset;
+            return currentKeyRootMidi + closestInterval + octaveOffset;
         });
 
-        setActiveMidiNotes(adjustedNotes);
-    }, [heldRoots, musicalKey, scale]);
+        setActiveMidiNotes(transposedNotes);
+    }, [heldRoots, musicalKey, scale, initialKey]);
 
     const arpSequence = useMemo(() => {
         if (activeMidiNotes.length === 0) return [];
@@ -851,31 +896,63 @@ export default function Arpeggiator({
 
     const initializeAudio = useCallback(() => {
         if (!audioContextRef.current) {
-            const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-            audioContextRef.current = context;
+            try {
+                const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+                audioContextRef.current = context;
 
-            const masterGain = context.createGain();
-            const compressor = context.createDynamicsCompressor();
+                const masterGain = context.createGain();
+                const compressor = context.createDynamicsCompressor();
 
-            compressor.threshold.setValueAtTime(-24, context.currentTime);
-            compressor.knee.setValueAtTime(30, context.currentTime);
-            compressor.ratio.setValueAtTime(12, context.currentTime);
-            compressor.attack.setValueAtTime(0.003, context.currentTime);
-            compressor.release.setValueAtTime(0.25, context.currentTime);
+                compressor.threshold.setValueAtTime(-24, context.currentTime);
+                compressor.knee.setValueAtTime(30, context.currentTime);
+                compressor.ratio.setValueAtTime(12, context.currentTime);
+                compressor.attack.setValueAtTime(0.003, context.currentTime);
+                compressor.release.setValueAtTime(0.25, context.currentTime);
 
-            masterGain.connect(compressor);
-            compressor.connect(context.destination);
+                masterGain.connect(compressor);
+                compressor.connect(context.destination);
 
-            masterGain.gain.value = masterVolume;
+                masterGain.gain.value = masterVolume;
 
-            masterGainRef.current = masterGain;
-            compressorRef.current = compressor;
+                masterGainRef.current = masterGain;
+                compressorRef.current = compressor;
+            } catch (error) {
+                console.error('[Arpeggiator] Error creating audio context:', error);
+            }
         }
-        if (audioContextRef.current.state === 'suspended') audioContextRef.current.resume();
+
+        if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume().catch(err => {
+                console.error('[Arpeggiator] Error resuming audio context:', err);
+            });
+        }
     }, [masterVolume]);
 
-    const handleNoteOn = useCallback((midiNote: number) => { initializeAudio(); setHeldRoots(prev => [...prev, midiNote]); }, [initializeAudio]);
-    const handleNoteOff = useCallback((midiNote: number) => { if (!isHoldOn) setHeldRoots(prev => prev.filter(n => n !== midiNote)); }, [isHoldOn]);
+    const handleNoteOn = useCallback((midiNote: number) => { 
+        initializeAudio(); 
+        setHeldRoots(prev => [...prev, midiNote]); 
+    }, [initializeAudio]);
+    
+    const handleNoteOff = useCallback((midiNote: number) => { 
+        if (!isHoldOn) setHeldRoots(prev => prev.filter(n => n !== midiNote)); 
+    }, [isHoldOn]);
+
+    // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
+    useEffect(() => {
+        const handleUserGesture = () => {
+            initializeAudio();
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('keydown', handleUserGesture);
+        };
+        
+        document.addEventListener('click', handleUserGesture);
+        document.addEventListener('keydown', handleUserGesture);
+        
+        return () => {
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('keydown', handleUserGesture);
+        };
+    }, [initializeAudio]);
 
     useEffect(() => {
         const KEY_TO_MIDI: Record<string, number> = { 'a': 60, 's': 62, 'd': 64, 'f': 65, 'g': 67, 'h': 69, 'j': 71, 'k': 72 };
@@ -914,12 +991,13 @@ export default function Arpeggiator({
     }, []);
 
     const scheduleNote = (seqStep: number, time: number) => {
-        const { sequencerSteps, heldRoots } = paramsRef.current;
+        const { sequencerSteps } = paramsRef.current;
 
         const isActiveStep = sequencerSteps[seqStep];
         let noteToPlay: number | number[] | null = null;
         let noteIndex = -1;
 
+        // ใช้ heldRoots จาก state โดยตรง ไม่ใช่จาก paramsRef
         if (heldRoots.length > 0) {
             const result = getNextNote();
             if (result) {
@@ -930,11 +1008,11 @@ export default function Arpeggiator({
             }
         }
 
-        notesInQueueRef.current.push({ 
-            noteIndex: (isActiveStep && heldRoots.length > 0 && noteToPlay !== null) ? noteIndex : -1, 
-            seqIndex: seqStep, 
+        notesInQueueRef.current.push({
+            noteIndex: (isActiveStep && heldRoots.length > 0 && noteToPlay !== null) ? noteIndex : -1,
+            seqIndex: seqStep,
             midiNote: (isActiveStep && heldRoots.length > 0) ? noteToPlay : null,
-            time 
+            time
         });
 
         if (noteToPlay !== null && isActiveStep) {
@@ -992,40 +1070,6 @@ export default function Arpeggiator({
         seqStepRef.current = (seqStepRef.current + 1) % 16;
     };
 
-    const scheduler = useCallback(() => {
-        if (!audioContextRef.current || !isPlaying) return;
-        const ctx = audioContextRef.current;
-
-        while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_TIME) {
-            scheduleNote(seqStepRef.current, nextNoteTimeRef.current);
-            nextNote();
-        }
-    }, [getNextNote, isPlaying]);
-
-    useEffect(() => {
-        if (!isPlaying) {
-            workerRef.current?.terminate();
-            if (timerIDRef.current) clearInterval(timerIDRef.current);
-            return;
-        }
-
-        try {
-            workerRef.current = new Worker('metronome.worker.js');
-            workerRef.current.onmessage = (e) => {
-                if (e.data === 'tick') {
-                    scheduler();
-                }
-            };
-        } catch (err) {
-            console.warn("Worker failed to init:", err);
-            timerIDRef.current = setInterval(scheduler, 25);
-        }
-        return () => {
-            workerRef.current?.terminate();
-            if (timerIDRef.current) clearInterval(timerIDRef.current);
-        };
-    }, [scheduler, isPlaying]);
-
     useEffect(() => {
         let rAF: number;
         const draw = () => {
@@ -1068,6 +1112,14 @@ export default function Arpeggiator({
     useEffect(() => {
         if (isPlaying) {
             initializeAudio();
+
+            // Force resume audio context (สำคัญสำหรับ browser ที่ suspend audio)
+            if (audioContextRef.current?.state === 'suspended') {
+                audioContextRef.current.resume().catch(err => {
+                    console.error('[Arpeggiator] Error resuming audio context:', err);
+                });
+            }
+
             noteIndexRef.current = 0;
             seqStepRef.current = 0;
             upDownDirectionRef.current = 'up';
@@ -1075,32 +1127,51 @@ export default function Arpeggiator({
 
             if (audioContextRef.current) {
                 nextNoteTimeRef.current = audioContextRef.current.currentTime + 0.05;
-                workerRef.current?.postMessage('start');
+                
+                // ใช้ setTimeout แทน worker (Next.js App Router ไม่รองรับ worker)
+                // Clear timer เก่าก่อนสร้างใหม่ (ป้องกัน scheduler ซ้อน)
+                if (timerIDRef.current) {
+                    clearInterval(timerIDRef.current);
+                }
+                timerIDRef.current = setInterval(() => {
+                    if (!isPlaying) return;
+                    const ctx = audioContextRef.current;
+                    if (!ctx) return;
+                    
+                    while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_TIME) {
+                        scheduleNote(seqStepRef.current, nextNoteTimeRef.current);
+                        nextNote();
+                    }
+                }, LOOKAHEAD);
             }
         } else {
-            workerRef.current?.postMessage('stop');
+            if (timerIDRef.current) {
+                clearInterval(timerIDRef.current);
+            }
+            timerIDRef.current = null;
         }
-    }, [isPlaying, initializeAudio]);
-
-    // รีเซ็ต queue และ index เมื่อโน๊ตเปลี่ยนแบบ real-time (KEY, SCALE, heldRoots)
-    useEffect(() => {
-        if (!isPlaying) return;
         
-        // Clear queue เก่าและเริ่มใหม่ด้วยโน๊ตใหม่
-        notesInQueueRef.current = [];
-        noteIndexRef.current = 0;
-        seqStepRef.current = 0;
-        upDownDirectionRef.current = 'up';
-        
-        if (audioContextRef.current) {
-            nextNoteTimeRef.current = audioContextRef.current.currentTime + 0.05;
-        }
-    }, [arpSequence, isPlaying]);
+        // Cleanup function
+        return () => {
+            if (timerIDRef.current) {
+                clearInterval(timerIDRef.current);
+                timerIDRef.current = null;
+            }
+        };
+    }, [isPlaying, initializeAudio, heldRoots, arpSequence, pattern]);
 
     useEffect(() => { if (masterGainRef.current) masterGainRef.current.gain.value = masterVolume; }, [masterVolume]);
 
-    const togglePlay = useCallback(() => { initializeAudio(); setIsPlaying(prev => !prev); }, [initializeAudio]);
-    const toggleHold = useCallback(() => { const newHold = !isHoldOn; setIsHoldOn(newHold); if (!newHold) setHeldRoots([]); }, [isHoldOn]);
+    const togglePlay = useCallback(() => { 
+        initializeAudio(); 
+        setIsPlaying(prev => !prev); 
+    }, [initializeAudio]);
+    
+    const toggleHold = useCallback(() => { 
+        const newHold = !isHoldOn; 
+        setIsHoldOn(newHold); 
+        if (!newHold) setHeldRoots([]); 
+    }, [isHoldOn]);
 
     const stopAllMidiPlayback = useCallback(() => {
         if (audioContextRef.current) { scheduledEventsRef.current.forEach(id => clearTimeout(id as unknown as number)); scheduledEventsRef.current = []; if (midiMainGainRef.current) { midiMainGainRef.current.disconnect(); midiMainGainRef.current = null; } }

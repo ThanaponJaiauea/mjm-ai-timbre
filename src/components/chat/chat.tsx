@@ -16,6 +16,8 @@ import ChordRecommend from "@/components/ChordRecommend";
 import ChatPromptInput from "./chatPromptInput";
 import { ModelSelected } from "@/components/modal/model_selected";
 import { get_all_by_type } from "@/api/music";
+import Arpeggiator from "@/components/instruments/Arpeggiator";
+import AcidSynth from "@/components/instruments/AcidSynth";
 
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
@@ -141,16 +143,52 @@ export function Chat({ id, initialMessages }: Props) {
                     }
                     if (part.type === "tool-aiRecommend") {
                       const d = part.args || part.input;
+                      // ใช้ key ที่คงที่เพื่อป้องกัน re-mount (ใช้ค่าที่เปลี่ยนบ่อยๆ)
+                      const stableKey = `arp-${d?.bpm ?? 120}-${d?.pattern ?? 'UpDown'}-${d?.musicalKey ?? 'C'}-${d?.scale ?? 'Minor'}`;
+                      const acidKey = `acid-${d?.bpm ?? 120}-${d?.musicalKey ?? 'C'}-${d?.scale ?? 'Minor'}-${d?.rootNote ?? 60}`;
+                      
                       return (
-                        <ChordRecommend
-                          key={partKey}
-                          initialData={{
-                            key: d?.key ?? "C",
-                            mood: d?.mood ?? "Pop",
-                          }}
-                        />
+                        <div key={partKey} className="space-y-4 w-full max-w-5xl">
+                          <ChordRecommend
+                            initialData={{
+                              key: d?.key ?? "C",
+                              mood: d?.mood ?? "Pop",
+                            }}
+                          />
+                          <div className="w-full overflow-auto">
+                            <Arpeggiator
+                              compact={false}
+                              key={stableKey}
+                              initialSettings={{
+                                waveform: d?.waveform ?? "sawtooth",
+                                bpm: d?.bpm ?? 120,
+                                timeDivision: d?.timeDivision ?? "1/16",
+                                pattern: d?.pattern ?? "UpDown",
+                                octaveRange: d?.octaveRange ?? 1,  // เปลี่ยนเป็น 1 เพื่อไม่ให้โน๊ตซ้ำ
+                                gateLength: d?.gateLength ?? 90,
+                                velocity: d?.velocity ?? 0.9,
+                                rootNote: d?.rootNote ?? 60,
+                                masterVolume: d?.masterVolume ?? 0.6,
+                                heldRoots: [],  // ไม่ตั้งค่า heldRoots ให้ user กดเอง
+                                sortNotes: d?.sortNotes ?? true,
+                                sequencerSteps: d?.sequencerSteps ?? Array(16).fill(true),
+                                musicalKey: d?.musicalKey ?? "C",
+                                scale: d?.scale ?? "Minor",
+                              }}
+                            />
+                          </div>
+                          <div className="w-full overflow-auto">
+                            <AcidSynth
+                              key={acidKey}
+                              initialBpm={d?.bpm ?? 140}
+                              initialScale={d?.scale ?? "Minor"}
+                              initialRoot={0}  // ใช้ 0 เสมอ เพื่อให้เสียงเหมือน test-components
+                            />
+                          </div>
+                        </div>
                       );
                     }
+                
 
                     return null;
                   })}
