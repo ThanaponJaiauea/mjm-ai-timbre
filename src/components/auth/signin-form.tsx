@@ -79,12 +79,12 @@ export function SignInForm() {
       </div>
       <div className="flex flex-row gap-8 justify-center">
         <Button variant="outline" className="rounded-full size-14">
-          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/google">
+          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/google?redirectUrl=http://localhost:3000/auth/callback">
             <Image src="/logo/google-logo.svg" alt="Google" width={28} height={28} />
           </Link>
         </Button>
         <Button variant="outline" className="rounded-full size-14">
-          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/apple">
+          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/apple?redirectUrl=http://localhost:3000/auth/callback">
             <Image src="/logo/apple-logo.svg" alt="Apple" width={28} height={28} />
           </Link>
         </Button>

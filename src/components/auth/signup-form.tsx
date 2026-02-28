@@ -86,17 +86,17 @@ export function SignUpForm() {
       </div>
       <div className="flex flex-row gap-8 justify-center">
         <Button variant="outline" className="rounded-full size-14">
-          <Link href="/auth/login/google">
+          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/google?redirectUrl=http://localhost:3000/auth/callback">
             <Image src="/logo/google-logo.svg" alt="Google" width={28} height={28} />
           </Link>
         </Button>
         <Button variant="outline" className="rounded-full size-14">
-          <Link href="/auth/login/apple">
+          <Link href="https://apigateway.yojomjm.com/auth-service/oauth2/apple?redirectUrl=http://localhost:3000/auth/callback">
             <Image src="/logo/apple-logo.svg" alt="Apple" width={28} height={28} />
           </Link>
         </Button>
         <Button variant="outline" className="rounded-full size-14">
-          <Link href="/auth/login/mjm-music">
+          <Link href="#">
             <Image src="/logo/mjm-music-logo.svg" alt="MJM Music" width={28} height={28} />
           </Link>
         </Button>
