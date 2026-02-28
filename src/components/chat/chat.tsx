@@ -29,7 +29,6 @@ interface Props {
 
 export function Chat({ id, initialMessages }: Props) {
   const { loadChatHistory, chatMode } = useChatContext();
-  const { t } = useLanguage();
 
   /* -------------------- CHAT SDK -------------------- */
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -82,10 +81,10 @@ export function Chat({ id, initialMessages }: Props) {
   const handleSelectOption = async (option: string) => {
     setSelectModel(option);
 
-    if (["genre", "key", "instrumental"].includes(option)) {
+    if (["genre", "key", "mood", "instrumental"].includes(option)) {
       setOpenModel(true);
 
-      if (option === "genre" || option === "key") {
+      if (option === "genre" || option === "key" || option === "mood") {
         const res = await get_all_by_type(option);
         setDataType(res.data);
       }
@@ -187,7 +186,15 @@ export function Chat({ id, initialMessages }: Props) {
         instrumentalOptions={["Arp", "Bassline"]}
         onClose={clearModel}
         onSelect={handleSelectValue}
-        title={selectModel === "genre" ? "genre" : selectModel === "key" ? "Key" : "Instrumental"}
+        title={
+          selectModel === "genre"
+            ? "genre"
+            : selectModel === "key"
+              ? "Key"
+              : selectModel === "mood"
+                ? "Mood"
+                : "Instrumental"
+        }
       />
     </div>
   );

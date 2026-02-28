@@ -27,7 +27,7 @@ export function ModelSelected({ model, onClose, title, data, onSelect, instrumen
         </div>
 
         {/* Content */}
-        {title === "genre" || title === "Key" ? (
+        {title === "genre" || title === "Key" || title === "Mood" ? (
           <div className="space-y-3">
             {data?.items?.length ? (
               <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[300px] p-4">

@@ -13,7 +13,7 @@ interface Props {
   value: string;
   onChange: (v: string) => void;
   onSubmit?: (msg: PromptInputMessage) => void;
-  onSelectOption?: (type: "genre" | "key" | "instrumental") => void;
+  onSelectOption?: (type: "genre" | "key" | "mood" | "instrumental") => void;
   showOptions?: boolean;
   placeholder?: string;
   submitting?: boolean;
@@ -46,6 +46,7 @@ export default function ChatPromptInput({
           <div className="flex gap-2 px-3 items-center border-r border-[#2A2A2A] mr-2 shrink-0">
             <BadgeButton label="Style" onClick={() => onSelectOption?.("genre")} />
             <BadgeButton label="Key" onClick={() => onSelectOption?.("key")} />
+            <BadgeButton label="mood" onClick={() => onSelectOption?.("mood")} />
             <BadgeButton label="Instrumental" onClick={() => onSelectOption?.("instrumental")} />
           </div>
         )}
