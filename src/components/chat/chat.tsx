@@ -131,19 +131,20 @@ export function Chat({ id, initialMessages }: Props) {
               <Message from={msg.role} key={msg.id}>
                 <MessageContent className={inter.className}>
                   {msg.parts.map((part, i) => {
+                    const partKey = `${msg.id}-part-${i}`;
+
                     if (part.type === "text") {
                       return (
-                        <Response key={i} shikiTheme={["dark-plus"]}>
+                        <Response key={partKey} shikiTheme={["dark-plus"]}>
                           {part.text}
                         </Response>
                       );
                     }
-
                     if (part.type === "tool-aiRecommend") {
                       const d = part.args || part.input;
                       return (
                         <ChordRecommend
-                          key={i}
+                          key={partKey}
                           initialData={{
                             key: d?.key ?? "C",
                             mood: d?.mood ?? "Pop",

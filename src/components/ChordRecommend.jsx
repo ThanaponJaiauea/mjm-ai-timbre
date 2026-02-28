@@ -175,7 +175,9 @@ export default function ChordRecommend({ initialData }) {
   };
 
   useEffect(() => {
-    if (initialData) handleRecommend(initialData);
+    if (initialData && !recommendedChords.length) {
+      handleRecommend(initialData);
+    }
   }, [initialData]);
 
   return (
