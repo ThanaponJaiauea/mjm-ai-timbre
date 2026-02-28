@@ -147,11 +147,7 @@ export function SignInForm() {
             Forgot password?
           </Link>
         </div>
-        <Button
-          type="submit"
-          className="w-full rounded-full h-12 text-[18px] font-medium"
-          disabled={!form.formState.isValid || isPending}
-        >
+        <Button type="submit" className="w-full rounded-full h-12 text-[18px] font-medium" disabled={isPending}>
           {isPending && <Spinner />}
           <span className="bg-linear-to-r from-[#E759FF] to-[#6174FF] bg-clip-text text-transparent">Sign In</span>
         </Button>
