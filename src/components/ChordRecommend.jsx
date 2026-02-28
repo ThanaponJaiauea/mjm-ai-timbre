@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { recommend_chords, change_chords } from "../api/music";
 import * as Tone from "tone";
 import { Chord } from "@tonaljs/tonal";
+import ModalSubstitution from "@/components/modal/modal_Substitution";
 
 export default function ChordRecommend({ initialData }) {
   const [recommendedChords, setRecommendedChords] = useState([]);
@@ -14,6 +15,11 @@ export default function ChordRecommend({ initialData }) {
   const [loading, setLoading] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
   const [activeChordIndex, setActiveChordIndex] = useState(null);
+
+  // state สำหรับ modal substitution
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentSubs, setCurrentSubs] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(null);
 
   const samplerRef = useRef(null);
 
@@ -143,15 +149,29 @@ export default function ChordRecommend({ initialData }) {
     const currentDegree = currentRomanNumerals[index];
     const targetKey = recommendedKey;
 
+    setSelectedIndex(index);
+
     try {
       const res = await change_chords({
         degree: currentDegree,
         target_key: targetKey,
       });
-      console.log("res", res.data.results);
+
+      if (res.data.results && res.data.results.length > 0) {
+        setCurrentSubs(res.data.results[0].substitutions);
+        setIsModalOpen(true);
+      }
     } catch (err) {
       console.error("Error fetching substitutions:", err);
     }
+  };
+
+  const selectNewChord = newChordName => {
+    const updatedChords = [...recommendedChords];
+    updatedChords[selectedIndex] = newChordName;
+    setRecommendedChords(updatedChords);
+    setIsModalOpen(false);
+    playSingleChord(newChordName);
   };
 
   useEffect(() => {
@@ -210,7 +230,7 @@ export default function ChordRecommend({ initialData }) {
 
                 {idx !== 0 && (
                   <button
-                    onClick={() => handleChangeSingleChord(idx, chord)}
+                    onClick={() => handleChangeSingleChord(idx)}
                     className="cursor-pointer absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-green-400 p-1"
                   >
                     <RefreshCw size={14} />
@@ -235,6 +255,17 @@ export default function ChordRecommend({ initialData }) {
             </button>
           </div>
         </div>
+      )}
+
+      {isModalOpen && (
+        <ModalSubstitution
+          currentRomanNumerals={currentRomanNumerals}
+          selectedIndex={selectedIndex}
+          setIsModalOpen={setIsModalOpen}
+          currentSubs={currentSubs}
+          selectNewChord={selectNewChord}
+          playSingleChord={playSingleChord}
+        />
       )}
     </div>
   );
