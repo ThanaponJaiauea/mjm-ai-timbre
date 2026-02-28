@@ -38,9 +38,11 @@ export function AuthDialog() {
         <AlertDialogHeader>
           <Image src="/logo/mjm-logo.svg" alt="Logo" width={50} height={50} />
         </AlertDialogHeader>
-        {tab === "signin" && <SignInForm />}
-        {tab === "signup" && <SignUpForm />}
-        {tab === "verify-email" && <VerifyEmailForm />}
+        <div className="no-scrollbar -mx-4 max-h-[80vh] overflow-y-auto px-4">
+          {tab === "signin" && <SignInForm />}
+          {tab === "signup" && <SignUpForm />}
+          {tab === "verify-email" && <VerifyEmailForm />}
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );
