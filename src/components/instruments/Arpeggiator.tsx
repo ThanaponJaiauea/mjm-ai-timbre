@@ -10,7 +10,7 @@ type Pattern = 'Up' | 'Down' | 'UpDown' | 'Random';
 type PlaybackState = 'stopped' | 'playing';
 type TimeDivision = '1/4' | '1/8' | '1/16' | '1/32';
 type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
-type Scale = 'Major' | 'Minor' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Locrian' | 'Harmonic Minor' | 'Melodic Minor' | 'Pentatonic Major' | 'Pentatonic Minor' | 'Blues' | 'Chromatic';
+type Scale = 'Major' | 'Minor' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Locrian' | 'Harmonic Minor' | 'Melodic Minor' | 'Pentatonic Major' | 'Pentatonic Minor' | 'Blues' | 'Chromatic' | 'Freestyle';
 
 export interface ArpSettings {
     waveform: Waveform;
@@ -44,7 +44,7 @@ interface ArpeggiatorProps {
 
 // --- CONSTANTS ---
 const TIME_DIVISIONS: Record<TimeDivision, number> = { '1/4': 1, '1/8': 0.5, '1/16': 0.25, '1/32': 0.125 };
-const ROOT_NOTES: Record<string, number> = { 'C': 60, 'C#': 61, 'D': 62, 'D#': 63, 'E': 64, 'F': 65, 'F#': 66, 'G': 67, 'G#': 68, 'A': 69, 'A#': 70, 'B': 71 };
+const ROOT_NOTES: Record<string, number> = { 'C': 60, 'C#': 61, 'Db': 61, 'D': 62, 'D#': 63, 'Eb': 63, 'E': 64, 'F': 65, 'F#': 66, 'Gb': 66, 'G': 67, 'G#': 68, 'Ab': 68, 'A': 69, 'A#': 70, 'Bb': 70, 'B': 71 };
 const SCALE_INTERVALS: Record<Scale, number[]> = {
     'Major': [0, 2, 4, 5, 7, 9, 11],
     'Minor': [0, 2, 3, 5, 7, 8, 10],
@@ -58,10 +58,11 @@ const SCALE_INTERVALS: Record<Scale, number[]> = {
     'Pentatonic Major': [0, 2, 4, 7, 9],
     'Pentatonic Minor': [0, 3, 5, 7, 10],
     'Blues': [0, 3, 5, 6, 7, 10],
-    'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    'Freestyle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // เหมือน Chromatic แต่ไม่ transpose
 };
-const KEY_NAMES: MusicalKey[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const SCALE_NAMES: Scale[] = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Harmonic Minor', 'Melodic Minor', 'Pentatonic Major', 'Pentatonic Minor', 'Blues', 'Chromatic'];
+const KEY_NAMES: MusicalKey[] = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+const SCALE_NAMES: Scale[] = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Harmonic Minor', 'Melodic Minor', 'Pentatonic Major', 'Pentatonic Minor', 'Blues', 'Chromatic', 'Freestyle'];
 
 const GENRE_PRESETS: Record<string, ArpSettings> = {
     'TRANCE': {
@@ -143,6 +144,14 @@ const GENRE_PRESETS: Record<string, ArpSettings> = {
         sortNotes: true,
         sequencerSteps: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
         musicalKey: 'C', scale: 'Major'
+    },
+    'FREESTYLE': {
+        name: 'FREESTYLE', waveform: 'sawtooth', bpm: 120, timeDivision: '1/16', pattern: 'UpDown',
+        octaveRange: 2, gateLength: 90, velocity: 0.8, rootNote: 60,
+        masterVolume: 0.7, heldRoots: [],
+        sortNotes: true,
+        sequencerSteps: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+        musicalKey: 'C', scale: 'Freestyle'
     }
 };
 
@@ -442,6 +451,7 @@ const HardButton = ({ label, active, onClick, color = "red" }: any) => {
         red: 'from-red-600 to-red-800 border-red-900 text-white shadow-[0_0_15px_rgba(255,0,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
         green: 'from-green-600 to-green-800 border-green-900 text-white shadow-[0_0_15px_rgba(0,255,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
         blue: 'from-blue-600 to-blue-800 border-blue-900 text-white shadow-[0_0_15px_rgba(0,0,255,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
+        orange: 'from-orange-500 to-orange-700 border-orange-900 text-white shadow-[0_0_15px_rgba(255,165,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
     };
 
     return (
@@ -498,13 +508,13 @@ const Screw = ({ className }: { className?: string }) => (
 const StepButton = ({ index, active, current, onClick }: { index: number, active: boolean, current: boolean, onClick: () => void }) => {
     const isAccent = index % 4 === 0;
     return (
-        <div className="flex flex-col items-center gap-1">
-            <div className={`w-1.5 h-1.5 rounded-full border border-black/50 transition-all duration-75 ${current ? 'bg-red-500 shadow-[0_0_8px_#f00]' : active ? 'bg-red-900/50' : 'bg-[#111]'}`}></div>
+        <div className="flex flex-col items-center gap-0.5 md:gap-1">
+            <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full border border-black/50 transition-all duration-75 ${current ? 'bg-red-500 shadow-[0_0_8px_#f00]' : active ? 'bg-red-900/50' : 'bg-[#111]'}`}></div>
             <button
                 onClick={onClick}
                 className={`
-          w-8 h-12 rounded-[2px] relative overflow-hidden transition-transform active:scale-[0.98]
-          border-b-[4px] border-r-[1px] border-l-[1px] border-t-[1px]
+          w-6 md:w-8 h-8 md:h-12 rounded-[2px] relative overflow-hidden transition-transform active:scale-[0.98]
+          border-b-[3px] md:border-b-[4px] border-r-[1px] border-l-[1px] border-t-[1px]
           ${active
                         ? isAccent
                             ? 'bg-[#ff9f43] border-[#d35400] shadow-[0_0_10px_rgba(255,159,67,0.4)]'
@@ -520,14 +530,17 @@ const StepButton = ({ index, active, current, onClick }: { index: number, active
     );
 };
 
-const VirtualKeyboard = memo(({ heldRoots, onNoteOn, onNoteOff }: { heldRoots: number[], onNoteOn: (n: number) => void, onNoteOff: (n: number) => void }) => {
+const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: { heldRoots: number[], activeChordNotes?: number[], onNoteOn: (n: number) => void, onNoteOff: (n: number) => void }) => {
     const keys = useMemo(() => {
         let startMidi = 48;
         let endMidi = 72;
 
-        if (heldRoots.length > 0) {
-            const minHeld = Math.min(...heldRoots);
-            const maxHeld = Math.max(...heldRoots);
+        // ใช้ activeChordNotes ถ้ามี (จาก heldNotes) ไม่อย่างนั้นใช้ heldRoots
+        const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+
+        if (displayNotes.length > 0) {
+            const minHeld = Math.min(...displayNotes);
+            const maxHeld = Math.max(...displayNotes);
             if (minHeld < startMidi) startMidi = Math.max(0, minHeld - 2);
             if (maxHeld > endMidi) endMidi = Math.min(127, maxHeld + 2);
         }
@@ -541,43 +554,58 @@ const VirtualKeyboard = memo(({ heldRoots, onNoteOn, onNoteOff }: { heldRoots: n
             generatedKeys.push({ note: noteName, midi: i, type: noteName.includes('#') ? 'black' : 'white' });
         }
         return generatedKeys;
-    }, [heldRoots]);
+    }, [heldRoots, activeChordNotes]);
 
     const whiteKeys = keys.filter(k => k.type === 'white');
     const whiteKeyWidthPct = 100 / whiteKeys.length;
 
     return (
         <div className="w-full relative h-[120px] select-none bg-zinc-950 rounded-b-md overflow-hidden shadow-inner border-t-4 border-zinc-900">
-            {whiteKeys.map((key, index) => (
-                <button
-                    key={key.midi}
-                    onMouseDown={() => onNoteOn(key.midi)} onMouseUp={() => onNoteOff(key.midi)} onMouseLeave={() => onNoteOff(key.midi)}
-                    onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
-                    className={`absolute top-0 h-full border-l border-b-8 border-r border-zinc-300 rounded-b-md active:bg-zinc-200 transition-colors shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] ${heldRoots.includes(key.midi) ? 'bg-blue-100' : 'bg-[#f0f0f0]'}`}
-                    style={{ width: `${whiteKeyWidthPct}%`, left: `${index * whiteKeyWidthPct}%`, zIndex: 1 }}
-                >
-                    <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold text-zinc-400">{key.note}</span>
-                </button>
-            ))}
-            {keys.filter(k => k.type === 'black').map((key) => {
-                const whiteKeyIndex = whiteKeys.findIndex(wk => wk.midi === key.midi - 1);
-                if (whiteKeyIndex === -1) return null;
-                const blackKeyWidthPct = whiteKeyWidthPct * 0.65;
-                const leftPosPct = ((whiteKeyIndex + 1) * whiteKeyWidthPct) - (blackKeyWidthPct / 2);
+            {whiteKeys.map((key, index) => {
+                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
+                const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+                const isPressed = displayNotes.includes(key.midi);
                 return (
                     <button
                         key={key.midi}
                         onMouseDown={() => onNoteOn(key.midi)} onMouseUp={() => onNoteOff(key.midi)} onMouseLeave={() => onNoteOff(key.midi)}
                         onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
-                        className={`absolute top-0 h-[60%] border-b-8 border-x-2 border-black rounded-b-sm z-10 shadow-[2px_2px_5px_rgba(0,0,0,0.5),inset_0_5px_10px_rgba(255,255,255,0.1)] ${heldRoots.includes(key.midi) ? 'bg-blue-900 border-blue-900' : 'bg-gradient-to-b from-[#333] to-black'}`}
+                        className={`absolute top-0 h-full border-l border-b-8 border-r border-zinc-300 rounded-b-md active:bg-zinc-200 transition-all duration-75 shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] ${
+                            isPressed
+                                ? 'bg-gradient-to-b from-[#2ed573] to-[#1a9c50] border-[#1a9c50] shadow-[0_0_20px_rgba(46,213,115,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
+                                : 'bg-[#f0f0f0]'
+                        }`}
+                        style={{ width: `${whiteKeyWidthPct}%`, left: `${index * whiteKeyWidthPct}%`, zIndex: 1 }}
+                    >
+                        <span className={`absolute bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold ${isPressed ? 'text-white drop-shadow-[0_0_3px_rgba(0,0,0,0.8)]' : 'text-zinc-400'}`}>{key.note}</span>
+                    </button>
+                );
+            })}
+            {keys.filter(k => k.type === 'black').map((key) => {
+                const whiteKeyIndex = whiteKeys.findIndex(wk => wk.midi === key.midi - 1);
+                if (whiteKeyIndex === -1) return null;
+                const blackKeyWidthPct = whiteKeyWidthPct * 0.65;
+                const leftPosPct = ((whiteKeyIndex + 1) * whiteKeyWidthPct) - (blackKeyWidthPct / 2);
+                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
+                const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+                const isPressed = displayNotes.includes(key.midi);
+                return (
+                    <button
+                        key={key.midi}
+                        onMouseDown={() => onNoteOn(key.midi)} onMouseUp={() => onNoteOff(key.midi)} onMouseLeave={() => onNoteOff(key.midi)}
+                        onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
+                        className={`absolute top-0 h-[60%] border-b-8 border-x-2 border-black rounded-b-sm z-10 shadow-[2px_2px_5px_rgba(0,0,0,0.5),inset_0_5px_10px_rgba(255,255,255,0.1)] transition-all duration-75 ${
+                            isPressed
+                                ? 'bg-gradient-to-b from-[#00dfd8] to-[#00a896] border-[#00a896] shadow-[0_0_20px_rgba(0,223,216,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
+                                : 'bg-gradient-to-b from-[#333] to-black'
+                        }`}
                         style={{ width: `${blackKeyWidthPct}%`, left: `${leftPosPct}%` }}
                     />
                 );
             })}
         </div>
     );
-});
-VirtualKeyboard.displayName = 'VirtualKeyboard';
+};
 
 const ArpGrid = memo(({ sequence }: { sequence: (number | number[] | null)[] }) => {
     const totalSteps = Math.max(16, sequence.length);
@@ -684,6 +712,7 @@ export default function Arpeggiator({
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeMidiNotes, setActiveMidiNotes] = useState<(number | number[])[]>([]);
     const [heldRoots, setHeldRoots] = useState<number[]>([]);
+    const [activeChordNotes, setActiveChordNotes] = useState<number[]>([]); // โน๊ตทั้งหมดจาก heldNotes สำหรับแสดงบน Virtual Keyboard
     const [waveform, setWaveform] = useState<Waveform>(initialSettings?.waveform || 'sine');
     const [masterVolume, setMasterVolume] = useState(initialSettings?.masterVolume || 0.5);
     const [gateLength, setGateLength] = useState(initialSettings?.gateLength || 100);
@@ -699,6 +728,8 @@ export default function Arpeggiator({
     const [savedMidis, setSavedMidis] = useState<SavedMidi[]>([]);
     const [playbackState, setPlaybackState] = useState<Record<string, PlaybackState>>({});
     const [isHoldOn, setIsHoldOn] = useState(false);
+    const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+    const [keyboardOctave, setKeyboardOctave] = useState(0); // Octave offset for keyboard input (-2 to +2)
     const [currentPresetName, setCurrentPresetName] = useState<string | null>(null);
 
     const [currentStep, setCurrentStep] = useState<number | null>(null);
@@ -741,7 +772,18 @@ export default function Arpeggiator({
 
         let targetRoot = settings.rootNote;
 
+        // เซ็ต activeChordNotes จาก heldNotes (สำหรับแสดงบน Virtual Keyboard)
         if (settings.heldNotes && settings.heldNotes.length > 0) {
+            const flatNotes: string[] = settings.heldNotes.flat() as string[];
+            const allChordNotes = Array.from(new Set(flatNotes.map(noteNameToMidi)));
+            setActiveChordNotes(allChordNotes);
+        }
+
+        // ใช้ heldRoots จาก settings โดยตรง (สำคัญ: เพื่อให้ AI ส่งค่ามาแล้วเล่นได้ทันที)
+        if (settings.heldRoots && settings.heldRoots.length > 0) {
+            setHeldRoots(settings.heldRoots);
+            setIsHoldOn(true);
+        } else if (settings.heldNotes && settings.heldNotes.length > 0) {
             const flatNotes: string[] = settings.heldNotes.flat() as string[];
             const uniqueNotes = Array.from(new Set(flatNotes));
             const rawMidiNotes = uniqueNotes.map(noteNameToMidi);
@@ -756,9 +798,6 @@ export default function Arpeggiator({
                 setHeldRoots(adjustedRoots);
                 setIsHoldOn(true);
             }
-        } else if (settings.heldRoots && settings.heldRoots.length > 0) {
-            setHeldRoots(settings.heldRoots);
-            setIsHoldOn(true);
         }
 
         setRootNote(targetRoot);
@@ -788,13 +827,35 @@ export default function Arpeggiator({
 
     // ตั้งค่า initialKey และ initialScale สำหรับ transpose
     const [initialKey, setInitialKey] = useState<MusicalKey | null>(null);
-    
+    const hasInitializedRef = useRef(false); // เช็คว่าเคยเซ็ตค่าเริ่มต้นแล้วหรือยัง
+
+    // เซ็ตค่าเริ่มต้นจาก initialSettings (รันแค่ครั้งเดียวตอน mount)
     useEffect(() => {
-        if (initialSettings?.musicalKey) {
+        if (!initialSettings || hasInitializedRef.current) return;
+        hasInitializedRef.current = true;
+
+        console.log('[Arpeggiator] Initializing with initialSettings:', initialSettings);
+
+        if (initialSettings.musicalKey) {
             setMusicalKey(initialSettings.musicalKey);
             setInitialKey(initialSettings.musicalKey);
         }
-        if (initialSettings?.scale) setScale(initialSettings.scale);
+        if (initialSettings.scale) setScale(initialSettings.scale);
+
+        // เซ็ต Hold = true โดยอัตโนมัติถ้ามี heldRoots จาก initialSettings (เพื่อให้กด RUN แล้วเล่นได้ทันที)
+        if (initialSettings.heldRoots && initialSettings.heldRoots.length > 0) {
+            console.log('[Arpeggiator] Setting heldRoots:', initialSettings.heldRoots);
+            setHeldRoots(initialSettings.heldRoots);
+            setIsHoldOn(true);
+        }
+
+        // เซ็ต activeChordNotes จาก heldNotes (สำหรับแสดงบน Virtual Keyboard)
+        if (initialSettings.heldNotes && initialSettings.heldNotes.length > 0) {
+            const flatNotes: string[] = initialSettings.heldNotes.flat() as string[];
+            const allChordNotes = Array.from(new Set(flatNotes.map(noteNameToMidi)));
+            console.log('[Arpeggiator] Setting activeChordNotes from heldNotes:', allChordNotes);
+            setActiveChordNotes(allChordNotes);
+        }
     }, []);
 
     useEffect(() => {
@@ -810,38 +871,47 @@ export default function Arpeggiator({
         } catch (e) { console.warn("LocalStorage write failed", e); }
     }, [savedMidis]);
 
-    // คำนวณ activeMidiNotes จาก heldRoots + KEY + SCALE (transpose ตาม key)
+    // คำนวณ activeMidiNotes จาก heldRoots/activeChordNotes + KEY + SCALE (transpose ตาม key)
     useEffect(() => {
-        if (heldRoots.length === 0) {
+        // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
+        const sourceNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+
+        if (sourceNotes.length === 0) {
             setActiveMidiNotes([]);
+            return;
+        }
+
+        // Freestyle: ใช้โน๊ตตามที่กดเลย ไม่บังคับตาม scale
+        if (scale === 'Freestyle') {
+            setActiveMidiNotes([...sourceNotes]);
             return;
         }
 
         // ถ้าไม่มี initialKey ให้ใช้โน๊ตตรงๆ
         if (!initialKey) {
-            setActiveMidiNotes([...heldRoots]);
+            setActiveMidiNotes([...sourceNotes]);
             return;
         }
 
         const scaleIntervals = SCALE_INTERVALS[scale];
         const currentKeyRootMidi = ROOT_NOTES[musicalKey];
         const initialKeyRootMidi = ROOT_NOTES[initialKey];
-        
+
         // คำนวณ interval จาก initialKey แล้ว transpose ไป currentKey
-        const transposedNotes = heldRoots.map(keyMidi => {
+        const transposedNotes = sourceNotes.map(keyMidi => {
             // คำนวณ interval จาก initialKey
             const initialInterval = (keyMidi - initialKeyRootMidi + 1200) % 12;
             const octaveOffset = Math.floor((keyMidi - initialKeyRootMidi) / 12) * 12;
-            
+
             // Transpose ไปยัง currentKey
             const transposedNote = currentKeyRootMidi + initialInterval + octaveOffset;
-            
+
             // ปรับให้อยู่ใน scale (ถ้าไม่อยู่ใน scale ให้หาโน๊ตที่ใกล้ที่สุด)
             const rawInterval = (transposedNote - currentKeyRootMidi + 1200) % 12;
             if (scaleIntervals.includes(rawInterval)) {
                 return transposedNote;
             }
-            
+
             // หาโน๊ตที่ใกล้ที่สุดใน scale
             let closestInterval = scaleIntervals[0];
             let minDiff = 12;
@@ -853,12 +923,12 @@ export default function Arpeggiator({
                     closestInterval = interval;
                 }
             }
-            
+
             return currentKeyRootMidi + closestInterval + octaveOffset;
         });
 
         setActiveMidiNotes(transposedNotes);
-    }, [heldRoots, musicalKey, scale, initialKey]);
+    }, [heldRoots, activeChordNotes, musicalKey, scale, initialKey]);
 
     const arpSequence = useMemo(() => {
         if (activeMidiNotes.length === 0) return [];
@@ -928,14 +998,102 @@ export default function Arpeggiator({
         }
     }, [masterVolume]);
 
-    const handleNoteOn = useCallback((midiNote: number) => { 
-        initializeAudio(); 
-        setHeldRoots(prev => [...prev, midiNote]); 
-    }, [initializeAudio]);
-    
-    const handleNoteOff = useCallback((midiNote: number) => { 
-        if (!isHoldOn) setHeldRoots(prev => prev.filter(n => n !== midiNote)); 
+    // State สำหรับ Undo
+    const [heldRootsHistory, setHeldRootsHistory] = useState<number[][]>([]);
+    const [activeChordNotesHistory, setActiveChordNotesHistory] = useState<number[][]>([]);
+
+    // State สำหรับเก็บโน๊ตที่กดในขณะ Hold ปิด (momentary notes)
+    const momentaryNotes = useRef<Set<number>>(new Set());
+
+    const handleNoteOn = useCallback((midiNote: number) => {
+        initializeAudio();
+
+        if (isHoldOn) {
+            // Hold เปิด: บันทึก state สำหรับ Undo แล้ว toggle โน๊ต (latch mode)
+            setHeldRootsHistory(prev => [...prev.slice(-9), [...heldRoots]]);
+            setActiveChordNotesHistory(prev => [...prev.slice(-9), [...activeChordNotes]]);
+
+            // Toggle โน๊ต: ถ้ามีอยู่แล้วให้ลบออก, ถ้าไม่มีให้เพิ่ม
+            setHeldRoots(prev => {
+                if (prev.includes(midiNote)) {
+                    return prev.filter(n => n !== midiNote);
+                }
+                return [...prev, midiNote];
+            });
+            setActiveChordNotes(prev => {
+                if (prev.includes(midiNote)) {
+                    return prev.filter(n => n !== midiNote);
+                }
+                return [...prev, midiNote];
+            });
+        } else {
+            // Hold ปิด: เพิ่มโน๊ตแบบ momentary (ผู้ใช้ต้องกดค้างเอง ปล่อยมือ=โน๊ตหลุด)
+            momentaryNotes.current.add(midiNote);
+            setHeldRoots(prev => {
+                if (!prev.includes(midiNote)) {
+                    return [...prev, midiNote];
+                }
+                return prev;
+            });
+            setActiveChordNotes(prev => {
+                if (!prev.includes(midiNote)) {
+                    return [...prev, midiNote];
+                }
+                return prev;
+            });
+        }
+    }, [initializeAudio, isHoldOn, heldRoots, activeChordNotes]);
+
+    const handleNoteOff = useCallback((midiNote: number) => {
+        if (!isHoldOn) {
+            // Hold ปิด: ลบเฉพาะ momentary notes (โน๊ตที่ผู้ใช้กดค้างไว้)
+            // ปล่อยมือ = โน๊ตหลุด (momentary mode)
+            if (momentaryNotes.current.has(midiNote)) {
+                momentaryNotes.current.delete(midiNote);
+                setHeldRoots(prev => prev.filter(n => n !== midiNote));
+                setActiveChordNotes(prev => prev.filter(n => n !== midiNote));
+            }
+        }
+        // Hold เปิด: ไม่ลบโน๊ต (โน๊ตจะค้างอยู่จนกว่าจะกดซ้ำหรือ CLEAR) - latch mode
     }, [isHoldOn]);
+
+    // Clear momentary notes เมื่อ Hold ถูกเปิด หรือเมื่อหยุดเล่น
+    useEffect(() => {
+        if (isHoldOn) {
+            momentaryNotes.current.clear();
+        }
+    }, [isHoldOn]);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            momentaryNotes.current.clear();
+        }
+    }, [isPlaying]);
+
+    // ฟังก์ชัน Undo
+    const undo = useCallback(() => {
+        if (heldRootsHistory.length > 0) {
+            const lastRoots = heldRootsHistory[heldRootsHistory.length - 1];
+            setHeldRoots(lastRoots);
+            setHeldRootsHistory(prev => prev.slice(0, -1));
+        }
+        if (activeChordNotesHistory.length > 0) {
+            const lastChords = activeChordNotesHistory[activeChordNotesHistory.length - 1];
+            setActiveChordNotes(lastChords);
+            setActiveChordNotesHistory(prev => prev.slice(0, -1));
+        }
+    }, [heldRootsHistory, activeChordNotesHistory]);
+
+    // ฟังก์ชัน Clear โน๊ตทั้งหมด (ลบหมดทุกอย่าง)
+    const clearNotes = useCallback(() => {
+        // บันทึก state ปัจจุบันสำหรับ Undo
+        setHeldRootsHistory(prev => [...prev.slice(-9), [...heldRoots]]);
+        setActiveChordNotesHistory(prev => [...prev.slice(-9), [...activeChordNotes]]);
+
+        // ลบโน๊ตทั้งหมด
+        setHeldRoots([]);
+        setActiveChordNotes([]);
+    }, [heldRoots, activeChordNotes]);
 
     // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
     useEffect(() => {
@@ -944,31 +1102,61 @@ export default function Arpeggiator({
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('keydown', handleUserGesture);
         };
-        
+
         document.addEventListener('click', handleUserGesture);
         document.addEventListener('keydown', handleUserGesture);
-        
+
         return () => {
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('keydown', handleUserGesture);
         };
     }, [initializeAudio]);
 
+    // Keyboard input for playing VIRTUAL KEYBED
     useEffect(() => {
-        const KEY_TO_MIDI: Record<string, number> = { 'a': 60, 's': 62, 'd': 64, 'f': 65, 'g': 67, 'h': 69, 'j': 71, 'k': 72 };
+        // Map computer keyboard to MIDI notes (2 octaves starting from C3 + keyboardOctave offset)
+        const baseOctave = 3 + keyboardOctave; // Default C3, can be changed with octave buttons
+        const KEY_TO_MIDI: Record<string, number> = {
+            // Lower octave (starts from C of baseOctave)
+            'a': 12 * baseOctave, 'w': 12 * baseOctave + 1, 's': 12 * baseOctave + 1, 'e': 12 * baseOctave + 2, 'd': 12 * baseOctave + 3, 'f': 12 * baseOctave + 4, 't': 12 * baseOctave + 5, 'g': 12 * baseOctave + 6, 'y': 12 * baseOctave + 7, 'h': 12 * baseOctave + 8, 'u': 12 * baseOctave + 9, 'j': 12 * baseOctave + 10, 'k': 12 * baseOctave + 11,
+            // Upper octave (starts from C of baseOctave+1)
+            'z': 12 * (baseOctave + 1), 's': 12 * (baseOctave + 1) + 1, 'x': 12 * (baseOctave + 1) + 2, 'd': 12 * (baseOctave + 1) + 3, 'c': 12 * (baseOctave + 1) + 4, 'v': 12 * (baseOctave + 1) + 5, 'g': 12 * (baseOctave + 1) + 6, 'b': 12 * (baseOctave + 1) + 7, 'n': 12 * (baseOctave + 1) + 8, 'm': 12 * (baseOctave + 1) + 9, ',': 12 * (baseOctave + 1) + 10, '.': 12 * (baseOctave + 1) + 11, '/': 12 * (baseOctave + 1) + 12
+        };
+
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
-            if (e.ctrlKey || e.metaKey || e.altKey || target.tagName === 'INPUT' || target.tagName === 'SELECT') return;
+            // Ignore if typing in input or modifier keys are pressed
+            if (e.ctrlKey || e.metaKey || e.altKey || target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable) return;
+
             const key = e.key.toLowerCase();
-            if (KEY_TO_MIDI[key] && !pressedKeysRef.current.has(key)) { e.preventDefault(); pressedKeysRef.current.add(key); handleNoteOn(KEY_TO_MIDI[key]); }
+            if (KEY_TO_MIDI[key] && !pressedKeysRef.current.has(key)) {
+                e.preventDefault();
+                pressedKeysRef.current.add(key);
+                handleNoteOn(KEY_TO_MIDI[key]);
+            }
         };
+
         const handleKeyUp = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
-            if (KEY_TO_MIDI[key]) { e.preventDefault(); pressedKeysRef.current.delete(key); handleNoteOff(KEY_TO_MIDI[key]); }
+            if (KEY_TO_MIDI[key]) {
+                e.preventDefault();
+                pressedKeysRef.current.delete(key);
+
+                if (!isHoldOn) {
+                    handleNoteOff(KEY_TO_MIDI[key]);
+                }
+                // Hold เปิด: ไม่ลบโน๊ต (latch mode)
+            }
         };
-        window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
-        return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
-    }, [handleNoteOn, handleNoteOff]);
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [isHoldOn, handleNoteOn, handleNoteOff, keyboardOctave]);
 
     const LOOKAHEAD = 25.0;
     const SCHEDULE_AHEAD_TIME = 0.2;
@@ -1167,10 +1355,17 @@ export default function Arpeggiator({
         setIsPlaying(prev => !prev); 
     }, [initializeAudio]);
     
-    const toggleHold = useCallback(() => { 
-        const newHold = !isHoldOn; 
-        setIsHoldOn(newHold); 
-        if (!newHold) setHeldRoots([]); 
+    const toggleHold = useCallback(() => {
+        const newHold = !isHoldOn;
+        setIsHoldOn(newHold);
+
+        // เมื่อปิด HOLD → ล้าง momentary notes และโน๊ตที่ค้างไว้จากการเปิด HOLD
+        if (!newHold) {
+            momentaryNotes.current.clear();
+            // ลบโน๊ตที่ค้างไว้ตอน HOLD เปิด
+            setHeldRoots([]);
+            setActiveChordNotes([]);
+        }
     }, [isHoldOn]);
 
     const stopAllMidiPlayback = useCallback(() => {
@@ -1241,94 +1436,91 @@ export default function Arpeggiator({
 
     // --- FULL MODE RENDER ---
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 font-sans select-none text-[#ededed]">
-            <div className="relative w-full max-w-5xl rounded-xl border-4 border-[#1a1a1a] flex flex-col overflow-hidden bg-[#222] bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_0_0_2px_rgba(255,255,255,0.1)]">
+        <div className="w-full bg-[#0a0a0a] p-2 md:p-4 font-sans select-none text-[#ededed]">
+            <div className="relative w-full rounded-lg md:rounded-xl border-2 md:border-4 border-[#1a1a1a] flex flex-col overflow-hidden bg-[#222] bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_0_0_2px_rgba(255,255,255,0.1)]">
 
-                <Screw className="absolute top-3 left-3" />
-                <Screw className="absolute top-3 right-3" />
-                <Screw className="absolute bottom-3 left-3" />
-                <Screw className="absolute bottom-3 right-3" />
+                <Screw className="absolute top-1 md:top-3 left-1 md:left-3 w-2 h-2 md:w-3 md:h-3" />
+                <Screw className="absolute top-1 md:top-3 right-1 md:right-3 w-2 h-2 md:w-3 md:h-3" />
+                <Screw className="absolute bottom-1 md:bottom-3 left-1 md:left-3 w-2 h-2 md:w-3 md:h-3" />
+                <Screw className="absolute bottom-1 md:bottom-3 right-1 md:right-3 w-2 h-2 md:w-3 md:h-3" />
 
-                <div className="h-14 bg-[#111] border-b border-black flex items-center justify-between px-8 z-10 shadow-md">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-black text-zinc-400 tracking-[0.2em] italic" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>YOJOIES ARPEGGIATOR</h1>
-                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mt-1 border-l border-zinc-700 pl-3"> ARPEGGIATOR MIDI</span>
+                <div className="h-10 md:h-14 bg-[#111] border-b border-black flex items-center justify-between px-3 md:px-8 z-10 shadow-md">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <h1 className="text-lg md:text-3xl font-black text-zinc-400 tracking-[0.2em] italic" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>YOJOIES ARP </h1>
+                        <span className="text-[6px] md:text-[9px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5 md:mt-1 border-l border-zinc-700 pl-1 md:pl-3 hidden xs:inline">ARPEGGIATOR MIDI</span>
                     </div>
                     <div className="flex flex-col items-end">
-                        <div className="text-[8px] text-zinc-600 font-mono tracking-wider">SER: 808-909-MKII</div>
-                        <div className="flex gap-1 mt-1">
-                            <div className="w-12 h-1.5 bg-zinc-800 rounded-full shadow-inner"></div>
-                            <div className="w-12 h-1.5 bg-zinc-800 rounded-full shadow-inner"></div>
+                        <div className="text-[6px] md:text-[8px] text-zinc-600 font-mono tracking-wider">SER: 808-909-MKII</div>
+                        <div className="flex gap-0.5 md:gap-1 mt-0.5 md:mt-1">
+                            <div className="w-6 md:w-12 h-1 md:h-1.5 bg-zinc-800 rounded-full shadow-inner"></div>
+                            <div className="w-6 md:w-12 h-1 md:h-1.5 bg-zinc-800 rounded-full shadow-inner"></div>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-8 relative z-10 w-full">
+                <div className="p-2 md:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 md:gap-3 lg:gap-4 relative z-10 w-full">
 
-                    <div className="col-span-1 md:col-span-2 lg:col-span-12 h-40 bg-black rounded p-1 border-b border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.5)] relative group mb-2">
-                        <div className="absolute top-3 left-4 text-[9px] text-zinc-500 font-mono z-30 tracking-wider">SEQUENCE MONITOR // <span className={isPlaying ? "text-[#2ed573] animate-pulse" : "text-red-500"}>{isPlaying ? "RUNNING" : "STOPPED"}</span></div>
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-12 h-28 md:h-36 lg:h-40 bg-black rounded p-1 border-b border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.5)] relative group mb-1 md:mb-2">
+                        <div className="absolute top-1 left-1 md:top-2 md:left-2 text-[8px] md:text-[10px] text-zinc-500 font-mono z-30 tracking-wider">SEQUENCE MONITOR // <span className={isPlaying ? "text-[#2ed573] animate-pulse" : "text-red-500"}>{isPlaying ? "RUNNING" : "STOPPED"}</span> {scale === 'Freestyle' && <span className="text-[#ff0080] ml-2">🎹 FREESTYLE MODE</span>}</div>
                         <ArpDisplay sequence={arpSequence} currentStep={currentStep} />
                     </div>
 
-                    <div className="col-span-1 lg:col-span-3 flex flex-col gap-4 min-h-[180px]">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
                         <ModulePanel title="OSCILLATOR" className="h-full flex flex-col justify-between">
-                            <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="grid grid-cols-4 gap-0.5 md:gap-1 mt-1">
                                 {(['sine', 'square', 'sawtooth', 'triangle'] as const).map(w => (
-                                    <button key={w} onClick={() => setWaveform(w)} className={`h-8 rounded-[2px] text-[8px] font-bold uppercase border transition-all duration-100 shadow-sm ${waveform === w ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'}`}>{w.slice(0, 3)}</button>
+                                    <button key={w} onClick={() => setWaveform(w)} className={`h-7 md:h-8 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border transition-all duration-100 shadow-sm ${waveform === w ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'}`}>{w.slice(0, 3)}</button>
                                 ))}
                             </div>
-                            <div className="flex justify-between items-end mt-4 px-1">
-                                <Knob label="Gate" value={gateLength} min={10} max={128} onChange={setGateLength} size={50} color="#00dfd8" />
-                                <Knob label="Vel" value={velocity} min={0} max={1} onChange={setVelocity} size={50} color="#00dfd8" />
+                            <div className="flex justify-between items-end mt-1 md:mt-2 px-0.5">
+                                <Knob label="Gate" value={gateLength} min={10} max={128} onChange={setGateLength} size={35} color="#00dfd8" />
+                                <Knob label="Vel" value={velocity} min={0} max={1} onChange={setVelocity} size={35} color="#00dfd8" />
                             </div>
                         </ModulePanel>
                     </div>
 
-                    <div className="col-span-1 lg:col-span-3 min-h-[180px]">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 min-h-[120px] md:min-h-[150px]">
                         <PresetSelector currentPreset={currentPresetName} onSelect={loadSettings} />
                     </div>
 
-                    <div className="col-span-1 md:col-span-2 lg:col-span-6 flex flex-col gap-4 min-h-[180px]">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-6 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
                         <ModulePanel title="SEQUENCE ENGINE" className="h-full">
-                            <div className="absolute top-2 right-3 flex gap-1.5"><Led active={arpSequence.length > 0} /><Led active={isPlaying} color="#ff0080" /></div>
-                            <div className="grid grid-cols-2 gap-6 mt-2">
-                                <div className="space-y-4">
-                                    <div className="space-y-1">
-                                        <div className="text-[8px] text-zinc-500 font-bold tracking-widest text-center">PATTERN</div>
-                                        <div className="grid grid-cols-2 gap-1.5">
+                            <div className="absolute top-1 right-1 md:top-2 md:right-2 flex gap-0.5 md:gap-1"><Led active={arpSequence.length > 0} /><Led active={isPlaying} color="#ff0080" /></div>
+                            <div className="grid grid-cols-2 gap-2 md:gap-4 mt-1">
+                                <div className="space-y-1 md:space-y-2">
+                                    <div className="space-y-0.5">
+                                        <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center">PATTERN</div>
+                                        <div className="grid grid-cols-2 gap-0.5">
                                             {(['Up', 'Down', 'UpDown', 'Random'] as const).map(p => (
-                                                <button key={p} onClick={() => setPattern(p)} className={`h-6 text-[8px] uppercase font-bold rounded-[2px] border ${pattern === p ? 'bg-[#ffa502] text-black border-[#e67e22] shadow-[0_0_8px_rgba(255,165,2,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{p}</button>
+                                                <button key={p} onClick={() => setPattern(p)} className={`h-6 md:h-7 text-[7px] md:text-[9px] uppercase font-bold rounded-[2px] border ${pattern === p ? 'bg-[#ffa502] text-black border-[#e67e22] shadow-[0_0_8px_rgba(255,165,2,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{p}</button>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="flex justify-between px-2">
-                                        <Knob label="Octave" value={octaveRange} min={1} max={4} onChange={setOctaveRange} size={40} color="#ffa502" />
-                                        <Knob label="Root" value={rootNote} min={36} max={84} onChange={setRootNote} size={40} color="#ffa502" />
+                                    <div className="flex justify-between px-0.5">
+                                        <Knob label="Octave" value={octaveRange} min={1} max={4} onChange={setOctaveRange} size={30} color="#ffa502" />
+                                        <Knob label="Root" value={rootNote} min={36} max={84} onChange={setRootNote} size={30} color="#ffa502" />
                                     </div>
-                                    <div className="mt-2">
-                                        <div className="text-[8px] text-zinc-500 font-bold tracking-widest text-center mb-1">TIME DIV</div>
-                                        <div className="grid grid-cols-4 gap-1">
+                                    <div className="mt-0.5 md:mt-1">
+                                        <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">TIME DIV</div>
+                                        <div className="grid grid-cols-4 gap-0.5">
                                             {(['1/4', '1/8', '1/16', '1/32'] as const).map(t => (
-                                                <button key={t} onClick={() => setTimeDivision(t as TimeDivision)} className={`h-6 text-[7px] font-mono tracking-wider rounded-[1px] border transition-all ${timeDivision === t ? 'bg-[#ffa502] text-black border-[#ffa502] shadow-[0_0_8px_rgba(255,165,2,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{t}</button>
+                                                <button key={t} onClick={() => setTimeDivision(t as TimeDivision)} className={`h-6 md:h-7 text-[7px] md:text-[9px] font-mono tracking-wider rounded-[1px] border transition-all ${timeDivision === t ? 'bg-[#ffa502] text-black border-[#ffa502] shadow-[0_0_8px_rgba(255,165,2,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{t}</button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <div className="text-[8px] text-zinc-500 font-bold tracking-widest text-center mb-1">KEY</div>
-                                    <div className="grid grid-cols-3 gap-1">
+                                <div className="space-y-1">
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">KEY</div>
+                                    <div className="grid grid-cols-4 gap-0.5">
                                         {KEY_NAMES.map(key => (
-                                            <button key={key} onClick={() => setMusicalKey(key)} className={`h-6 text-[7px] font-bold rounded-[1px] border transition-all ${musicalKey === key ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{key}</button>
+                                            <button key={key} onClick={() => setMusicalKey(key)} className={`h-6 md:h-7 text-[7px] md:text-[9px] font-bold rounded-[1px] border transition-all ${musicalKey === key ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{key}</button>
                                         ))}
                                     </div>
-                                    <div className="text-[8px] text-zinc-500 font-bold tracking-widest text-center mb-1 mt-2">SCALE</div>
-                                    <div className="grid grid-cols-2 gap-1">
-                                        {SCALE_NAMES.slice(0, 10).map(s => (
-                                            <button key={s} onClick={() => setScale(s)} className={`h-5 text-[6px] font-mono tracking-wider rounded-[1px] border-l-2 transition-all ${scale === s ? 'bg-[#222] border-[#2ed573] text-[#2ed573]' : 'bg-[#111] border-zinc-800 text-zinc-600 hover:text-zinc-400'}`}>{s}</button>
-                                        ))}
-                                        {SCALE_NAMES.slice(10).map(s => (
-                                            <button key={s} onClick={() => setScale(s)} className={`h-5 text-[6px] font-mono tracking-wider rounded-[1px] border-l-2 transition-all ${scale === s ? 'bg-[#222] border-[#2ed573] text-[#2ed573]' : 'bg-[#111] border-zinc-800 text-zinc-600 hover:text-zinc-400'}`}>{s}</button>
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5 mt-0.5 md:mt-1">SCALE</div>
+                                    <div className="grid grid-cols-2 gap-0.5 max-h-[80px] md:max-h-[100px] overflow-y-auto custom-scrollbar">
+                                        {SCALE_NAMES.map(s => (
+                                            <button key={s} onClick={() => setScale(s)} className={`h-5 md:h-6 text-[7px] md:text-[9px] font-mono tracking-wider rounded-[1px] border-l-2 transition-all ${scale === s ? 'bg-[#222] border-[#2ed573] text-[#2ed573]' : 'bg-[#111] border-zinc-800 text-zinc-600 hover:text-zinc-400'}`}>{s}</button>
                                         ))}
                                     </div>
                                 </div>
@@ -1336,28 +1528,60 @@ export default function Arpeggiator({
                         </ModulePanel>
                     </div>
 
-                    <div className="col-span-1 md:col-span-2 lg:col-span-12 flex flex-col md:flex-row gap-4 h-full">
-                        <div className="w-full md:w-1/3 lg:w-1/4">
-                            <ModulePanel title="MASTER" className="h-full flex flex-col min-h-[160px]">
-                                <div className="flex justify-around mb-6 mt-2">
-                                    <Knob label="BPM" value={bpm} min={60} max={200} onChange={setBpm} size={60} color="white" />
-                                    <Knob label="Vol" value={masterVolume} min={0} max={1} onChange={setMasterVolume} size={60} color="white" />
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-12 flex flex-col sm:flex-row gap-2 md:gap-3 h-full">
+                        <div className="w-full sm:w-1/3 lg:w-1/4">
+                            <ModulePanel title="MASTER" className="h-full flex flex-col min-h-[120px] md:min-h-[140px]">
+                                <div className="flex justify-around mb-2 md:mb-4 mt-1">
+                                    <Knob label="BPM" value={bpm} min={60} max={200} onChange={setBpm} size={45} color="white" />
+                                    <Knob label="Vol" value={masterVolume} min={0} max={1} onChange={setMasterVolume} size={45} color="white" />
                                 </div>
-                                <div className="mt-auto grid grid-cols-2 gap-3">
+                                <div className="mt-auto grid grid-cols-4 gap-1 md:gap-2">
                                     <HardButton label={isPlaying ? "STOP" : "RUN"} active={isPlaying} color="green" onClick={togglePlay} />
                                     <HardButton label="HOLD" active={isHoldOn} color="red" onClick={toggleHold} />
+                                    <HardButton label="UNDO" active={heldRootsHistory.length > 0} color="blue" onClick={undo} />
+                                    <HardButton label="CLEAR" active={false} color="orange" onClick={clearNotes} />
                                 </div>
+                                <div className="mt-5 text-[8px] md:text-[10px] text-zinc-400 text-center px-1 font-medium">
+                                    {isHoldOn
+                                        ? "🔒 HOLD: Release key to sustain note"
+                                        : "🔓 HOLD: Press & hold for note"}
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-1 px-1">
+                                    <button
+                                        onClick={() => setKeyboardOctave(prev => Math.max(-2, prev - 1))}
+                                        disabled={keyboardOctave <= -2}
+                                        className="flex-1 h-6 bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#444] text-[8px] md:text-[9px] font-bold rounded border border-[#222] text-[#2ed573]"
+                                    >
+                                        OCT -
+                                    </button>
+                                    <span className="text-[7px] md:text-[8px] text-zinc-400 px-1">
+                                        C{3 + keyboardOctave}
+                                    </span>
+                                    <button
+                                        onClick={() => setKeyboardOctave(prev => Math.min(2, prev + 1))}
+                                        disabled={keyboardOctave >= 2}
+                                        className="flex-1 h-6 bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#444] text-[8px] md:text-[9px] font-bold rounded border border-[#222] text-[#2ed573]"
+                                    >
+                                        OCT +
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => setShowKeyboardHelp(true)}
+                                    className="mt-2 text-[7px] md:text-[8px] text-[#2ed573] hover:text-[#00dfd8] underline text-center px-1 w-full"
+                                >
+                                    ⌨️ Keyboard Shortcuts
+                                </button>
                             </ModulePanel>
                         </div>
 
-                        <div className="flex-1">
-                            <div className="bg-[#1a1a1a] rounded p-3 pt-4 border border-[#111] shadow-inner relative overflow-hidden h-full flex flex-col justify-center">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-yellow-500 to-red-500 opacity-20"></div>
-                                <div className="flex items-center justify-between mb-3 px-1">
-                                    <div className="text-[10px] font-black text-[#555] tracking-[0.2em] flex items-center gap-2"><span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_5px_red]"></span>RHYTHM GATE</div>
-                                    <div className="text-[8px] text-[#444] font-mono">16-STEP GATE CONTROL</div>
+                        <div className="flex-1 min-w-0">
+                            <div className="bg-[#1a1a1a] rounded p-1 md:p-2 pt-2 md:pt-3 border border-[#111] shadow-inner relative overflow-hidden h-full flex flex-col justify-center">
+                                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-orange-500 via-yellow-500 to-red-500 opacity-20"></div>
+                                <div className="flex items-center justify-between mb-1 md:mb-2 px-0.5">
+                                    <div className="text-[8px] md:text-[10px] font-black text-[#555] tracking-[0.2em] flex items-center gap-0.5 md:gap-1"><span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_5px_red]"></span>RHYTHM GATE</div>
+                                    <div className="text-[7px] md:text-[9px] text-[#444] font-mono">16-STEP</div>
                                 </div>
-                                <div className="flex justify-between gap-0.5 md:gap-1 px-1">
+                                <div className="flex gap-0.5 px-0.5 overflow-x-auto pb-1 custom-scrollbar min-w-full">
                                     {sequencerSteps.map((isActive, i) => (
                                         <StepButton key={i} index={i} active={isActive} current={currentSeqStep === i} onClick={() => { const newSteps = [...sequencerSteps]; newSteps[i] = !newSteps[i]; setSequencerSteps(newSteps); }} />
                                     ))}
@@ -1366,14 +1590,14 @@ export default function Arpeggiator({
                         </div>
                     </div>
 
-                    <div className="col-span-1 md:col-span-2 lg:col-span-12 mt-4">
-                        <div className="bg-[#111] p-1 rounded-t-sm border-t border-[#333] pb-0 shadow-lg">
-                            <div className="text-[8px] text-center text-[#555] tracking-[0.3em] mb-1 font-bold">VIRTUAL KEYBED CONTROLLER</div>
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-12 mt-1 md:mt-2">
+                        <div className="bg-[#111] p-0.5 rounded-t-sm border-t border-[#333] pb-0 shadow-lg">
+                            <div className="text-[7px] md:text-[9px] text-center text-[#555] tracking-[0.3em] mb-0.5 font-bold">VIRTUAL KEYBED CONTROLLER</div>
                         </div>
-                        <VirtualKeyboard heldRoots={heldRoots} onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} />
+                        <VirtualKeyboard key={`kbd-${activeChordNotes.join(',')}-${heldRoots.join(',')}`} heldRoots={heldRoots} activeChordNotes={activeChordNotes} onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} />
                     </div>
 
-                    <div className="col-span-1 md:col-span-2 lg:col-span-12 bg-[#080808] rounded border border-[#333] p-3 flex flex-col md:flex-row items-center justify-between shadow-[inset_0_0_10px_black] gap-4">
+                    {/* <div className="col-span-1 md:col-span-2 lg:col-span-12 bg-[#080808] rounded border border-[#333] p-3 flex flex-col md:flex-row items-center justify-between shadow-[inset_0_0_10px_black] gap-4">
                         <div className="flex items-center gap-6 pl-2 w-full overflow-hidden">
                             <div className="text-right shrink-0 hidden md:block">
                                 <div className="text-[9px] font-bold text-[#666] tracking-wider">DATA RECORDER</div>
@@ -1397,9 +1621,86 @@ export default function Arpeggiator({
                             <button onClick={handleSaveMidi} className="flex-1 md:flex-none h-8 px-3 bg-[#cc8e35] text-black text-[9px] font-bold rounded-[1px] border-b-2 border-[#a36b22] active:translate-y-[1px] shadow-lg hover:bg-[#eeb158]">SAVE</button>
                             <button onClick={() => setSavedMidis([])} className="flex-1 md:flex-none h-8 px-3 bg-[#333] text-[#888] text-[9px] font-bold rounded-[1px] border-b-2 border-[#111] active:translate-y-[1px] shadow hover:text-white">CLEAR</button>
                         </div>
-                    </div>
+                    </div> */}
 
                 </div>
+
+                {/* Keyboard Help Modal */}
+                {showKeyboardHelp && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowKeyboardHelp(false)}>
+                        <div className="bg-[#222] border-2 border-[#2ed573] p-6 rounded shadow-[0_0_50px_rgba(46,213,115,0.3)] max-w-lg w-full text-center" onClick={e => e.stopPropagation()}>
+                            <div className="text-xl font-bold text-[#2ed573] mb-4 tracking-widest">⌨️ KEYBOARD SHORTCUTS</div>
+
+                            <div className="text-[10px] text-zinc-400 mb-4 space-y-3">
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                                    <div className="text-[9px] text-[#ffa502] font-bold mb-2">🎼 CURRENT OCTAVE</div>
+                                    <div className="text-[8px] text-zinc-400">
+                                        Press <span className="text-[#2ed573] font-bold">OCT -</span> or <span className="text-[#2ed573] font-bold">OCT +</span> to change starting octave
+                                    </div>
+                                    <div className="text-[8px] text-[#2ed573] font-bold mt-1">
+                                        Currently: C{3 + keyboardOctave} (Z key)
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                                    <div className="text-[9px] text-[#2ed573] font-bold mb-2">🎹 LOWER OCTAVE</div>
+                                    <div className="grid grid-cols-7 gap-1 text-[8px] font-mono">
+                                        <div className="bg-[#333] p-1 rounded">A=C</div>
+                                        <div className="bg-[#222] p-1 rounded">W=C#</div>
+                                        <div className="bg-[#333] p-1 rounded">S=D</div>
+                                        <div className="bg-[#222] p-1 rounded">E=D#</div>
+                                        <div className="bg-[#333] p-1 rounded">D=E</div>
+                                        <div className="bg-[#333] p-1 rounded">F=F</div>
+                                        <div className="bg-[#222] p-1 rounded">T=F#</div>
+                                        <div className="bg-[#333] p-1 rounded">G=G</div>
+                                        <div className="bg-[#222] p-1 rounded">Y=G#</div>
+                                        <div className="bg-[#333] p-1 rounded">H=A</div>
+                                        <div className="bg-[#222] p-1 rounded">U=A#</div>
+                                        <div className="bg-[#333] p-1 rounded">J=B</div>
+                                        <div className="bg-[#333] p-1 rounded">K=C↑</div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                                    <div className="text-[9px] text-[#00dfd8] font-bold mb-2">🎹 UPPER OCTAVE</div>
+                                    <div className="grid grid-cols-7 gap-1 text-[8px] font-mono">
+                                        <div className="bg-[#333] p-1 rounded">Z=C</div>
+                                        <div className="bg-[#222] p-1 rounded">S=C#</div>
+                                        <div className="bg-[#333] p-1 rounded">X=D</div>
+                                        <div className="bg-[#222] p-1 rounded">D=D#</div>
+                                        <div className="bg-[#333] p-1 rounded">C=E</div>
+                                        <div className="bg-[#333] p-1 rounded">V=F</div>
+                                        <div className="bg-[#222] p-1 rounded">G=F#</div>
+                                        <div className="bg-[#333] p-1 rounded">B=G</div>
+                                        <div className="bg-[#222] p-1 rounded">N=G#</div>
+                                        <div className="bg-[#333] p-1 rounded">M=A</div>
+                                        <div className="bg-[#222] p-1 rounded">,=A#</div>
+                                        <div className="bg-[#333] p-1 rounded">.=B</div>
+                                        <div className="bg-[#333] p-1 rounded">/=C↑↑</div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-[#333] text-left">
+                                    <div className="text-[9px] text-[#ffa502] font-bold mb-2">💡 TIPS</div>
+                                    <ul className="text-[8px] space-y-1 text-zinc-400">
+                                        <li>• <span className="text-[#2ed573]">HOLD ON 🔒</span>: Press key once to toggle note on/off</li>
+                                        <li>• <span className="text-[#00dfd8]">HOLD OFF 🔓</span>: Hold key down for note (release to stop)</li>
+                                        <li>• White keys = natural notes (A,S,D,F,G,H,J,K / Z,X,C,V,B,N,M)</li>
+                                        <li>• Black keys = sharps (W,E,T,Y,U / S,D,G,N,.)</li>
+                                        <li>• <span className="text-[#ffa502]">OCT - / OCT +</span>: Change starting octave (C3 to C5)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowKeyboardHelp(false)}
+                                className="px-6 py-2 bg-[#2ed573] text-black text-[10px] font-bold tracking-widest border border-[#1a9c50] hover:bg-[#00dfd8] rounded"
+                            >
+                                GOT IT!
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {modalState.show && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">

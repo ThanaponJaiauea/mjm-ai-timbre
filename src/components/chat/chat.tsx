@@ -167,20 +167,21 @@ export function Chat({ id, initialMessages }: Props) {
                                 compact={false}
                                 key={stableKey}
                                 initialSettings={{
-                                  waveform: d?.waveform ?? "sawtooth",
-                                  bpm: d?.bpm ?? 120,
-                                  timeDivision: d?.timeDivision ?? "1/16",
-                                  pattern: d?.pattern ?? "UpDown",
-                                  octaveRange: d?.octaveRange ?? 1, // เปลี่ยนเป็น 1 เพื่อไม่ให้โน๊ตซ้ำ
-                                  gateLength: d?.gateLength ?? 90,
-                                  velocity: d?.velocity ?? 0.9,
-                                  rootNote: d?.rootNote ?? 60,
-                                  masterVolume: d?.masterVolume ?? 0.6,
-                                  heldRoots: [], // ไม่ตั้งค่า heldRoots ให้ user กดเอง
-                                  sortNotes: d?.sortNotes ?? true,
-                                  sequencerSteps: d?.sequencerSteps ?? Array(16).fill(true),
-                                  musicalKey: d?.musicalKey ?? "C",
-                                  scale: d?.scale ?? "Minor",
+                                  waveform: arp.waveform ?? "sawtooth",
+                                  bpm: arp.bpm ?? 120,
+                                  timeDivision: arp.timeDivision ?? "1/16",
+                                  pattern: arp.pattern ?? "UpDown",
+                                  octaveRange: arp.octaveRange ?? 1,
+                                  gateLength: arp.gateLength ?? 90,
+                                  velocity: arp.velocity ?? 0.9,
+                                  rootNote: arp.rootNote ?? 60,
+                                  masterVolume: arp.masterVolume ?? 0.6,
+                                  heldRoots: arp.heldRoots ?? [],
+                                  sortNotes: arp.sortNotes ?? true,
+                                  sequencerSteps: arp.sequencerSteps ?? Array(16).fill(true),
+                                  musicalKey: arp.musicalKey ?? "C",
+                                  scale: arp.scale ?? "Minor",
+                                  heldNotes: arp.heldNotes ?? [],
                                 }}
                               />
                             </div>
