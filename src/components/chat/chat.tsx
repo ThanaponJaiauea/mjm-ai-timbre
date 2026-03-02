@@ -33,7 +33,9 @@ export function Chat({ id, initialMessages }: Props) {
   const { loadChatHistory, chatMode } = useChatContext();
 
   const [arp, setArp] = useState(null);
+  const [acid, setAcid] = useState(null);
   console.log("arp state:", arp);
+  console.log("acid state:", acid);
 
   /* -------------------- CHAT SDK -------------------- */
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -159,36 +161,40 @@ export function Chat({ id, initialMessages }: Props) {
                             }}
                             setArp={setArp}
                           />
-                          <div className="w-full overflow-auto">
-                            <Arpeggiator
-                              compact={false}
-                              key={stableKey}
-                              initialSettings={{
-                                waveform: d?.waveform ?? "sawtooth",
-                                bpm: d?.bpm ?? 120,
-                                timeDivision: d?.timeDivision ?? "1/16",
-                                pattern: d?.pattern ?? "UpDown",
-                                octaveRange: d?.octaveRange ?? 1, // เปลี่ยนเป็น 1 เพื่อไม่ให้โน๊ตซ้ำ
-                                gateLength: d?.gateLength ?? 90,
-                                velocity: d?.velocity ?? 0.9,
-                                rootNote: d?.rootNote ?? 60,
-                                masterVolume: d?.masterVolume ?? 0.6,
-                                heldRoots: [], // ไม่ตั้งค่า heldRoots ให้ user กดเอง
-                                sortNotes: d?.sortNotes ?? true,
-                                sequencerSteps: d?.sequencerSteps ?? Array(16).fill(true),
-                                musicalKey: d?.musicalKey ?? "C",
-                                scale: d?.scale ?? "Minor",
-                              }}
-                            />
-                          </div>
-                          <div className="w-full overflow-auto">
-                            <AcidSynth
-                              key={acidKey}
-                              initialBpm={d?.bpm ?? 140}
-                              initialScale={d?.scale ?? "Minor"}
-                              initialRoot={0} // ใช้ 0 เสมอ เพื่อให้เสียงเหมือน test-components
-                            />
-                          </div>
+                          {arp !== null && (
+                            <div className="w-full overflow-auto">
+                              <Arpeggiator
+                                compact={false}
+                                key={stableKey}
+                                initialSettings={{
+                                  waveform: d?.waveform ?? "sawtooth",
+                                  bpm: d?.bpm ?? 120,
+                                  timeDivision: d?.timeDivision ?? "1/16",
+                                  pattern: d?.pattern ?? "UpDown",
+                                  octaveRange: d?.octaveRange ?? 1, // เปลี่ยนเป็น 1 เพื่อไม่ให้โน๊ตซ้ำ
+                                  gateLength: d?.gateLength ?? 90,
+                                  velocity: d?.velocity ?? 0.9,
+                                  rootNote: d?.rootNote ?? 60,
+                                  masterVolume: d?.masterVolume ?? 0.6,
+                                  heldRoots: [], // ไม่ตั้งค่า heldRoots ให้ user กดเอง
+                                  sortNotes: d?.sortNotes ?? true,
+                                  sequencerSteps: d?.sequencerSteps ?? Array(16).fill(true),
+                                  musicalKey: d?.musicalKey ?? "C",
+                                  scale: d?.scale ?? "Minor",
+                                }}
+                              />
+                            </div>
+                          )}
+                          {acid !== null && (
+                            <div className="w-full overflow-auto">
+                              <AcidSynth
+                                key={acidKey}
+                                initialBpm={d?.bpm ?? 140}
+                                initialScale={d?.scale ?? "Minor"}
+                                initialRoot={0} // ใช้ 0 เสมอ เพื่อให้เสียงเหมือน test-components
+                              />
+                            </div>
+                          )}
                         </div>
                       );
                     }
