@@ -3,14 +3,15 @@
 
 import { Play, RefreshCw, Loader2, Music4 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { recommend_chords, change_chords } from "../api/music";
+import { recommend_chords, change_chords, generate_settings } from "../api/music";
 import * as Tone from "tone";
 import { Chord } from "@tonaljs/tonal";
 import ModalSubstitution from "@/components/modal/modal_Substitution";
 
-export default function ChordRecommend({ initialData }) {
+export default function ChordRecommend({ initialData, setArp }) {
   const [recommendedChords, setRecommendedChords] = useState([]);
   const [recommendedKey, setRecommendedKey] = useState("");
+  const [selectedMood, setSelectedMood] = useState("");
   const [currentRomanNumerals, setCurrentRomanNumerals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
@@ -105,6 +106,8 @@ export default function ChordRecommend({ initialData }) {
       const response = await recommend_chords({ data: queryData });
       const { chords, roman_numerals } = response.data;
 
+      console.log("response", response.data);
+
       const chordArray = typeof chords === "string" ? chords.split(",").map(c => c.trim()) : chords;
       const romanArray =
         typeof roman_numerals === "string" ? roman_numerals.split(",").map(r => r.trim()) : roman_numerals;
@@ -136,6 +139,7 @@ export default function ChordRecommend({ initialData }) {
 
       combined.sort((a, b) => a.weight - b.weight);
       setRecommendedKey(response.data.key);
+      setSelectedMood(response.data.mood);
       setRecommendedChords(combined.map(item => item.chord));
       setCurrentRomanNumerals(combined.map(item => item.roman));
     } catch (error) {
@@ -179,6 +183,25 @@ export default function ChordRecommend({ initialData }) {
       handleRecommend(initialData);
     }
   }, [initialData]);
+
+  const handleGenerate = async () => {
+    if (recommendedChords.length === 0) return;
+
+    setLoading(true);
+    try {
+      const payload = {
+        chords: recommendedChords,
+        mood: selectedMood,
+      };
+
+      const response = await generate_settings(payload);
+      setArp(response.data);
+    } catch (error) {
+      console.error("Error generating synth settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="my-4">
@@ -254,6 +277,15 @@ export default function ChordRecommend({ initialData }) {
                 <Play size={16} fill={activeChordIndex !== null ? "transparent" : "white"} />
               )}
               {!isAudioReady ? "LOADING AUDIO..." : activeChordIndex !== null ? "PLAYING..." : "PLAY SEQUENCE"}
+            </button>
+
+            <button
+              onClick={handleGenerate}
+              disabled={recommendedChords.length === 0 || loading}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-md font-bold flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+              {loading ? "GENERATING..." : "GENERATE NEW PROGRESSION"}
             </button>
           </div>
         </div>
