@@ -1,5 +1,6 @@
 /** @format */
 
+import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/hooks/LanguageProvider";
@@ -39,7 +40,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <NuqsAdapter>
             <PlaybackProvider>
-              <LanguageProvider>{children}</LanguageProvider>
+              <LanguageProvider>
+                <Providers>{children}</Providers>
+              </LanguageProvider>
             </PlaybackProvider>
           </NuqsAdapter>
           <Toaster />

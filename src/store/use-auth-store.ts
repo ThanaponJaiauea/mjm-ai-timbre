@@ -23,6 +23,7 @@ interface AuthStore extends AuthState {
 }
 
 const AUTH_STORE_KEY = "auth";
+const TOKEN_KEY = "token";
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   accessExpire: null,
