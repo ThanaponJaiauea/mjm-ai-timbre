@@ -118,7 +118,7 @@ export function Chat({ id, initialMessages }: Props) {
   const assistantTyping = lastMessage?.role === "assistant" && lastMessage.parts.some(p => p.type === "text" && p.text);
 
   return (
-    <div className="relative flex flex-col w-full h-screen bg-black overflow-hidden z-0">
+    <div className="relative flex flex-col w-full">
       <Conversation>
         <ConversationContent>
           {chatMode === "chat" && messages.length === 0 && (

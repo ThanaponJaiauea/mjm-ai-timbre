@@ -53,7 +53,7 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
         )}
       </div>
 
-      <div className="mt-20 flex flex-col items-center gap-10">
+      <div className="mt-20 flex flex-col items-center gap-8">
         <div>
           <h1 className={`font-bold text-[70px] ${montserrat.className}`}>CREATIVE AI MUSIC</h1>
           <p className="text-center text-sm">
