@@ -446,7 +446,7 @@ const Knob = ({ label, value, min, max, onChange, color = "#2ed573", size = 60 }
     );
 };
 
-const HardButton = ({ label, active, onClick, color = "red" }: any) => {
+const HardButton = ({ label, active, onClick, color = "red" }: { label: React.ReactNode, active: boolean, onClick: () => void, color?: string }) => {
     const activeColors: Record<string, string> = {
         red: 'from-red-600 to-red-800 border-red-900 text-white shadow-[0_0_15px_rgba(255,0,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
         green: 'from-green-600 to-green-800 border-green-900 text-white shadow-[0_0_15px_rgba(0,255,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
@@ -572,7 +572,7 @@ const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: {
                         onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
                         className={`absolute top-0 h-full border-l border-b-8 border-r border-zinc-300 rounded-b-md active:bg-zinc-200 transition-all duration-75 shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] ${
                             isPressed
-                                ? 'bg-gradient-to-b from-[#2ed573] to-[#1a9c50] border-[#1a9c50] shadow-[0_0_20px_rgba(46,213,115,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
+                                ? 'bg-gradient-to-b from-[#60a5fa] to-[#2563eb] border-b-[#2563eb] shadow-[0_0_20px_rgba(96,165,250,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
                                 : 'bg-[#f0f0f0]'
                         }`}
                         style={{ width: `${whiteKeyWidthPct}%`, left: `${index * whiteKeyWidthPct}%`, zIndex: 1 }}
@@ -596,7 +596,7 @@ const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: {
                         onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
                         className={`absolute top-0 h-[60%] border-b-8 border-x-2 border-black rounded-b-sm z-10 shadow-[2px_2px_5px_rgba(0,0,0,0.5),inset_0_5px_10px_rgba(255,255,255,0.1)] transition-all duration-75 ${
                             isPressed
-                                ? 'bg-gradient-to-b from-[#00dfd8] to-[#00a896] border-[#00a896] shadow-[0_0_20px_rgba(0,223,216,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
+                                ? 'bg-gradient-to-b from-[#93c5fd] to-[#3b82f6] border-b-[#3b82f6] shadow-[0_0_20px_rgba(147,197,255,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
                                 : 'bg-gradient-to-b from-[#333] to-black'
                         }`}
                         style={{ width: `${blackKeyWidthPct}%`, left: `${leftPosPct}%` }}
