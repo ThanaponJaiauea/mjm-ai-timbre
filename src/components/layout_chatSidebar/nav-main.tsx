@@ -23,21 +23,10 @@ import {
 import NavChatHistorySkeleton from "./ืnavChatHistorySkeleton";
 
 import en from "@/locales/en.json";
-
-interface NavItem {
-  title: string;
-  url: string;
-  icon?: string | LucideIcon;
-  isActive?: boolean;
-  items?: {
-    title: string;
-    url: string;
-    icon?: string | LucideIcon;
-  }[];
-}
+import Image from "next/image";
+import { icon_create, icon_creator_guide, icon_download, icon_subscription, icon_vst_plugins } from "@/images";
 
 interface NavMainProps {
-  items: NavItem[];
   openToggleSidebar: () => void;
   state: "collapsed" | "expanded" | string;
   t: typeof en;
@@ -45,12 +34,10 @@ interface NavMainProps {
   chatHistoryLoading: boolean;
   pathname: string;
   handleNewChat: () => void;
-  handleChatVocal: () => void;
   handDeleteChat: (id: string, isCurrentPage: boolean) => void;
 }
 
 export function NavMain({
-  items,
   openToggleSidebar,
   state,
   t,
@@ -58,12 +45,11 @@ export function NavMain({
   chatHistoryLoading,
   pathname,
   handleNewChat,
-  handleChatVocal,
   handDeleteChat,
 }: NavMainProps) {
   return (
     <SidebarGroup className="flex flex-col">
-      {/* New Chat */}
+      {/* Create */}
       <SidebarMenu>
         <SidebarMenuButton
           size="lg"
@@ -74,23 +60,32 @@ export function NavMain({
             openToggleSidebar();
           }}
         >
-          <span className={`${state === "collapsed" && "hidden"}`}>{t.newchat.trim()}</span>
+          <Image alt="create" width={24} height={24} src={icon_create} />
+          <span className={`${state === "collapsed" && "hidden"}`}>Create</span>
         </SidebarMenuButton>
       </SidebarMenu>
 
-      {/* Vocal */}
+      {/* Subscription Plan */}
       <SidebarMenu>
-        <SidebarMenuButton
-          size="lg"
-          isActive={pathname === "/mjm-ai/chat/vocal" || false}
-          tooltip={t.vocal}
-          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
-          onClick={() => {
-            handleChatVocal();
-            openToggleSidebar();
-          }}
-        >
-          <span className={`${state === "collapsed" && "hidden"}`}>{t.vocal}</span>
+        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
+          <Image alt="subscription" width={24} height={24} src={icon_subscription} />
+          <span className={`${state === "collapsed" && "hidden"}`}>Subscription Plan</span>
+        </SidebarMenuButton>
+      </SidebarMenu>
+
+      {/* Creator Guide */}
+      <SidebarMenu>
+        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
+          <Image alt="creator guide" width={24} height={24} src={icon_creator_guide} />
+          <span className={`${state === "collapsed" && "hidden"}`}>Creator Guide</span>
+        </SidebarMenuButton>
+      </SidebarMenu>
+
+      {/* Creator Guide */}
+      <SidebarMenu>
+        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
+          <Image alt="vst plugins" width={24} height={24} src={icon_vst_plugins} />
+          <span className={`${state === "collapsed" && "hidden"}`}>VST Plugins</span>
         </SidebarMenuButton>
       </SidebarMenu>
 
@@ -104,6 +99,7 @@ export function NavMain({
           asChild
         >
           <Link href="/mjm-ai/chat/download" onClick={openToggleSidebar}>
+            <Image alt="download app" width={24} height={24} src={icon_download} />
             <span className={`${state === "collapsed" && "hidden"}`}>{t.downloadApp}</span>
           </Link>
         </SidebarMenuButton>
