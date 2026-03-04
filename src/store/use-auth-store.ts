@@ -23,6 +23,7 @@ interface AuthStore extends AuthState {
 }
 
 const AUTH_STORE_KEY = "auth";
+const TOKEN_KEY = "token";
 
 export const useAuthStore = create<AuthStore>(set => ({
   accessExpire: null,
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthStore>(set => ({
   setAuth: data => {
     set(() => ({ ...data }));
     globalThis.localStorage.setItem(AUTH_STORE_KEY, JSON.stringify(data));
+    globalThis.localStorage.setItem(TOKEN_KEY, data.accessToken!);
   },
   clearAuth: () => {
     set(() => ({
@@ -49,5 +51,6 @@ export const useAuthStore = create<AuthStore>(set => ({
       user: null,
     }));
     globalThis.localStorage.removeItem(AUTH_STORE_KEY);
+    globalThis.localStorage.removeItem(TOKEN_KEY);
   },
 }));
