@@ -4,6 +4,8 @@
 
 import { SidebarMenu, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { icon_mjm } from "@/images";
 
 export function NavHeader({
   toggleSidebar,
@@ -23,7 +25,9 @@ export function NavHeader({
           className="cursor-pointer text-center "
           onClick={state === "collapsed" ? toggleSidebar : () => router.push("/mjm-ai/chat")}
           title={state === "collapsed" ? "Expand Sidebar" : "New Chat"}
-        ></Button>
+        >
+          <Image src={icon_mjm} alt="Icon MJM" width={60} height={60} />
+        </Button>
 
         <SidebarTrigger className={state === "collapsed" ? "hidden" : "flex cursor-pointer"} />
       </SidebarMenuItem>

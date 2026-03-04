@@ -5,6 +5,7 @@ import icon_subscription from "./icon/icon_subscription.png";
 import icon_creator_guide from "./icon/icon_creator_guide.png";
 import icon_vst_plugins from "./icon/icon_vst_plugins.png";
 import icon_download from "./icon/icon_download.png";
+import icon_mjm from "./icon/icon_mjm.png";
 
 export {
   bg_ChatFirstPage,
@@ -14,4 +15,5 @@ export {
   icon_creator_guide,
   icon_vst_plugins,
   icon_download,
+  icon_mjm,
 };

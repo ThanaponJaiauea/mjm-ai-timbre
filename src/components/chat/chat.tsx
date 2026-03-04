@@ -21,12 +21,13 @@ import AcidSynth from "@/components/instruments/AcidSynth";
 
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
+import { MyUIMessage } from "@/utils/message-type";
 
 const inter = Inter({});
 
 interface Props {
-  id?: string;
-  initialMessages?: any[];
+  id: string; // Make sure id is always a string
+  initialMessages?: MyUIMessage[]; // Use the correct type
 }
 
 export function Chat({ id, initialMessages }: Props) {
@@ -66,9 +67,12 @@ export function Chat({ id, initialMessages }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (message: PromptInputMessage) => {
-    if (!message.text.trim() || isSubmitting || status === "streaming") return;
+    if (!message?.text?.trim() || isSubmitting || status === "streaming") return;
+
     setIsSubmitting(true);
+
     sendMessage({ text: message.text });
+
     setText("");
   };
 
@@ -148,7 +152,6 @@ export function Chat({ id, initialMessages }: Props) {
                     }
                     if (part.type === "tool-aiRecommend") {
                       const d = part.args || part.input;
-                      // ใช้ key ที่คงที่เพื่อป้องกัน re-mount (ใช้ค่าที่เปลี่ยนบ่อยๆ)
                       const stableKey = `arp-${d?.bpm ?? 120}-${d?.pattern ?? "UpDown"}-${d?.musicalKey ?? "C"}-${d?.scale ?? "Minor"}`;
                       const acidKey = `acid-${d?.bpm ?? 120}-${d?.musicalKey ?? "C"}-${d?.scale ?? "Minor"}-${d?.rootNote ?? 60}`;
 
