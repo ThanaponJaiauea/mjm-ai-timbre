@@ -22,9 +22,12 @@ const ollama = createOllama({
 const ALLOWED_KEYS = ["A", "Ab", "B", "Bb", "C", "D", "Db", "E", "Eb", "F", "F#", "G"];
 
 export async function POST(req: Request) {
+  const authHeader = req.headers.get("authorization");
+  const token = authHeader?.split(" ")[1];
+
   const { message, chatId }: { message: UIMessage; chatId: string } = await req.json();
 
-  await saveChat({ chatId, messages: [message], mode: "CHAT_AI" });
+  await saveChat({ chatId, messages: [message], mode: "CHAT_AI" }, token);
   const modelMessages = await convertToModelMessages([message]);
 
   const stream = createUIMessageStream({
@@ -64,7 +67,7 @@ Assistant: (วิเคราะห์แล้วเลือกคีย์ C
     originalMessages: [message],
     onFinish: async ({ responseMessage }) => {
       try {
-        saveChat({ chatId, messages: [responseMessage], mode: "CHAT_AI" });
+        saveChat({ chatId, messages: [responseMessage], mode: "CHAT_AI" }, token);
       } catch (error) {
         console.error(error);
       }

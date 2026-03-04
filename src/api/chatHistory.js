@@ -1,13 +1,14 @@
 /** @format */
-import axios from "../config/axios";
+import axios from "@/config/axios";
 
-// export const saveChat = async (data) => {
-//   await axios.post(`${baseUrl}/chat/save`, data);
-// };
-
-export const saveChat = async data => {
+export const saveChat = async (data, token = null) => {
   try {
-    await axios.post("/chat/save", data);
+    const config = {};
+    if (token) {
+      config.headers = { Authorization: `Bearer ${token}` };
+    }
+
+    return await axios.post("/chat/save", data, config);
   } catch (err) {
     console.error("saveChat error:", err.response?.data || err.message);
   }

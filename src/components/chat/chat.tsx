@@ -44,12 +44,19 @@ export function Chat({ id, initialMessages }: Props) {
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages }) => ({
-        body: {
-          message: messages[messages.length - 1],
-          chatId: id,
-        },
-      }),
+      prepareSendMessagesRequest: ({ messages }) => {
+        const token = localStorage.getItem("ACCESS_TOKEN");
+
+        return {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: {
+            message: messages[messages.length - 1],
+            chatId: id,
+          },
+        };
+      },
     }),
     onFinish: ({ messages }) => {
       if (messages.length <= 2) loadChatHistory();
@@ -118,7 +125,7 @@ export function Chat({ id, initialMessages }: Props) {
   const assistantTyping = lastMessage?.role === "assistant" && lastMessage.parts.some(p => p.type === "text" && p.text);
 
   return (
-    <div className="relative flex flex-col w-full">
+    <div className="relative flex flex-col w-full h-screen">
       <Conversation>
         <ConversationContent>
           {chatMode === "chat" && messages.length === 0 && (

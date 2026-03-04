@@ -9,6 +9,7 @@ import { UserMenu } from "../auth/user-menu";
 import { ButtonSign } from "../button/button_sign";
 import ChatPromptInput from "./chatPromptInput";
 import { useState } from "react";
+import { saveChat } from "@/api/chatHistory";
 
 const montserrat = Montserrat();
 
