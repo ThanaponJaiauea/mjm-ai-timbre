@@ -15,7 +15,7 @@ export default function DawPage() {
         <Separator />
         <section>
           <Image src="/images/daw/workflow.svg" alt="DAW Integration" width={1200} height={800} />
-          <h1 className="text-3xl font-semibold mt-12">🎵 Drag-and-Drop Workflow</h1>
+          <h1 className="text-2xl font-semibold mt-12">🎵 Drag-and-Drop Workflow</h1>
           <p className="text-base font-extralight mt-4">
             Users can drag MIDI files directly from the plugin into a track within their DAW.
           </p>
@@ -30,7 +30,7 @@ export default function DawPage() {
         </section>
         <Separator />
         <section>
-          <h1 className="text-3xl font-semibold">🔐 Offline Grace Period</h1>
+          <h1 className="text-2xl font-semibold">🔐 Offline Grace Period</h1>
           <p className="text-base font-extralight mt-4">
             The VST plugin remains fully usable even without an internet connection.
           </p>
