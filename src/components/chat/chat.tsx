@@ -208,12 +208,16 @@ export function Chat({ id, initialMessages }: Props) {
                                   sequencerSteps: arp.sequencerSteps ?? Array(16).fill(true),
                                   musicalKey: arp.musicalKey ?? "C",
                                   scale: arp.scale ?? "Minor",
-                                  heldNotes: (arp.heldNotes ? (Array.isArray(arp.heldNotes[0]) ? arp.heldNotes.flat() : arp.heldNotes) : []) as string[],
-                                  style: arp.style ?? "",
-                                  mood: arp.mood ?? "",
-                                  chords: arp.chords ?? [],
+                                  heldNotes: (arp.heldNotes
+                                    ? Array.isArray(arp.heldNotes[0])
+                                      ? arp.heldNotes.flat()
+                                      : arp.heldNotes
+                                    : []) as string[],
+                                  style: arp?.style ?? "",
+                                  mood: arp?.mood ?? "",
+                                  chords: arp?.chords ?? [],
                                 }}
-                                onSave={(settings) => {
+                                onSave={settings => {
                                   handleSaveArp(settings);
                                 }}
                               />
