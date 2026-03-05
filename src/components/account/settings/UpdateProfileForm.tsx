@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { getAccessToken } from "@/utils/local-storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -23,17 +24,16 @@ export function UpdateProfileForm({ username }: Readonly<{ username: string }>) 
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    await new Promise(resolve => setTimeout(resolve, 1000));
     try {
       const res = await fetch("https://apigateway.yojomjm.com/auth-service/v1/account", {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getAccessToken()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
       });
+
       if (!res.ok) {
         if (res.status === 417) {
           const error = await res.json();
@@ -43,8 +43,7 @@ export function UpdateProfileForm({ username }: Readonly<{ username: string }>) 
           throw new Error("Failed to update profile");
         }
       }
-      const data = await res.json();
-      console.log(data);
+
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error(error);
