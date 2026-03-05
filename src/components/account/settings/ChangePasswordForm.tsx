@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { getAccessToken } from "@/utils/local-storage";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -81,7 +81,7 @@ export function ChangePasswordForm() {
                     <FieldLabel htmlFor={field.name}>Current Password</FieldLabel>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </FieldContent>
-                  <Input
+                  <PasswordInput
                     {...field}
                     id={field.name}
                     aria-invalid={fieldState.invalid}
@@ -100,7 +100,7 @@ export function ChangePasswordForm() {
                     <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </FieldContent>
-                  <Input
+                  <PasswordInput
                     {...field}
                     id={field.name}
                     aria-invalid={fieldState.invalid}
@@ -119,7 +119,7 @@ export function ChangePasswordForm() {
                     <FieldLabel htmlFor={field.name}>Confirm Password</FieldLabel>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </FieldContent>
-                  <Input
+                  <PasswordInput
                     {...field}
                     id={field.name}
                     aria-invalid={fieldState.invalid}
