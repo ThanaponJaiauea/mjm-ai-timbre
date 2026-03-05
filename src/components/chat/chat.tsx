@@ -15,13 +15,15 @@ import ChatFirstPage from "@/components/chat/ChatFirstPage";
 import ChordRecommend from "@/components/ChordRecommend";
 import ChatPromptInput from "./chatPromptInput";
 import { ModelSelected } from "@/components/modal/model_selected";
-import { get_all_by_type } from "@/api/music";
+import { get_all_by_type, save_arp_settings } from "@/api/music";
 import Arpeggiator from "@/components/instruments/Arpeggiator";
 import AcidSynth from "@/components/instruments/AcidSynth";
 
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
 import { MyUIMessage } from "@/utils/message-type";
+import { ca } from "zod/v4/locales";
+import { getAccessToken } from "@/utils/local-storage";
 
 const inter = Inter({});
 
@@ -43,7 +45,7 @@ export function Chat({ id, initialMessages }: Props) {
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages }) => {
-        const token = localStorage.getItem("ACCESS_TOKEN");
+        const token = getAccessToken();
 
         return {
           headers: {
@@ -118,12 +120,22 @@ export function Chat({ id, initialMessages }: Props) {
     setDataType(null);
   };
 
+  const handleSaveArp = async data => {
+    if (data.length === 0) return;
+
+    try {
+      await save_arp_settings(data);
+    } catch (error) {
+      console.error("Error saving arp settings:", error);
+    }
+  };
+
   /* -------------------- RENDER -------------------- */
   const lastMessage = messages[messages.length - 1];
   const assistantTyping = lastMessage?.role === "assistant" && lastMessage.parts.some(p => p.type === "text" && p.text);
 
   return (
-    <div className="relative flex flex-col w-full h-screen">
+    <div className="relative flex flex-col w-full h-screen p-4">
       <Conversation>
         <ConversationContent>
           {chatMode === "chat" && messages.length === 0 && (
@@ -193,6 +205,13 @@ export function Chat({ id, initialMessages }: Props) {
                                   heldNotes: arp.heldNotes ?? [],
                                 }}
                               />
+
+                              <button
+                                onClick={() => handleSaveArp(arp)}
+                                className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded mt-2 mb-10"
+                              >
+                                Save Arpdsdsd
+                              </button>
                             </div>
                           )}
                           {acid !== null && (

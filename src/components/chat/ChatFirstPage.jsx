@@ -9,7 +9,6 @@ import { UserMenu } from "../auth/user-menu";
 import { ButtonSign } from "../button/button_sign";
 import ChatPromptInput from "./chatPromptInput";
 import { useState } from "react";
-import { saveChat } from "@/api/chatHistory";
 
 const montserrat = Montserrat();
 
@@ -38,7 +37,7 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
   };
 
   return (
-    <section className="flex flex-col items-center relative w-full p-4">
+    <section className="flex flex-col items-center relative w-full">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <Image src={bg_ChatFirstPage} alt="Background" fill priority className="object-cover" />
       </div>
