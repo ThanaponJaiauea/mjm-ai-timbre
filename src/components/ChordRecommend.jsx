@@ -8,7 +8,7 @@ import * as Tone from "tone";
 import { Chord } from "@tonaljs/tonal";
 import ModalSubstitution from "@/components/modal/modal_Substitution";
 
-export default function ChordRecommend({ initialData, setArp, arp }) {
+export default function ChordRecommend({ initialData, setArp, selectStyle }) {
   const [recommendedChords, setRecommendedChords] = useState([]);
   const [recommendedKey, setRecommendedKey] = useState("");
   const [selectedMood, setSelectedMood] = useState("");
@@ -21,8 +21,6 @@ export default function ChordRecommend({ initialData, setArp, arp }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentSubs, setCurrentSubs] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
-
-  console.log("arp", arp);
 
   const samplerRef = useRef(null);
 
@@ -194,6 +192,7 @@ export default function ChordRecommend({ initialData, setArp, arp }) {
       const payload = {
         chords: recommendedChords,
         mood: selectedMood,
+        style: selectStyle,
       };
 
       const response = await generate_settings(payload);

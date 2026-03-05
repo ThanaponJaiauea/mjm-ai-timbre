@@ -36,6 +36,8 @@ export function Chat({ id, initialMessages }: Props) {
   const { loadChatHistory, chatMode } = useChatContext();
 
   const [arp, setArp] = useState(null);
+  console.log("arp", arp);
+
   const [acid, setAcid] = useState(null);
 
   /* -------------------- CHAT SDK -------------------- */
@@ -94,6 +96,7 @@ export function Chat({ id, initialMessages }: Props) {
   /* -------------------- MODEL SELECTED -------------------- */
   const [openModel, setOpenModel] = useState(false);
   const [selectModel, setSelectModel] = useState<string | null>(null);
+  const [selectStyle, setSelectStyle] = useState<any>(null);
   const [dataType, setDataType] = useState<any>(null);
 
   const handleSelectOption = async (option: string) => {
@@ -110,6 +113,10 @@ export function Chat({ id, initialMessages }: Props) {
   };
 
   const handleSelectValue = (value: string) => {
+    if (selectModel === "genre") {
+      setSelectStyle(value);
+    }
+
     setText(prev => (prev ? `${prev}, ${value}` : value));
     clearModel();
   };
@@ -181,6 +188,7 @@ export function Chat({ id, initialMessages }: Props) {
                             }}
                             setArp={setArp}
                             arp={arp}
+                            selectStyle={selectStyle}
                           />
                           {arp !== null && (
                             <div className="w-full overflow-auto">
