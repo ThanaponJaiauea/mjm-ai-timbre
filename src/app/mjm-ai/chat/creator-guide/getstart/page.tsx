@@ -20,7 +20,7 @@ export default function GetStartPage() {
             Sign up from any MJM platform using the same email. Each app offers a different way to create music, but all
             share one account and Cloud Sync.
           </p>
-          <ul className="list-disc m-6 ">
+          <ul className="list-disc m-6">
             <li>Same email</li>
             <li> Shared cloud sync</li>
             <li>Access anywhere</li>
