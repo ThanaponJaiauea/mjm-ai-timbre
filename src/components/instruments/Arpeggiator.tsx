@@ -29,6 +29,9 @@ export interface ArpSettings {
     name?: string;
     musicalKey?: MusicalKey;
     scale?: Scale;
+    style?: string;
+    mood?: string;
+    chords?: string[];
 }
 
 interface ArpeggiatorProps {
@@ -727,6 +730,9 @@ export default function Arpeggiator({
     const [rootNote, setRootNote] = useState<number>(initialSettings?.rootNote || 60);
     const [musicalKey, setMusicalKey] = useState<MusicalKey>(initialSettings?.musicalKey || 'C');
     const [scale, setScale] = useState<Scale>(initialSettings?.scale || 'Major');
+    const [style, setStyle] = useState<string>(initialSettings?.style || '');
+    const [mood, setMood] = useState<string>(initialSettings?.mood || '');
+    const [chords, setChords] = useState<string[]>(initialSettings?.chords || []);
     const [savedMidis, setSavedMidis] = useState<SavedMidi[]>([]);
     const [playbackState, setPlaybackState] = useState<Record<string, PlaybackState>>({});
     const [isHoldOn, setIsHoldOn] = useState(false);
@@ -853,10 +859,14 @@ export default function Arpeggiator({
 
         // เซ็ต activeChordNotes จาก heldNotes (สำหรับแสดงบน Virtual Keyboard)
         if (initialSettings.heldNotes && initialSettings.heldNotes.length > 0) {
-            const flatNotes: string[] = initialSettings.heldNotes.flat() as string[];
-            const allChordNotes = Array.from(new Set(flatNotes.map(noteNameToMidi)));
-            console.log('[Arpeggiator] Setting activeChordNotes from heldNotes:', allChordNotes);
-            setActiveChordNotes(allChordNotes);
+            const flatNotes: string[] = initialSettings.heldNotes
+                .flat()
+                .filter((n): n is string => typeof n === 'string' && n.length > 0);
+            if (flatNotes.length > 0) {
+                const allChordNotes = Array.from(new Set(flatNotes.map(noteNameToMidi)));
+                console.log('[Arpeggiator] Setting activeChordNotes from heldNotes:', allChordNotes);
+                setActiveChordNotes(allChordNotes);
+            }
         }
     }, []);
 
@@ -1132,6 +1142,9 @@ export default function Arpeggiator({
                     musicalKey,
                     scale,
                     heldNotes: activeChordNotes.length > 0 ? activeChordNotes.map(n => midiToNoteName(n)) : undefined,
+                    style,
+                    mood,
+                    chords,
                 };
                 onSave?.(settings);
                 setModalState({ show: false, type: 'alert', title: '', message: '' });
@@ -1146,7 +1159,7 @@ export default function Arpeggiator({
                 }, 100);
             }
         });
-    }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, onSave]);
+    }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, style, mood, chords, onSave]);
 
     // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
     useEffect(() => {
