@@ -1,7 +1,6 @@
 /** @format */
 "use client";
 
-import { useLanguage } from "@/hooks/LanguageProvider";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInputMessage } from "@/components/ai-elements/prompt-input";
@@ -22,7 +21,6 @@ import AcidSynth from "@/components/instruments/AcidSynth";
 import { Inter } from "next/font/google";
 import { toast } from "sonner";
 import { MyUIMessage } from "@/utils/message-type";
-import { ca } from "zod/v4/locales";
 import { getAccessToken } from "@/utils/local-storage";
 
 const inter = Inter({});
