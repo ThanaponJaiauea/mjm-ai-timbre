@@ -204,14 +204,10 @@ export function Chat({ id, initialMessages }: Props) {
                                   scale: arp.scale ?? "Minor",
                                   heldNotes: arp.heldNotes ?? [],
                                 }}
+                                onSave={(settings) => {
+                                  handleSaveArp(settings);
+                                }}
                               />
-
-                              <button
-                                onClick={() => handleSaveArp(arp)}
-                                className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded mt-2 mb-10"
-                              >
-                                Save Arpdsdsd
-                              </button>
                             </div>
                           )}
                           {acid !== null && (

@@ -40,6 +40,7 @@ interface ArpeggiatorProps {
     onPresetChange?: (presetName: string) => void;
     onSequenceChange?: (sequence: (number | number[] | null)[]) => void;
     initialSettings?: Partial<ArpSettings>;
+    onSave?: (settings: ArpSettings) => void;
 }
 
 // --- CONSTANTS ---
@@ -707,6 +708,7 @@ export default function Arpeggiator({
     onWaveformChange,
     onPresetChange,
     onSequenceChange,
+    onSave,
     initialSettings
 }: ArpeggiatorProps) {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -1094,6 +1096,57 @@ export default function Arpeggiator({
         setHeldRoots([]);
         setActiveChordNotes([]);
     }, [heldRoots, activeChordNotes]);
+
+    // ฟังก์ชัน Save ARP Settings (แสดง confirmation modal)
+    const handleSave = useCallback(() => {
+        // ตรวจสอบว่ามีโน๊ตหรือไม่
+        if (heldRoots.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO NOTES',
+                message: 'Please add notes before saving. Press keys or enable HOLD to add notes.',
+            });
+            return;
+        }
+
+        setModalState({
+            show: true,
+            type: 'confirm',
+            title: 'CONFIRM SAVE',
+            message: `Save current arpeggiator settings? (BPM: ${Math.round(bpm)}, Pattern: ${pattern}, Key: ${musicalKey}, Notes: ${heldRoots.length})`,
+            onConfirm: () => {
+                const settings: ArpSettings = {
+                    waveform,
+                    bpm: Math.round(bpm), // ปัดเศษ BPM เป็นจำนวนเต็ม
+                    timeDivision,
+                    pattern,
+                    octaveRange,
+                    gateLength: Math.round(gateLength), // ปัดเศษ gateLength เป็นจำนวนเต็ม
+                    velocity: Math.round(velocity * 100) / 100, // ปัดเศษ velocity 2 ตำแหน่ง
+                    rootNote: Math.round(rootNote), // ปัดเศษ rootNote เป็นจำนวนเต็ม
+                    masterVolume: Math.round(masterVolume * 100) / 100, // ปัดเศษ masterVolume 2 ตำแหน่ง
+                    heldRoots: heldRoots.map(n => Math.round(n)), // ปัดเศษ heldRoots เป็นจำนวนเต็ม
+                    sortNotes,
+                    sequencerSteps,
+                    musicalKey,
+                    scale,
+                    heldNotes: activeChordNotes.length > 0 ? activeChordNotes.map(n => midiToNoteName(n)) : undefined,
+                };
+                onSave?.(settings);
+                setModalState({ show: false, type: 'alert', title: '', message: '' });
+                // Show success message after save
+                setTimeout(() => {
+                    setModalState({
+                        show: true,
+                        type: 'success',
+                        title: 'SAVED',
+                        message: 'Arpeggiator settings saved successfully!',
+                    });
+                }, 100);
+            }
+        });
+    }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, onSave]);
 
     // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
     useEffect(() => {
@@ -1529,8 +1582,8 @@ export default function Arpeggiator({
                     </div>
 
                     <div className="col-span-1 sm:col-span-2 lg:col-span-12 flex flex-col sm:flex-row gap-2 md:gap-3 h-full">
-                        <div className="w-full sm:w-1/3 lg:w-1/4">
-                            <ModulePanel title="MASTER" className="h-full flex flex-col min-h-[120px] md:min-h-[140px]">
+                        <div className="w-full sm:w-2/5 lg:w-1/3 flex-shrink-0">
+                            <ModulePanel title="MASTER" className="h-full flex flex-col min-h-[140px] md:min-h-[160px]">
                                 <div className="flex justify-around mb-2 md:mb-4 mt-1">
                                     <Knob label="BPM" value={bpm} min={60} max={200} onChange={setBpm} size={45} color="white" />
                                     <Knob label="Vol" value={masterVolume} min={0} max={1} onChange={setMasterVolume} size={45} color="white" />
@@ -1581,7 +1634,7 @@ export default function Arpeggiator({
                                     <div className="text-[8px] md:text-[10px] font-black text-[#555] tracking-[0.2em] flex items-center gap-0.5 md:gap-1"><span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_5px_red]"></span>RHYTHM GATE</div>
                                     <div className="text-[7px] md:text-[9px] text-[#444] font-mono">16-STEP</div>
                                 </div>
-                                <div className="flex gap-0.5 px-0.5 overflow-x-auto pb-1 custom-scrollbar min-w-full">
+                                <div className="flex gap-0.5 md:gap-1 px-0.5 overflow-x-auto pb-1 custom-scrollbar min-w-full">
                                     {sequencerSteps.map((isActive, i) => (
                                         <StepButton key={i} index={i} active={isActive} current={currentSeqStep === i} onClick={() => { const newSteps = [...sequencerSteps]; newSteps[i] = !newSteps[i]; setSequencerSteps(newSteps); }} />
                                     ))}
@@ -1595,6 +1648,24 @@ export default function Arpeggiator({
                             <div className="text-[7px] md:text-[9px] text-center text-[#555] tracking-[0.3em] mb-0.5 font-bold">VIRTUAL KEYBED CONTROLLER</div>
                         </div>
                         <VirtualKeyboard key={`kbd-${activeChordNotes.join(',')}-${heldRoots.join(',')}`} heldRoots={heldRoots} activeChordNotes={activeChordNotes} onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} />
+                    </div>
+
+                    {/* SAVE BUTTON */}
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-12 mt-2 md:mt-4 flex justify-center">
+                        <button
+                            onClick={handleSave}
+                            className="group relative h-11 px-8 bg-[#222] text-[#2ed573] text-[11px] font-bold tracking-[0.2em] uppercase rounded-sm border border-[#333] border-b-4 border-b-[#111] hover:bg-[#2a2a2a] hover:border-[#2ed573] hover:text-[#00dfd8] hover:shadow-[0_0_20px_rgba(46,213,115,0.3)] active:translate-y-[1px] active:border-b-2 transition-all duration-100 flex items-center gap-3"
+                        >
+                            {/* Save Icon (Floppy Disk SVG) */}
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Arpeggiator Settings</span>
+                            {/* Glow Effect */}
+                            <div className="absolute inset-0 rounded-sm bg-gradient-to-r from-[#2ed573]/0 via-[#2ed573]/10 to-[#00dfd8]/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        </button>
                     </div>
 
                     {/* <div className="col-span-1 md:col-span-2 lg:col-span-12 bg-[#080808] rounded border border-[#333] p-3 flex flex-col md:flex-row items-center justify-between shadow-[inset_0_0_10px_black] gap-4">
@@ -1703,11 +1774,20 @@ export default function Arpeggiator({
                 )}
 
                 {modalState.show && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                        <div className="bg-[#222] border-2 border-zinc-700 p-6 rounded shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center">
-                            <div className={`text-lg font-bold tracking-widest mb-2 ${modalState.type === 'alert' ? 'text-red-500' : 'text-[#2ed573]'}`}>{modalState.title}</div>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget && modalState.type !== 'confirm') closeModal(); }}>
+                        <div className="bg-[#222] border-2 border-zinc-700 p-6 rounded shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center" onClick={e => e.stopPropagation()}>
+                            <div className={`text-lg font-bold tracking-widest mb-2 ${modalState.type === 'alert' ? 'text-red-500' : modalState.type === 'success' ? 'text-[#2ed573]' : 'text-[#ffa502]'}`}>{modalState.title}</div>
                             <div className="text-[11px] font-mono text-zinc-400 mb-6">{modalState.message}</div>
-                            <button onClick={closeModal} className="px-6 py-2 bg-zinc-800 text-white text-[10px] font-bold tracking-widest border border-zinc-600 hover:bg-zinc-700">ACKNOWLEDGE</button>
+                            <div className="flex gap-2 justify-center">
+                                {modalState.type === 'confirm' ? (
+                                    <>
+                                        <button onClick={() => { modalState.onConfirm?.(); }} className="px-6 py-2 bg-[#2ed573] text-black text-[10px] font-bold tracking-widest border border-[#1a9c50] hover:bg-[#00dfd8]">CONFIRM</button>
+                                        <button onClick={closeModal} className="px-6 py-2 bg-zinc-800 text-white text-[10px] font-bold tracking-widest border border-zinc-600 hover:bg-zinc-700">CANCEL</button>
+                                    </>
+                                ) : (
+                                    <button onClick={closeModal} className="px-6 py-2 bg-zinc-800 text-white text-[10px] font-bold tracking-widest border border-zinc-600 hover:bg-zinc-700">OK</button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
