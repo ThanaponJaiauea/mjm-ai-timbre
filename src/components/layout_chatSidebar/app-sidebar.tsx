@@ -23,6 +23,9 @@ import { deleteChat } from "@/api/chatHistory";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t, lang, setLang } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toggleSidebar, state } = useSidebar();
 
   const languages = [
     { code: "en", label: "English", flag: null },
@@ -32,42 +35,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
     navMain: [
       {
-        title: t.labelInstruments,
-        url: "#",
+        title: t.newchat,
+        url: "/",
         icon: "/icon/icon_instrument.png",
-        items: [
-          {
-            id: 1,
-            icon: "/icon/icon_drum.png",
-            title: "drums",
-            url: "/mjm-ai/chat/instruments/drums",
-          },
-          {
-            id: 2,
-            icon: "/icon/icon_bass.png",
-            title: "bass",
-            url: "/mjm-ai/chat/instruments/bass",
-          },
-        ],
+        isActive: pathname === "/mjm-ai/chat",
+        isShowSubmenu: false,
+        onClick: () => {
+          handleNewChat();
+          openToggleSidebar();
+        },
       },
-
       {
-        title: t.myLibrary,
-        url: "#",
-        icon: "/icon/icon_library.png",
-        isActive: true,
+        title: t.downloadApp,
+        url: "/mjm-ai/chat/download",
+        icon: "/icon/icon_download.png",
+        isShowSubmenu: false,
+        isActive: pathname === "/mjm-ai/chat/download",
+      },
+      {
+        title: "Creator Guide",
+        url: "/mjm-ai/chat/creator-guide",
+        icon: "/icon/icon_creator.png",
+        isActive: pathname === "/mjm-ai/chat/creator-guide",
+        isShowSubmenu: true,
         items: [
           {
-            id: 3,
-            icon: "/icon/icon_music_play.png",
-            title: "musicPlay",
-            url: "/mjm-ai/chat/my-library/music-play",
+            title: "Get start",
+            url: "/mjm-ai/chat/creator-guide/getstart",
+            icon: "/icons/getstart.svg",
+            iconActive: "/icons/getstart-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/getstart",
           },
           {
-            id: 4,
-            icon: "/icon/icon_covered_song.png",
-            title: "CoveredSong",
-            url: "/mjm-ai/chat/my-library/covered-song",
+            title: "Multi-Engine Generation",
+            url: "/mjm-ai/chat/creator-guide/engine-generation",
+            icon: "/icons/engine-generation.svg",
+            iconActive: "/icons/engine-generation-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/engine-generation",
+          },
+          {
+            title: "Smart Timbre Library",
+            url: "/mjm-ai/chat/creator-guide/timbre",
+            icon: "/icons/timbre.svg",
+            iconActive: "/icons/timbre-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/timbre",
+          },
+          {
+            title: "DAW (VST Display)",
+            url: "/mjm-ai/chat/creator-guide/daw",
+            icon: "/icons/daw.svg",
+            iconActive: "/icons/daw-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/daw",
+          },
+          {
+            title: "Subscription",
+            url: "/mjm-ai/chat/creator-guide/subscription",
+            icon: "/icons/subscription.svg",
+            iconActive: "/icons/subscription-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/subscription",
+          },
+          {
+            title: "Unit Testing",
+            url: "/mjm-ai/chat/creator-guide/unit-test",
+            icon: "/icons/unit-test.svg",
+            iconActive: "/icons/unit-test-active.svg",
+            isActive: pathname === "/mjm-ai/chat/creator-guide/unit-test",
           },
         ],
       },
@@ -78,12 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   useEffect(() => {
     loadChatHistory();
-  }, []);
-
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const { toggleSidebar, state } = useSidebar();
+  }, [loadChatHistory]);
 
   const handleNewChat = async () => {
     router.push(`/mjm-ai/chat`);
@@ -121,13 +148,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain
           items={data.navMain}
           state={state}
-          openToggleSidebar={openToggleSidebar}
           t={t}
           chatHistoryLoading={chatHistoryLoading}
           chatHistory={chatHistory}
           pathname={pathname}
-          handleNewChat={handleNewChat}
-          handleChatVocal={handleChatVocal}
           handDeleteChat={handDeleteChat}
         />
       </SidebarContent>
