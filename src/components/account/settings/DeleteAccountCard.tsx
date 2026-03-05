@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/store/use-auth-store";
+import { getAccessToken } from "@/utils/local-storage";
 import { Trash2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -43,14 +44,14 @@ function ConfirmDeleteDialog() {
 
   async function handleDelete() {
     startDeleteTransition(async () => {
-      console.log("delete");
       try {
         const res = await fetch("https://apigateway.yojomjm.com/auth-service/v1/account", {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getAccessToken()}`,
           },
         });
+
         if (!res.ok) {
           if (res.status === 417) {
             const error = await res.json();
@@ -60,8 +61,7 @@ function ConfirmDeleteDialog() {
             throw new Error("Failed to delete account");
           }
         }
-        const data = await res.json();
-        console.log(data);
+
         toast.success("Account deleted successfully");
 
         clearAuth();

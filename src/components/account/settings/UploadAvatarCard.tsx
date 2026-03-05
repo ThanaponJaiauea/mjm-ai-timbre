@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { getAccessToken } from "@/utils/local-storage";
 import { Upload } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -29,33 +30,31 @@ export function UploadAvatarCard({ avatar }: Readonly<{ avatar?: string }>) {
       try {
         const formData = new FormData();
         formData.append("file", file!);
-        const res = await fetch("https://apigateway.yojomjm.com/file-service/v1/files/upload", {
+        const uploadRes = await fetch("https://apigateway.yojomjm.com/file-service/v1/files/upload", {
           method: "POST",
           body: formData,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getAccessToken()}`,
           },
         });
-        if (!res.ok) {
+        if (!uploadRes.ok) {
           throw new Error("Failed to upload avatar");
         }
-        const data = await res.json();
+        const uploadData = await uploadRes.json();
 
-        const res2 = await fetch("https://apigateway.yojomjm.com/auth-service/v1/account", {
+        const updateAvatarRes = await fetch("https://apigateway.yojomjm.com/auth-service/v1/account", {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getAccessToken()}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            avatar: data.data.url,
+            avatar: uploadData.data.url,
           }),
         });
-        if (!res2.ok) {
+        if (!updateAvatarRes.ok) {
           throw new Error("Failed to update avatar");
         }
-        const data2 = await res2.json();
-        console.log(data2);
 
         toast.success("Avatar uploaded successfully");
       } catch (error) {

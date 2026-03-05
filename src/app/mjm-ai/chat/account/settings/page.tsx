@@ -5,6 +5,7 @@ import { DeleteAccountCard } from "@/components/account/settings/DeleteAccountCa
 import { UpdateProfileForm } from "@/components/account/settings/UpdateProfileForm";
 import { UploadAvatarCard } from "@/components/account/settings/UploadAvatarCard";
 import { Spinner } from "@/components/ui/spinner";
+import { getAccessToken } from "@/utils/local-storage";
 import { useQuery } from "@tanstack/react-query";
 
 export default function SettingsPage() {
@@ -13,7 +14,7 @@ export default function SettingsPage() {
     queryFn: () =>
       fetch("https://apigateway.yojomjm.com/auth-service/v1/account", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getAccessToken()}`,
         },
       }).then(res => res.json()),
   });

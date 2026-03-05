@@ -1,5 +1,5 @@
+import { removeAccessToken, setAccessToken as setTokenToStorage } from "@/utils/local-storage";
 import { create } from "zustand";
-import { setAccessToken as setTokenToStorage, removeAccessToken } from "@/utils/local-storage";
 
 export interface User {
   avatar: string | null;
@@ -23,7 +23,6 @@ interface AuthStore extends AuthState {
 }
 
 const AUTH_STORE_KEY = "auth";
-const TOKEN_KEY = "token";
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   accessExpire: null,
