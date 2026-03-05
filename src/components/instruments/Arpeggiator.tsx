@@ -1654,7 +1654,7 @@ export default function Arpeggiator({
                     <div className="col-span-1 sm:col-span-2 lg:col-span-12 mt-2 md:mt-4 flex justify-center">
                         <button
                             onClick={handleSave}
-                            className="group relative h-11 px-8 bg-[#222] text-[#2ed573] text-[11px] font-bold tracking-[0.2em] uppercase rounded-sm border border-[#333] border-b-4 border-b-[#111] hover:bg-[#2a2a2a] hover:border-[#2ed573] hover:text-[#00dfd8] hover:shadow-[0_0_20px_rgba(46,213,115,0.3)] active:translate-y-[1px] active:border-b-2 transition-all duration-100 flex items-center gap-3"
+                            className="group relative h-11 px-8 bg-[#ff9f43] text-[#5c4033] text-[11px] font-bold tracking-[0.2em] uppercase rounded-sm border border-[#cc8e35] border-b-4 border-b-[#a36b22] hover:bg-[#ffa502] hover:border-[#ffb14d] hover:shadow-[0_0_20px_rgba(255,159,67,0.4)] active:translate-y-[1px] active:border-b-2 transition-all duration-100 flex items-center gap-3"
                         >
                             {/* Save Icon (Floppy Disk SVG) */}
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
@@ -1664,7 +1664,7 @@ export default function Arpeggiator({
                             </svg>
                             <span>Save Arpeggiator Settings</span>
                             {/* Glow Effect */}
-                            <div className="absolute inset-0 rounded-sm bg-gradient-to-r from-[#2ed573]/0 via-[#2ed573]/10 to-[#00dfd8]/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                            <div className="absolute inset-0 rounded-sm bg-gradient-to-r from-[#fff]/0 via-[#fff]/20 to-[#fff]/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                         </button>
                     </div>
 
