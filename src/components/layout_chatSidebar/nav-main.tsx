@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import NavChatHistorySkeleton from "./ืnavChatHistorySkeleton";
+import NavChatHistorySkeleton from "./navChatHistorySkeleton";
 
 import en from "@/locales/en.json";
 import Image from "next/image";

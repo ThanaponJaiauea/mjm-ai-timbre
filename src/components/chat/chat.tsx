@@ -35,8 +35,6 @@ export function Chat({ id, initialMessages }: Props) {
 
   const [arp, setArp] = useState(null);
   const [acid, setAcid] = useState(null);
-  console.log("arp state:", arp);
-  console.log("acid state:", acid);
 
   /* -------------------- CHAT SDK -------------------- */
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -170,6 +168,7 @@ export function Chat({ id, initialMessages }: Props) {
                               mood: d?.mood ?? "Pop",
                             }}
                             setArp={setArp}
+                            arp={arp}
                           />
                           {arp !== null && (
                             <div className="w-full overflow-auto">
