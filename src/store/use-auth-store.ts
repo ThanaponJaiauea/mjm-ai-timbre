@@ -37,6 +37,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const authData = JSON.parse(authString);
       set(authData);
       setTokenToStorage(authData.accessToken);
+
+      const base64 = authData.accessToken.split(".")[1];
+      const decoded = atob(base64);
+      const token = JSON.parse(decoded);
+      const expire = token.exp * 1000;
+      const now = Date.now();
+      if (expire < now) {
+        get().clearAuth();
+        globalThis.location.href = "/";
+      }
     }
   },
 
