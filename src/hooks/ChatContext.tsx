@@ -3,7 +3,7 @@
 
 import { getChatHistory } from "@/api/chatHistory";
 import { getAccessToken } from "@/utils/local-storage";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 interface ChatContextType {
   chatMode: string;
@@ -34,27 +34,26 @@ const ChatContext = createContext<ChatContextType>({
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chatMode, setChatMode] = useState("chat");
   const [chatHistory, setChatHistory] = useState<any[]>([]);
-
   const [selectedItem, setSelectedModelItem] = useState(null);
-
   const [chatHistoryLoading, setChatHistoryLoading] = useState<boolean>(false);
-  const [chatHistoryFirstLoad, setChatHistoryFirstLoad] = useState<boolean>(true);
-
   const [loadPreview, setLoadPreview] = useState<boolean>(true);
   const [loadData, setLoadData] = useState<boolean>(false);
 
-  const fetchChatHistory = async () => {
+  const chatHistoryFirstLoad = useRef<boolean>(true);
+
+  const fetchChatHistory = useCallback(async () => {
     const token = getAccessToken();
     if (!token) return;
-    if (chatHistoryFirstLoad) {
+
+    if (chatHistoryFirstLoad.current) {
       setChatHistoryLoading(true);
-      setChatHistoryFirstLoad(false);
+      chatHistoryFirstLoad.current = false;
     }
 
     const data = await getChatHistory();
     setChatHistory(data.data.data);
     setChatHistoryLoading(false);
-  };
+  }, []);
 
   return (
     <ChatContext.Provider

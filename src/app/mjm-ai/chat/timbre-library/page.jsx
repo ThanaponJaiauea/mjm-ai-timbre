@@ -6,13 +6,12 @@ import CardListMusic from "@/components/cardListMusic";
 
 import { getMusicStyle } from "@/api/music";
 
-
 export default function TimbreLibraryPage() {
-
   const menuList = ["All", "My Timble", "Trending", "Instrument"];
   const [selectedMenu, setSelectedMenu] = useState("All");
   const [showInstrumentDropdown, setShowInstrumentDropdown] = useState(false);
   const [musicStyleData, setMusicStyleData] = useState([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -25,6 +24,7 @@ export default function TimbreLibraryPage() {
     };
     fetchData();
   }, []);
+
   return (
     <div className="w-[90%] mx-auto m-0 flex flex-col gap-4 min-h-screen text-white">
       {/* Header */}
@@ -33,20 +33,20 @@ export default function TimbreLibraryPage() {
       <div className="flex justify-between items-center mt-6">
         {/* Menu */}
         <div className="flex gap-2 p-2 bg-[#141414] rounded-full">
-          {menuList.map((menu) => (
+          {menuList.map(menu =>
             menu === "Instrument" ? (
               <div className="relative" key={menu}>
                 <button
                   className={`px-6 py-2 rounded-full font-medium focus:outline-none flex items-center ${selectedMenu === menu ? "bg-[#232323] text-[#E759FF]" : "bg-transparent  text-[#8F8F8F]"}`}
                   onClick={() => {
                     setSelectedMenu(menu);
-                    setShowInstrumentDropdown((prev) => !prev);
+                    setShowInstrumentDropdown(prev => !prev);
                   }}
                 >
                   Instrument
-                  <span className="ml-2"><Image src="/icons/icon_dropdown.png" alt="dropdown" width={14} height={14} className="inline" /></span>
-
-
+                  <span className="ml-2">
+                    <Image src="/icons/icon_dropdown.png" alt="dropdown" width={14} height={14} className="inline" />
+                  </span>
                 </button>
                 {/* Dropdown slide down */}
                 {showInstrumentDropdown && selectedMenu === "Instrument" && (
@@ -57,14 +57,18 @@ export default function TimbreLibraryPage() {
                         setShowInstrumentDropdown(false);
                         setSelectedMenu("Arp");
                       }}
-                    >Arp</button>
+                    >
+                      Arp
+                    </button>
                     <button
                       className="px-6 py-3 text-left text-white hover:text-[#E759FF] hover:bg-[#181818] rounded-xl transition"
                       onClick={() => {
                         setShowInstrumentDropdown(false);
                         setSelectedMenu("Bass");
                       }}
-                    >Bass</button>
+                    >
+                      Bass
+                    </button>
                   </div>
                 )}
               </div>
@@ -80,7 +84,7 @@ export default function TimbreLibraryPage() {
                 {menu}
               </button>
             )
-          ))}
+          )}
         </div>
         {/* Search */}
         <div className="relative w-[250px]">
@@ -108,7 +112,6 @@ export default function TimbreLibraryPage() {
           <div className="mt-8 text-[22px] font-semibold">Your library is empty</div>
           <div className="mt-2 text-[16px] text-gray-400">Start creating music and your songs will show up here.</div>
         </div>
-
       </div>
       {/* Section Trending */}
       <div className="flex flex-col gap-4">
@@ -117,18 +120,14 @@ export default function TimbreLibraryPage() {
           <span className="ml-2 text-[22px]">🔥</span>
         </div>
         {/* Trending Items */}
-       
-          <div className="mt-2">
-            <CardListMusic data={musicStyleData} icon_data={""} />
-          </div>
-    
+
+        <div className="mt-2">
+          <CardListMusic data={musicStyleData} icon_data={""} />
+        </div>
       </div>
 
       {/* Section  Instruments */}
-      <div className="flex flex-col gap-4">
-      </div>
-      
-
+      <div className="flex flex-col gap-4"></div>
     </div>
   );
 }
