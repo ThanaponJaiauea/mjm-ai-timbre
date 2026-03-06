@@ -13,6 +13,7 @@ import icon_vst_plugins from "./icons/icon_vst_plugins.png";
 import icon_download from "./icons/icon_download.png";
 import icon_mjm from "./icons/icon_mjm.png";
 import icon_library from "./icons/icon_library.png";
+import icon_dropdown from "./icons/icon_dropdown.png";
 
 export {
   icon_instrument1,
@@ -30,4 +31,5 @@ export {
   icon_download,
   icon_mjm,
   icon_library,
+  icon_dropdown,
 };
