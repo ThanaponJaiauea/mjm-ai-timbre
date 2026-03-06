@@ -3,8 +3,13 @@
 import { getChatMessages } from "@/api/chatHistory";
 import { mapDBPartToUIMessagePart } from "./message-mapping";
 import { MyUIMessage } from "./message-type";
+import { getAccessToken } from "./local-storage";
 
 export const loadChat = async (chatId: string): Promise<MyUIMessage[]> => {
+  const token = getAccessToken();
+
+  if (!token) return [];
+
   const result = await getChatMessages(chatId);
 
   return (result.data.data as any[]).map(message => ({

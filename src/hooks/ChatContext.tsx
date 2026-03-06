@@ -2,6 +2,7 @@
 "use client";
 
 import { getChatHistory } from "@/api/chatHistory";
+import { getAccessToken } from "@/utils/local-storage";
 import React, { createContext, useContext, useState } from "react";
 
 interface ChatContextType {
@@ -43,6 +44,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [loadData, setLoadData] = useState<boolean>(false);
 
   const fetchChatHistory = async () => {
+    const token = getAccessToken();
+    if (!token) return;
     if (chatHistoryFirstLoad) {
       setChatHistoryLoading(true);
       setChatHistoryFirstLoad(false);
