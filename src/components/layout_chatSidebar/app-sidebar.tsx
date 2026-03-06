@@ -25,7 +25,7 @@ import { deleteChat } from "@/api/chatHistory";
 const getNavData = (handleNewChat: () => void, openToggleSidebar: () => void): { navMain: NavItemType[] } => ({
   navMain: [
     {
-      title: "newchat",
+      title: "Create",
       url: "/mjm-ai/chat",
       icon: icon_create,
       isShowSubmenu: false,
