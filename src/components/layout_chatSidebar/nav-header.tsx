@@ -5,7 +5,7 @@
 import { SidebarMenu, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { icon_mjm } from "@/images";
+import { icon_mjm } from "../../../public/index";
 
 export function NavHeader({
   toggleSidebar,

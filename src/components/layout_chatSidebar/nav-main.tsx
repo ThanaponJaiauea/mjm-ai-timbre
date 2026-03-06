@@ -24,7 +24,13 @@ import NavChatHistorySkeleton from "./navChatHistorySkeleton";
 
 import en from "@/locales/en.json";
 import Image from "next/image";
-import { icon_create, icon_creator_guide, icon_download, icon_subscription, icon_vst_plugins } from "@/images";
+import {
+  icon_create,
+  icon_creator_guide,
+  icon_download,
+  icon_subscription,
+  icon_vst_plugins,
+} from "../../../public/index";
 
 interface NavMainProps {
   openToggleSidebar: () => void;

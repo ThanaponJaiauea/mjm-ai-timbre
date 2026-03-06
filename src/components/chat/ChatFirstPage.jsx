@@ -1,6 +1,6 @@
 "use client";
 
-import { bg_ChatFirstPage, image_style_hip_hop } from "@/images/index";
+import { bg_ChatFirstPage } from "../../../public/index";
 import { useAuthStore } from "@/store/use-auth-store";
 import { Montserrat } from "next/font/google";
 import Image from "next/image";
@@ -8,25 +8,30 @@ import { useRouter } from "next/navigation";
 import { UserMenu } from "../auth/user-menu";
 import { ButtonSign } from "../button/button_sign";
 import ChatPromptInput from "./chatPromptInput";
-import { useState } from "react";
+import CardListMusic from "../cardListMusic";
+import { useEffect, useState } from "react";
+import { getMusicStyle } from "@/api/music";
+import {
+  icon_instrument1,
+  icon_instrument2,
+  icon_instrument3,
+  icon_instrument4,
+  icon_instrument5,
+} from "../../../public/index";
 
 const montserrat = Montserrat();
 
-const listStyleDataMoc = [
-  { label: "Hip Hop", image: image_style_hip_hop, bpm: "120 BPM" },
-  { label: "Hip Hop", image: image_style_hip_hop, bpm: "120 BPM" },
-  { label: "Hip Hop", image: image_style_hip_hop, bpm: "120 BPM" },
-  { label: "Hip Hop", image: image_style_hip_hop, bpm: "120 BPM" },
-  { label: "Hip Hop", image: image_style_hip_hop, bpm: "120 BPM" },
-];
-
 const ideasDataMoc = [{ title: "Lofi, Key C, 120 BPM, Drums" }, { title: "Pop, Key F, 120 BPM, Drums" }];
+
+const icon_instrument_data = [icon_instrument1, icon_instrument2, icon_instrument3, icon_instrument4, icon_instrument5];
 
 export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOption, isStreaming }) {
   const router = useRouter();
   const user = useAuthStore(state => state.user);
 
   const [selectedIdea, setSelectedIdea] = useState(null);
+
+  const [musicStyleData, setMusicStyleData] = useState([]);
 
   const handleSignIn = () => {
     router.push("?auth=signin");
@@ -35,6 +40,18 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
   const handleSignUp = () => {
     router.push("?auth=signup");
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getMusicStyle();
+        setMusicStyleData(res.data.data);
+      } catch (error) {
+        console.error("Error fetching music style:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <section className="flex flex-col items-center relative w-full p-4">
@@ -110,20 +127,8 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
         </div>
       </div>
 
-      <div className="w-full flex flex-wrap items-center justify-center mt-20 gap-2">
-        {listStyleDataMoc?.map((el, idx) => (
-          <div
-            key={idx}
-            className="bg-[#1B1B1B] w-[227px] h-[172px] flex flex-col items-center justify-center gap-4 rounded-[16px]"
-          >
-            <Image src={el.image} alt={el.label + " Style"} width={200} height={100} />
-
-            <div className="w-full">
-              <p className="text-[16px] text-white font-medium">{el.label}</p>
-              <p className="text-[14px] text-[#848484] font-medium">{el.bpm}</p>
-            </div>
-          </div>
-        ))}
+      <div className="mt-14">
+        <CardListMusic data={musicStyleData} icon_data={icon_instrument_data} />
       </div>
     </section>
   );
