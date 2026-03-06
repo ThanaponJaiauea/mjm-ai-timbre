@@ -3,7 +3,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, Clock4, EllipsisIcon, Trash, type LucideIcon } from "lucide-react";
+import { ChevronRight, Clock4, EllipsisIcon, Trash } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -26,42 +26,54 @@ import {
 } from "@/components/ui/dropdown-menu";
 import NavChatHistorySkeleton from "./navChatHistorySkeleton";
 
-import en from "@/locales/en.json";
-
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { useLanguage } from "@/hooks/LanguageProvider";
+import { type StaticImageData } from "next/image";
+
+export interface NavSubItemType {
+  title: string;
+  url: string;
+  icon: string;
+  iconActive: string;
+}
+
+export interface NavItemType {
+  title: string;
+  url: string;
+  icon: string | StaticImageData;
+  isShowSubmenu: boolean;
+  onClick?: () => void;
+  items?: NavSubItemType[];
+}
 
 interface NavMainProps {
-  openToggleSidebar: () => void;
-  state: "collapsed" | "expanded" | string;
-  t: typeof en;
+  items: NavItemType[];
+  state: "collapsed" | "expanded";
   chatHistory: { id: string; title: string }[];
   chatHistoryLoading: boolean;
-  pathname: string;
-  handleNewChat: () => void;
   handDeleteChat: (id: string, isCurrentPage: boolean) => void;
 }
 
-export function NavMain({
-  items,
-  state,
-  t,
-  chatHistory,
-  chatHistoryLoading,
-  pathname,
-  handDeleteChat,
-}: Readonly<NavMainProps>) {
+export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDeleteChat }: Readonly<NavMainProps>) {
+  const pathname = usePathname();
+  const { t } = useLanguage();
   return (
     <SidebarGroup className="flex flex-col">
       <SidebarMenu>
         {items.map(item => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible">
+          <Collapsible key={item.title} asChild defaultOpen={pathname === item.url} className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  tooltip={item.title}
-                  isActive={item.isActive}
+                  tooltip={
+                    typeof t[item.title as keyof typeof t] === "string"
+                      ? (t[item.title as keyof typeof t] as string)
+                      : item.title
+                  }
+                  isActive={pathname === item.url}
                   className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
                   onClick={item.onClick}
                 >
@@ -85,11 +97,11 @@ export function NavMain({
                   <SidebarMenuSub>
                     {item.items.map(subItem => (
                       <SidebarMenuSubItem key={subItem.title} className="mt-2">
-                        <SidebarMenuSubButton size="md" className=" h-10" isActive={subItem.isActive} asChild>
+                        <SidebarMenuSubButton size="md" className=" h-10" isActive={pathname === subItem.url} asChild>
                           <Link href={subItem.url}>
                             {subItem.icon && (
                               <div className="flex items-center m-1 gap-2 w-52 h-14 tex-sm ">
-                                {subItem.isActive ? (
+                                {pathname === subItem.url ? (
                                   <>
                                     <Image src={subItem.iconActive} alt="image" width={16} height={16} />
                                     <span className="text-sm font-normal bg-linear-to-r from-[#E759FF] to-[#6174FF] inline-block text-transparent bg-clip-text">

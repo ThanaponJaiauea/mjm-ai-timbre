@@ -9,20 +9,18 @@ import {
 
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "../ui/sidebar";
 import Image from "next/image";
+import { useLanguage } from "@/hooks/LanguageProvider";
 
 type Locale = "en" | "zh";
 
-export function NavFooter({
-  languages,
-  currentLang,
-  setLang,
-}: {
-  languages: { code: string; label: string; flag: string }[];
-  currentLang: Locale;
-  setLang: (lang: Locale) => void;
-}) {
-  const { isMobile } = useSidebar();
+const languages = [
+  { code: "en", label: "English", flag: null },
+  { code: "zh", label: "中文", flag: null },
+];
 
+export function NavFooter() {
+  const { isMobile } = useSidebar();
+  const { lang, setLang } = useLanguage();
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -36,7 +34,7 @@ export function NavFooter({
                 height={24}
                 className="h-6 w-6 rounded-full"
               /> */}
-              <span className="ml-2">{languages.find(l => l.code === currentLang)?.label}</span>
+              <span className="ml-2">{languages.find(l => l.code === lang)?.label}</span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
@@ -44,7 +42,7 @@ export function NavFooter({
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
-            className="flex flex-col cursor-pointer items-center justify-center p-2 bg-[#232323] rounded-[10px] w-[120px]"
+            className="flex flex-col cursor-pointer items-center justify-center p-2 bg-[#232323] rounded-[10px] w-30"
           >
             {languages.map(lang => (
               <DropdownMenuItem
@@ -52,7 +50,15 @@ export function NavFooter({
                 onClick={() => setLang(lang.code as Locale)}
                 className="flex items-center w-full  hover:bg-[#6e6e6e]"
               >
-                <Image src={lang.flag} alt={lang.label} width={20} height={20} className="h-5 w-5 rounded-full mr-2" />
+                {lang.flag && (
+                  <Image
+                    src={lang.flag}
+                    alt={lang.label}
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 rounded-full mr-2"
+                  />
+                )}
                 {lang.label}
               </DropdownMenuItem>
             ))}

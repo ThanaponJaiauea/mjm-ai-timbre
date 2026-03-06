@@ -3,7 +3,7 @@
 "use client";
 
 import * as React from "react";
-import { NavMain } from "@/components/layout_chatSidebar/nav-main";
+import { NavMain, type NavItemType } from "@/components/layout_chatSidebar/nav-main";
 import { NavFooter } from "@/components/layout_chatSidebar/nav-footer";
 import { NavHeader } from "@/components/layout_chatSidebar/nav-header";
 import {
@@ -15,119 +15,93 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import {
-  icon_create,
-  icon_creator_guide,
-  icon_download,
-  icon_subscription,
-  icon_vst_plugins,
-  icon_library,
-} from "../../../public/index";
+import { icon_create, icon_creator_guide, icon_download, icon_subscription, icon_library } from "../../../public/index";
 
-import { useLanguage } from "@/hooks/LanguageProvider";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useChatContext } from "@/hooks/ChatContext";
 import { useEffect } from "react";
 import { deleteChat } from "@/api/chatHistory";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { t, lang, setLang } = useLanguage();
-  const router = useRouter();
-  const pathname = usePathname();
-  const { toggleSidebar, state } = useSidebar();
-
-  const languages = [
-    { code: "en", label: "English", flag: null },
-    { code: "zh", label: "中文", flag: null },
-  ];
-
-  const data = {
-    navMain: [
-      {
-        title: t.newchat,
-        url: "/mjm-ai/chat",
-        icon: icon_create,
-        isActive: pathname === "/mjm-ai/chat",
-        isShowSubmenu: false,
-        onClick: () => {
-          handleNewChat();
-          openToggleSidebar();
+const getNavData = (handleNewChat: () => void, openToggleSidebar: () => void): { navMain: NavItemType[] } => ({
+  navMain: [
+    {
+      title: "newchat",
+      url: "/mjm-ai/chat",
+      icon: icon_create,
+      isShowSubmenu: false,
+      onClick: () => {
+        handleNewChat();
+        openToggleSidebar();
+      },
+    },
+    {
+      title: "Timbre Library",
+      url: "/mjm-ai/chat/timbre-library",
+      icon: icon_library,
+      isShowSubmenu: false,
+    },
+    {
+      title: "Subscription Plan",
+      url: "",
+      icon: icon_subscription,
+      isShowSubmenu: false,
+    },
+    {
+      title: "downloadApp",
+      url: "/mjm-ai/chat/download",
+      icon: icon_download,
+      isShowSubmenu: false,
+    },
+    {
+      title: "Creator Guide",
+      url: "/mjm-ai/chat/creator-guide",
+      icon: icon_creator_guide,
+      isShowSubmenu: true,
+      items: [
+        {
+          title: "Get start",
+          url: "/mjm-ai/chat/creator-guide/getstart",
+          icon: "/icons/getstart.svg",
+          iconActive: "/icons/getstart-active.svg",
         },
-      },
-      {
-        title: "Timbre Library",
-        url: "/mjm-ai/chat/timbre-library",
-        icon: icon_library,
-        isShowSubmenu: false,
-        isActive: pathname === "/mjm-ai/chat/timbre-library",
-      },
-      {
-        title: "Subscription Plan",
-        url: "",
-        icon: icon_subscription,
-        isShowSubmenu: false,
-        isActive: pathname === "",
-      },
-      {
-        title: t.downloadApp,
-        url: "/mjm-ai/chat/download",
-        icon: icon_download,
-        isShowSubmenu: false,
-        isActive: pathname === "/mjm-ai/chat/download",
-      },
-      {
-        title: "Creator Guide",
-        url: "/mjm-ai/chat/creator-guide",
-        icon: icon_creator_guide,
-        isActive: pathname === "/mjm-ai/chat/creator-guide",
-        isShowSubmenu: true,
-        items: [
-          {
-            title: "Get start",
-            url: "/mjm-ai/chat/creator-guide/getstart",
-            icon: "/icons/getstart.svg",
-            iconActive: "/icons/getstart-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/getstart",
-          },
-          {
-            title: "Multi-Engine Generation",
-            url: "/mjm-ai/chat/creator-guide/engine-generation",
-            icon: "/icons/engine-generation.svg",
-            iconActive: "/icons/engine-generation-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/engine-generation",
-          },
-          {
-            title: "Smart Timbre Library",
-            url: "/mjm-ai/chat/creator-guide/timbre",
-            icon: "/icons/timbre.svg",
-            iconActive: "/icons/timbre-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/timbre",
-          },
-          {
-            title: "DAW (VST Display)",
-            url: "/mjm-ai/chat/creator-guide/daw",
-            icon: "/icons/daw.svg",
-            iconActive: "/icons/daw-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/daw",
-          },
-          {
-            title: "Subscription",
-            url: "/mjm-ai/chat/creator-guide/subscription",
-            icon: "/icons/subscription.svg",
-            iconActive: "/icons/subscription-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/subscription",
-          },
-          {
-            title: "Testing Strategy",
-            url: "/mjm-ai/chat/creator-guide/test-strategy",
-            icon: "/icons/unit-test.svg",
-            iconActive: "/icons/unit-test-active.svg",
-            isActive: pathname === "/mjm-ai/chat/creator-guide/test-strategy",
-          },
-        ],
-      },
-    ],
-  };
+        {
+          title: "Multi-Engine Generation",
+          url: "/mjm-ai/chat/creator-guide/engine-generation",
+          icon: "/icons/engine-generation.svg",
+          iconActive: "/icons/engine-generation-active.svg",
+        },
+        {
+          title: "Smart Timbre Library",
+          url: "/mjm-ai/chat/creator-guide/timbre",
+          icon: "/icons/timbre.svg",
+          iconActive: "/icons/timbre-active.svg",
+        },
+        {
+          title: "DAW (VST Display)",
+          url: "/mjm-ai/chat/creator-guide/daw",
+          icon: "/icons/daw.svg",
+          iconActive: "/icons/daw-active.svg",
+        },
+        {
+          title: "Subscription",
+          url: "/mjm-ai/chat/creator-guide/subscription",
+          icon: "/icons/subscription.svg",
+          iconActive: "/icons/subscription-active.svg",
+        },
+        {
+          title: "Testing Strategy",
+          url: "/mjm-ai/chat/creator-guide/test-strategy",
+          icon: "/icons/unit-test.svg",
+          iconActive: "/icons/unit-test-active.svg",
+        },
+      ],
+    },
+  ],
+});
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
+  const { toggleSidebar, state } = useSidebar();
 
   const { chatHistory, loadChatHistory, chatHistoryLoading, setChatMode, setChatHistory } = useChatContext();
 
@@ -135,10 +109,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     loadChatHistory();
   }, [loadChatHistory]);
 
-  const handleNewChat = async () => {
+  const handleNewChat = React.useCallback(async () => {
     router.push("/mjm-ai/chat");
     setChatMode("chat");
-  };
+  }, [router, setChatMode]);
 
   const handDeleteChat = async (id: string, isCurrentPage: boolean) => {
     try {
@@ -150,11 +124,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  const openToggleSidebar = () => {
+  const openToggleSidebar = React.useCallback(() => {
     if (state === "collapsed") {
       toggleSidebar();
     }
-  };
+  }, [state, toggleSidebar]);
+
+  const navData = React.useMemo(() => getNavData(handleNewChat, openToggleSidebar), [handleNewChat, openToggleSidebar]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -164,18 +140,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <NavMain
-          items={data.navMain}
+          items={navData.navMain}
           state={state}
-          t={t}
           chatHistoryLoading={chatHistoryLoading}
           chatHistory={chatHistory}
-          pathname={pathname}
           handDeleteChat={handDeleteChat}
         />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavFooter languages={languages} currentLang={lang} setLang={setLang} />
+        <NavFooter />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
