@@ -534,13 +534,15 @@ const StepButton = ({ index, active, current, onClick }: { index: number, active
     );
 };
 
-const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: { heldRoots: number[], activeChordNotes?: number[], onNoteOn: (n: number) => void, onNoteOff: (n: number) => void }) => {
+const VirtualKeyboard = ({ heldIntervals, musicalKey, activeChordNotes, onNoteOn, onNoteOff }: { heldIntervals: number[], musicalKey: MusicalKey, activeChordNotes?: number[], onNoteOn: (n: number) => void, onNoteOff: (n: number) => void }) => {
     const keys = useMemo(() => {
         let startMidi = 48;
         let endMidi = 72;
 
-        // ใช้ activeChordNotes ถ้ามี (จาก heldNotes) ไม่อย่างนั้นใช้ heldRoots
-        const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+        // ใช้ activeChordNotes ถ้ามี (จาก heldNotes) ไม่อย่างนั้นใช้ heldIntervals + musicalKey
+        const displayNotes = activeChordNotes && activeChordNotes.length > 0 
+            ? activeChordNotes 
+            : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
 
         if (displayNotes.length > 0) {
             const minHeld = Math.min(...displayNotes);
@@ -558,7 +560,7 @@ const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: {
             generatedKeys.push({ note: noteName, midi: i, type: noteName.includes('#') ? 'black' : 'white' });
         }
         return generatedKeys;
-    }, [heldRoots, activeChordNotes]);
+    }, [heldIntervals, musicalKey, activeChordNotes]);
 
     const whiteKeys = keys.filter(k => k.type === 'white');
     const whiteKeyWidthPct = 100 / whiteKeys.length;
@@ -566,8 +568,10 @@ const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: {
     return (
         <div className="w-full relative h-[120px] select-none bg-zinc-950 rounded-b-md overflow-hidden shadow-inner border-t-4 border-zinc-900">
             {whiteKeys.map((key, index) => {
-                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
-                const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldIntervals + musicalKey
+                const displayNotes = activeChordNotes && activeChordNotes.length > 0 
+                    ? activeChordNotes 
+                    : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
                 const isPressed = displayNotes.includes(key.midi);
                 return (
                     <button
@@ -590,8 +594,10 @@ const VirtualKeyboard = ({ heldRoots, activeChordNotes, onNoteOn, onNoteOff }: {
                 if (whiteKeyIndex === -1) return null;
                 const blackKeyWidthPct = whiteKeyWidthPct * 0.65;
                 const leftPosPct = ((whiteKeyIndex + 1) * whiteKeyWidthPct) - (blackKeyWidthPct / 2);
-                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
-                const displayNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldIntervals + musicalKey
+                const displayNotes = activeChordNotes && activeChordNotes.length > 0 
+                    ? activeChordNotes 
+                    : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
                 const isPressed = displayNotes.includes(key.midi);
                 return (
                     <button
@@ -662,43 +668,6 @@ const ArpDisplay = memo(({ sequence, currentStep }: { sequence: (number | number
 });
 ArpDisplay.displayName = 'ArpDisplay';
 
-const PresetSelector = ({ currentPreset, onSelect }: { currentPreset: string | null, onSelect: (settings: ArpSettings) => void }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <ModulePanel title="PRESETS" className="h-full flex flex-col gap-2 relative z-50">
-            <div className="h-full flex items-center">
-                <div className="relative w-full">
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="w-full h-10 bg-[#151515] border border-zinc-700 text-[#2ed573] font-bold text-[12px] tracking-widest px-3 flex items-center justify-between shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] hover:border-[#2ed573] hover:shadow-[0_0_10px_rgba(46,213,115,0.2)] transition-all rounded-[2px]"
-                    >
-                        <span className="truncate">{currentPreset || "SELECT STYLE"}</span>
-                        <span className="text-[10px] transform scale-y-75">▼</span>
-                    </button>
-
-                    {isOpen && (
-                        <div className="absolute top-full left-0 w-full mt-1 max-h-[200px] overflow-y-auto bg-[#1a1a1a] border border-zinc-700 shadow-[0_10px_30px_rgba(0,0,0,0.9)] z-50 rounded-[2px] custom-scrollbar">
-                            {Object.values(GENRE_PRESETS).map((preset) => (
-                                <button
-                                    key={preset.name}
-                                    onClick={() => { onSelect(preset); setIsOpen(false); }}
-                                    className={`
-                                    w-full text-left px-3 py-2 text-[10px] font-bold tracking-widest border-b border-[#222] hover:bg-[#2ed573] hover:text-black transition-colors
-                                    ${currentPreset === preset.name ? 'text-[#2ed573] bg-[#222]' : 'text-zinc-500'}
-                                `}
-                                >
-                                    {preset.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </ModulePanel>
-    );
-};
-
 type SavedMidi = { name: string; data: string; settings?: ArpSettings; };
 
 // --- MAIN COMPONENT ---
@@ -716,7 +685,7 @@ export default function Arpeggiator({
 }: ArpeggiatorProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeMidiNotes, setActiveMidiNotes] = useState<(number | number[])[]>([]);
-    const [heldRoots, setHeldRoots] = useState<number[]>([]);
+    const [heldIntervals, setHeldIntervals] = useState<number[]>([]); // เก็บ interval (0-11) จาก root note
     const [activeChordNotes, setActiveChordNotes] = useState<number[]>([]); // โน๊ตทั้งหมดจาก heldNotes สำหรับแสดงบน Virtual Keyboard
     const [waveform, setWaveform] = useState<Waveform>(initialSettings?.waveform || 'sine');
     const [masterVolume, setMasterVolume] = useState(initialSettings?.masterVolume || 0.5);
@@ -739,6 +708,7 @@ export default function Arpeggiator({
     const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
     const [keyboardOctave, setKeyboardOctave] = useState(0); // Octave offset for keyboard input (-2 to +2)
     const [currentPresetName, setCurrentPresetName] = useState<string | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     const [currentStep, setCurrentStep] = useState<number | null>(null);
     const [currentSeqStep, setCurrentSeqStep] = useState<number>(-1);
@@ -789,7 +759,9 @@ export default function Arpeggiator({
 
         // ใช้ heldRoots จาก settings โดยตรง (สำคัญ: เพื่อให้ AI ส่งค่ามาแล้วเล่นได้ทันที)
         if (settings.heldRoots && settings.heldRoots.length > 0) {
-            setHeldRoots(settings.heldRoots);
+            // แปลง MIDI notes เป็น intervals (0-11)
+            const intervals = settings.heldRoots.map(n => n % 12);
+            setHeldIntervals(intervals);
             setIsHoldOn(true);
         } else if (settings.heldNotes && settings.heldNotes.length > 0) {
             const flatNotes: string[] = settings.heldNotes.flat() as string[];
@@ -801,9 +773,9 @@ export default function Arpeggiator({
                 const derivedRoot = 60 + (firstNoteMidi % 12);
                 targetRoot = derivedRoot;
 
-                const transposeOffset = derivedRoot - 60;
-                const adjustedRoots = rawMidiNotes.map(n => n - transposeOffset);
-                setHeldRoots(adjustedRoots);
+                // แปลงเป็น intervals
+                const intervals = rawMidiNotes.map(n => n % 12);
+                setHeldIntervals(intervals);
                 setIsHoldOn(true);
             }
         }
@@ -833,9 +805,7 @@ export default function Arpeggiator({
         };
     }, []);
 
-    // ตั้งค่า initialKey และ initialScale สำหรับ transpose
-    const [initialKey, setInitialKey] = useState<MusicalKey | null>(null);
-    const hasInitializedRef = useRef(false); // เช็คว่าเคยเซ็ตค่าเริ่มต้นแล้วหรือยัง
+    const hasInitializedRef = useRef(false);
 
     // เซ็ตค่าเริ่มต้นจาก initialSettings (รันแค่ครั้งเดียวตอน mount)
     useEffect(() => {
@@ -844,16 +814,15 @@ export default function Arpeggiator({
 
         console.log('[Arpeggiator] Initializing with initialSettings:', initialSettings);
 
-        if (initialSettings.musicalKey) {
-            setMusicalKey(initialSettings.musicalKey);
-            setInitialKey(initialSettings.musicalKey);
-        }
+        if (initialSettings.musicalKey) setMusicalKey(initialSettings.musicalKey);
         if (initialSettings.scale) setScale(initialSettings.scale);
 
         // เซ็ต Hold = true โดยอัตโนมัติถ้ามี heldRoots จาก initialSettings (เพื่อให้กด RUN แล้วเล่นได้ทันที)
         if (initialSettings.heldRoots && initialSettings.heldRoots.length > 0) {
             console.log('[Arpeggiator] Setting heldRoots:', initialSettings.heldRoots);
-            setHeldRoots(initialSettings.heldRoots);
+            // แปลง MIDI notes เป็น intervals
+            const intervals = initialSettings.heldRoots.map(n => n % 12);
+            setHeldIntervals(intervals);
             setIsHoldOn(true);
         }
 
@@ -885,62 +854,46 @@ export default function Arpeggiator({
 
     // คำนวณ activeMidiNotes จาก heldRoots/activeChordNotes + KEY + SCALE (transpose ตาม key)
     useEffect(() => {
-        // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldRoots
-        const sourceNotes = activeChordNotes && activeChordNotes.length > 0 ? activeChordNotes : heldRoots;
+        // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldIntervals
+        const sourceIntervals = activeChordNotes && activeChordNotes.length > 0
+            ? activeChordNotes.map(n => n % 12)
+            : heldIntervals;
 
-        if (sourceNotes.length === 0) {
+        if (sourceIntervals.length === 0) {
             setActiveMidiNotes([]);
             return;
         }
 
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const octaveShift = keyboardOctave * 12; // เพิ่ม octave shift จาก keyboardOctave
+
         // Freestyle: ใช้โน๊ตตามที่กดเลย ไม่บังคับตาม scale
         if (scale === 'Freestyle') {
-            setActiveMidiNotes([...sourceNotes]);
-            return;
-        }
-
-        // ถ้าไม่มี initialKey ให้ใช้โน๊ตตรงๆ
-        if (!initialKey) {
-            setActiveMidiNotes([...sourceNotes]);
+            const freestyleNotes = sourceIntervals.map(interval => currentKeyRootMidi + interval + octaveShift);
+            setActiveMidiNotes(freestyleNotes);
             return;
         }
 
         const scaleIntervals = SCALE_INTERVALS[scale];
-        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
-        const initialKeyRootMidi = ROOT_NOTES[initialKey];
 
-        // คำนวณ interval จาก initialKey แล้ว transpose ไป currentKey
-        const transposedNotes = sourceNotes.map(keyMidi => {
-            // คำนวณ interval จาก initialKey
-            const initialInterval = (keyMidi - initialKeyRootMidi + 1200) % 12;
-            const octaveOffset = Math.floor((keyMidi - initialKeyRootMidi) / 12) * 12;
-
-            // Transpose ไปยัง currentKey
-            const transposedNote = currentKeyRootMidi + initialInterval + octaveOffset;
-
-            // ปรับให้อยู่ใน scale (ถ้าไม่อยู่ใน scale ให้หาโน๊ตที่ใกล้ที่สุด)
-            const rawInterval = (transposedNote - currentKeyRootMidi + 1200) % 12;
-            if (scaleIntervals.includes(rawInterval)) {
-                return transposedNote;
-            }
-
-            // หาโน๊ตที่ใกล้ที่สุดใน scale
+        // Transpose โน้ตให้อยู่ใน scale ของ musicalKey ปัจจุบัน
+        const transposedNotes = sourceIntervals.map(interval => {
+            // หา interval ที่ใกล้ที่สุดใน scale
             let closestInterval = scaleIntervals[0];
             let minDiff = 12;
-            for (const interval of scaleIntervals) {
-                let diff = Math.abs(rawInterval - interval);
+            for (const scaleInterval of scaleIntervals) {
+                let diff = Math.abs(interval - scaleInterval);
                 if (diff > 6) diff = 12 - diff;
                 if (diff < minDiff) {
                     minDiff = diff;
-                    closestInterval = interval;
+                    closestInterval = scaleInterval;
                 }
             }
-
-            return currentKeyRootMidi + closestInterval + octaveOffset;
+            return currentKeyRootMidi + closestInterval + octaveShift;
         });
 
         setActiveMidiNotes(transposedNotes);
-    }, [heldRoots, activeChordNotes, musicalKey, scale, initialKey]);
+    }, [heldIntervals, activeChordNotes, musicalKey, scale, keyboardOctave]);
 
     const arpSequence = useMemo(() => {
         if (activeMidiNotes.length === 0) return [];
@@ -953,8 +906,8 @@ export default function Arpeggiator({
     }, [activeMidiNotes, octaveRange, sortNotes]);
 
     // Combined Params Ref for Scheduler Access
-    const paramsRef = useRef({ waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence: [] as (number | number[] | null)[], heldRoots, sortNotes, sequencerSteps, musicalKey, scale });
-    useEffect(() => { paramsRef.current = { waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence, heldRoots, sortNotes, sequencerSteps, musicalKey, scale }; }, [waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence, heldRoots, sortNotes, sequencerSteps, musicalKey, scale]);
+    const paramsRef = useRef({ waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence: [] as (number | number[] | null)[], heldIntervals, sortNotes, sequencerSteps, musicalKey, scale });
+    useEffect(() => { paramsRef.current = { waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence, heldIntervals, sortNotes, sequencerSteps, musicalKey, scale }; }, [waveform, masterVolume, gateLength, velocity, bpm, timeDivision, pattern, octaveRange, arpSequence, heldIntervals, sortNotes, sequencerSteps, musicalKey, scale]);
 
     useEffect(() => {
         onSequenceChange?.(arpSequence);
@@ -1011,7 +964,7 @@ export default function Arpeggiator({
     }, [masterVolume]);
 
     // State สำหรับ Undo
-    const [heldRootsHistory, setHeldRootsHistory] = useState<number[][]>([]);
+    const [heldIntervalsHistory, setHeldIntervalsHistory] = useState<number[][]>([]);
     const [activeChordNotesHistory, setActiveChordNotesHistory] = useState<number[][]>([]);
 
     // State สำหรับเก็บโน๊ตที่กดในขณะ Hold ปิด (momentary notes)
@@ -1020,17 +973,19 @@ export default function Arpeggiator({
     const handleNoteOn = useCallback((midiNote: number) => {
         initializeAudio();
 
+        const interval = midiNote % 12;
+
         if (isHoldOn) {
             // Hold เปิด: บันทึก state สำหรับ Undo แล้ว toggle โน๊ต (latch mode)
-            setHeldRootsHistory(prev => [...prev.slice(-9), [...heldRoots]]);
+            setHeldIntervalsHistory(prev => [...prev.slice(-9), [...heldIntervals]]);
             setActiveChordNotesHistory(prev => [...prev.slice(-9), [...activeChordNotes]]);
 
             // Toggle โน๊ต: ถ้ามีอยู่แล้วให้ลบออก, ถ้าไม่มีให้เพิ่ม
-            setHeldRoots(prev => {
-                if (prev.includes(midiNote)) {
-                    return prev.filter(n => n !== midiNote);
+            setHeldIntervals(prev => {
+                if (prev.includes(interval)) {
+                    return prev.filter(n => n !== interval);
                 }
-                return [...prev, midiNote];
+                return [...prev, interval];
             });
             setActiveChordNotes(prev => {
                 if (prev.includes(midiNote)) {
@@ -1041,9 +996,9 @@ export default function Arpeggiator({
         } else {
             // Hold ปิด: เพิ่มโน๊ตแบบ momentary (ผู้ใช้ต้องกดค้างเอง ปล่อยมือ=โน๊ตหลุด)
             momentaryNotes.current.add(midiNote);
-            setHeldRoots(prev => {
-                if (!prev.includes(midiNote)) {
-                    return [...prev, midiNote];
+            setHeldIntervals(prev => {
+                if (!prev.includes(interval)) {
+                    return [...prev, interval];
                 }
                 return prev;
             });
@@ -1054,15 +1009,17 @@ export default function Arpeggiator({
                 return prev;
             });
         }
-    }, [initializeAudio, isHoldOn, heldRoots, activeChordNotes]);
+    }, [initializeAudio, isHoldOn, heldIntervals, activeChordNotes]);
 
     const handleNoteOff = useCallback((midiNote: number) => {
+        const interval = midiNote % 12;
+        
         if (!isHoldOn) {
             // Hold ปิด: ลบเฉพาะ momentary notes (โน๊ตที่ผู้ใช้กดค้างไว้)
             // ปล่อยมือ = โน๊ตหลุด (momentary mode)
             if (momentaryNotes.current.has(midiNote)) {
                 momentaryNotes.current.delete(midiNote);
-                setHeldRoots(prev => prev.filter(n => n !== midiNote));
+                setHeldIntervals(prev => prev.filter(n => n !== interval));
                 setActiveChordNotes(prev => prev.filter(n => n !== midiNote));
             }
         }
@@ -1084,33 +1041,33 @@ export default function Arpeggiator({
 
     // ฟังก์ชัน Undo
     const undo = useCallback(() => {
-        if (heldRootsHistory.length > 0) {
-            const lastRoots = heldRootsHistory[heldRootsHistory.length - 1];
-            setHeldRoots(lastRoots);
-            setHeldRootsHistory(prev => prev.slice(0, -1));
+        if (heldIntervalsHistory.length > 0) {
+            const lastIntervals = heldIntervalsHistory[heldIntervalsHistory.length - 1];
+            setHeldIntervals(lastIntervals);
+            setHeldIntervalsHistory(prev => prev.slice(0, -1));
         }
         if (activeChordNotesHistory.length > 0) {
             const lastChords = activeChordNotesHistory[activeChordNotesHistory.length - 1];
             setActiveChordNotes(lastChords);
             setActiveChordNotesHistory(prev => prev.slice(0, -1));
         }
-    }, [heldRootsHistory, activeChordNotesHistory]);
+    }, [heldIntervalsHistory, activeChordNotesHistory]);
 
     // ฟังก์ชัน Clear โน๊ตทั้งหมด (ลบหมดทุกอย่าง)
     const clearNotes = useCallback(() => {
         // บันทึก state ปัจจุบันสำหรับ Undo
-        setHeldRootsHistory(prev => [...prev.slice(-9), [...heldRoots]]);
+        setHeldIntervalsHistory(prev => [...prev.slice(-9), [...heldIntervals]]);
         setActiveChordNotesHistory(prev => [...prev.slice(-9), [...activeChordNotes]]);
 
         // ลบโน๊ตทั้งหมด
-        setHeldRoots([]);
+        setHeldIntervals([]);
         setActiveChordNotes([]);
-    }, [heldRoots, activeChordNotes]);
+    }, [heldIntervals, activeChordNotes]);
 
     // ฟังก์ชัน Save ARP Settings (แสดง confirmation modal)
     const handleSave = useCallback(() => {
         // ตรวจสอบว่ามีโน๊ตหรือไม่
-        if (heldRoots.length === 0) {
+        if (heldIntervals.length === 0) {
             setModalState({
                 show: true,
                 type: 'alert',
@@ -1120,23 +1077,27 @@ export default function Arpeggiator({
             return;
         }
 
+        // แปลง intervals เป็น MIDI notes จาก musicalKey ปัจจุบัน
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const midiNotes = heldIntervals.map(interval => currentKeyRootMidi + interval);
+
         setModalState({
             show: true,
             type: 'confirm',
             title: 'CONFIRM SAVE',
-            message: `Save current arpeggiator settings? (BPM: ${Math.round(bpm)}, Pattern: ${pattern}, Key: ${musicalKey}, Notes: ${heldRoots.length})`,
+            message: `Save current arpeggiator settings? (BPM: ${Math.round(bpm)}, Pattern: ${pattern}, Key: ${musicalKey}, Notes: ${heldIntervals.length})`,
             onConfirm: () => {
                 const settings: ArpSettings = {
                     waveform,
-                    bpm: Math.round(bpm), // ปัดเศษ BPM เป็นจำนวนเต็ม
+                    bpm: Math.round(bpm),
                     timeDivision,
                     pattern,
                     octaveRange,
-                    gateLength: Math.round(gateLength), // ปัดเศษ gateLength เป็นจำนวนเต็ม
-                    velocity: Math.round(velocity * 100) / 100, // ปัดเศษ velocity 2 ตำแหน่ง
-                    rootNote: Math.round(rootNote), // ปัดเศษ rootNote เป็นจำนวนเต็ม
-                    masterVolume: Math.round(masterVolume * 100) / 100, // ปัดเศษ masterVolume 2 ตำแหน่ง
-                    heldRoots: heldRoots.map(n => Math.round(n)), // ปัดเศษ heldRoots เป็นจำนวนเต็ม
+                    gateLength: Math.round(gateLength),
+                    velocity: Math.round(velocity * 100) / 100,
+                    rootNote: Math.round(rootNote),
+                    masterVolume: Math.round(masterVolume * 100) / 100,
+                    heldRoots: midiNotes.map(n => Math.round(n)),
                     sortNotes,
                     sequencerSteps,
                     musicalKey,
@@ -1159,7 +1120,7 @@ export default function Arpeggiator({
                 }, 100);
             }
         });
-    }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, style, mood, chords, onSave]);
+    }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldIntervals, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, style, mood, chords, onSave]);
 
     // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
     useEffect(() => {
@@ -1251,8 +1212,8 @@ export default function Arpeggiator({
         let noteToPlay: number | number[] | null = null;
         let noteIndex = -1;
 
-        // ใช้ heldRoots จาก state โดยตรง ไม่ใช่จาก paramsRef
-        if (heldRoots.length > 0) {
+        // ใช้ heldIntervals จาก state โดยตรง ไม่ใช่จาก paramsRef
+        if (heldIntervals.length > 0) {
             const result = getNextNote();
             if (result) {
                 if (isActiveStep) {
@@ -1263,9 +1224,9 @@ export default function Arpeggiator({
         }
 
         notesInQueueRef.current.push({
-            noteIndex: (isActiveStep && heldRoots.length > 0 && noteToPlay !== null) ? noteIndex : -1,
+            noteIndex: (isActiveStep && heldIntervals.length > 0 && noteToPlay !== null) ? noteIndex : -1,
             seqIndex: seqStep,
-            midiNote: (isActiveStep && heldRoots.length > 0) ? noteToPlay : null,
+            midiNote: (isActiveStep && heldIntervals.length > 0) ? noteToPlay : null,
             time
         });
 
@@ -1367,7 +1328,7 @@ export default function Arpeggiator({
         if (isPlaying) {
             initializeAudio();
 
-            // Force resume audio context (สำคัญสำหรับ browser ที่ suspend audio)
+            // Force resume audio context (สำคัญสำหรั������� browser ที่ suspend audio)
             if (audioContextRef.current?.state === 'suspended') {
                 audioContextRef.current.resume().catch(err => {
                     console.error('[Arpeggiator] Error resuming audio context:', err);
@@ -1383,7 +1344,7 @@ export default function Arpeggiator({
                 nextNoteTimeRef.current = audioContextRef.current.currentTime + 0.05;
                 
                 // ใช้ setTimeout แทน worker (Next.js App Router ไม่รองรับ worker)
-                // Clear timer เก่าก่อนสร้างใหม่ (ป้องกัน scheduler ซ้อน)
+                // Clear timer เก่าก่อนสร้างใหม่ (����้อ���กัน scheduler ซ้อน)
                 if (timerIDRef.current) {
                     clearInterval(timerIDRef.current);
                 }
@@ -1412,7 +1373,7 @@ export default function Arpeggiator({
                 timerIDRef.current = null;
             }
         };
-    }, [isPlaying, initializeAudio, heldRoots, arpSequence, pattern]);
+    }, [isPlaying, initializeAudio, heldIntervals, arpSequence, pattern]);
 
     useEffect(() => { if (masterGainRef.current) masterGainRef.current.gain.value = masterVolume; }, [masterVolume]);
 
@@ -1429,7 +1390,7 @@ export default function Arpeggiator({
         if (!newHold) {
             momentaryNotes.current.clear();
             // ลบโน๊ตที่ค้างไว้ตอน HOLD เปิด
-            setHeldRoots([]);
+            setHeldIntervals([]);
             setActiveChordNotes([]);
         }
     }, [isHoldOn]);
@@ -1471,7 +1432,11 @@ export default function Arpeggiator({
         const exportSequence = generateArpeggioPattern(paramsRef.current, 64);
         const dataUri = createMidiDataUri(exportSequence, bpm, 480, TIME_DIVISIONS[timeDivision], gateLength, velocity);
 
-        const newMidi: SavedMidi = { name: `Arp-${new Date().toLocaleTimeString().replace(/:/g, '')}`, data: dataUri, settings: { waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots, sortNotes, sequencerSteps, musicalKey, scale } };
+        // แปลง intervals เป็น MIDI notes จาก musicalKey ปัจจุบัน
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const midiNotes = heldIntervals.map(interval => currentKeyRootMidi + interval);
+
+        const newMidi: SavedMidi = { name: `Arp-${new Date().toLocaleTimeString().replace(/:/g, '')}`, data: dataUri, settings: { waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldRoots: midiNotes, sortNotes, sequencerSteps, musicalKey, scale } };
         setSavedMidis(prev => [...prev, newMidi]);
         setModalState({ show: true, type: 'success', title: 'SAVED', message: `PRESET "${newMidi.name}" STORED.` });
     };
@@ -1494,7 +1459,32 @@ export default function Arpeggiator({
                             <Knob label="" value={bpm} min={60} max={200} onChange={setBpm} size={50} color="white" />
                         </div>
                     </div>
-                    <PresetSelector currentPreset={currentPresetName} onSelect={loadSettings} />
+                    <div className="relative w-full">
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="w-full h-10 bg-[#151515] border border-zinc-700 text-[#2ed573] font-bold text-[12px] tracking-widest px-3 flex items-center justify-between shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] hover:border-[#2ed573] hover:shadow-[0_0_10px_rgba(46,213,115,0.2)] transition-all rounded-[2px]"
+                        >
+                            <span className="truncate">{currentPresetName || "SELECT STYLE"}</span>
+                            <span className="text-[10px] transform scale-y-75">▼</span>
+                        </button>
+
+                        {isOpen && (
+                            <div className="absolute top-full left-0 w-full mt-1 max-h-[200px] overflow-y-auto bg-[#1a1a1a] border border-zinc-700 shadow-[0_10px_30px_rgba(0,0,0,0.9)] z-50 rounded-[2px] custom-scrollbar">
+                                {Object.values(GENRE_PRESETS).map((preset) => (
+                                    <button
+                                        key={preset.name}
+                                        onClick={() => { loadSettings(preset); setIsOpen(false); }}
+                                        className={`
+                                    w-full text-left px-3 py-2 text-[10px] font-bold tracking-widest border-b border-[#222] hover:bg-[#2ed573] hover:text-black transition-colors
+                                    ${currentPresetName === preset.name ? 'text-[#2ed573] bg-[#222]' : 'text-zinc-500'}
+                                `}
+                                    >
+                                        {preset.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -1531,29 +1521,67 @@ export default function Arpeggiator({
                         <ArpDisplay sequence={arpSequence} currentStep={currentStep} />
                     </div>
 
-                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
-                        <ModulePanel title="OSCILLATOR" className="h-full flex flex-col justify-between">
-                            <div className="grid grid-cols-4 gap-0.5 md:gap-1 mt-1">
-                                {(['sine', 'square', 'sawtooth', 'triangle'] as const).map(w => (
-                                    <button key={w} onClick={() => setWaveform(w)} className={`h-7 md:h-8 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border transition-all duration-100 shadow-sm ${waveform === w ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'}`}>{w.slice(0, 3)}</button>
-                                ))}
-                            </div>
-                            <div className="flex justify-between items-end mt-1 md:mt-2 px-0.5">
-                                <Knob label="Gate" value={gateLength} min={10} max={128} onChange={setGateLength} size={35} color="#00dfd8" />
-                                <Knob label="Vel" value={velocity} min={0} max={1} onChange={setVelocity} size={35} color="#00dfd8" />
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
+                        <ModulePanel title="OSCILLATOR" className="h-full">
+                            <div className="flex flex-col h-full gap-1 md:gap-2">
+                                <div className="flex-1">
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">WAVEFORM</div>
+                                    <div className="grid grid-cols-4 gap-0.5 md:gap-1">
+                                        {(['sine', 'square', 'sawtooth', 'triangle'] as const).map(w => (
+                                            <button key={w} onClick={() => setWaveform(w)} className={`h-7 md:h-8 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border transition-all duration-100 shadow-sm ${waveform === w ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'}`}>{w.slice(0, 3)}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">CLASSIC TIMBRE</div>
+                                    <div className="grid grid-cols-2 gap-0.5 md:gap-1">
+                                        <button className="h-6 md:h-7 rounded-[2px] text-[7px] md:text-[9px] font-bold uppercase border bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]">Analog</button>
+                                        <button className="h-6 md:h-7 rounded-[2px] text-[7px] md:text-[9px] font-bold uppercase border bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]">Digital</button>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <button className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#2ed573] to-[#26a65b] text-black border-[#1e8f5f] shadow-[0_0_8px_rgba(46,213,115,0.4)] hover:shadow-[0_0_12px_rgba(46,213,115,0.6)] transition-all">
+                                        ⬇ Install VST
+                                    </button>
+                                </div>
                             </div>
                         </ModulePanel>
                     </div>
 
-                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 min-h-[120px] md:min-h-[150px]">
-                        <PresetSelector currentPreset={currentPresetName} onSelect={loadSettings} />
-                    </div>
-
-                    <div className="col-span-1 sm:col-span-2 lg:col-span-6 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-8 flex flex-col gap-1 md:gap-2 min-h-[120px] md:min-h-[150px]">
                         <ModulePanel title="SEQUENCE ENGINE" className="h-full">
                             <div className="absolute top-1 right-1 md:top-2 md:right-2 flex gap-0.5 md:gap-1"><Led active={arpSequence.length > 0} /><Led active={isPlaying} color="#ff0080" /></div>
-                            <div className="grid grid-cols-2 gap-2 md:gap-4 mt-1">
-                                <div className="space-y-1 md:space-y-2">
+                            <div className="flex gap-2 md:gap-4 mt-1 h-full">
+                                <div className="flex flex-col gap-1 md:gap-2 flex-1">
+                                    <div className="space-y-0.5">
+                                        <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">PRESETS</div>
+                                        <div className="relative w-full">
+                                            <button
+                                                onClick={() => setIsOpen(!isOpen)}
+                                                className="w-full h-8 bg-[#151515] border border-zinc-700 text-[#2ed573] font-bold text-[10px] tracking-widest px-2 flex items-center justify-between shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] hover:border-[#2ed573] hover:shadow-[0_0_10px_rgba(46,213,115,0.2)] transition-all rounded-[2px]"
+                                            >
+                                                <span className="truncate">{currentPresetName || "SELECT STYLE"}</span>
+                                                <span className="text-[8px] transform scale-y-75">▼</span>
+                                            </button>
+
+                                            {isOpen && (
+                                                <div className="absolute top-full left-0 w-full mt-1 max-h-[200px] overflow-y-auto bg-[#1a1a1a] border border-zinc-700 shadow-[0_10px_30px_rgba(0,0,0,0.9)] z-50 rounded-[2px] custom-scrollbar">
+                                                    {Object.values(GENRE_PRESETS).map((preset) => (
+                                                        <button
+                                                            key={preset.name}
+                                                            onClick={() => { loadSettings(preset); setIsOpen(false); }}
+                                                            className={`
+                                    w-full text-left px-3 py-2 text-[10px] font-bold tracking-widest border-b border-[#222] hover:bg-[#2ed573] hover:text-black transition-colors
+                                    ${currentPresetName === preset.name ? 'text-[#2ed573] bg-[#222]' : 'text-zinc-500'}
+                                `}
+                                                        >
+                                                            {preset.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="space-y-0.5">
                                         <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center">PATTERN</div>
                                         <div className="grid grid-cols-2 gap-0.5">
@@ -1562,9 +1590,11 @@ export default function Arpeggiator({
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="flex justify-between px-0.5">
+                                    <div className="flex justify-between px-0.5 gap-0.5">
                                         <Knob label="Octave" value={octaveRange} min={1} max={4} onChange={setOctaveRange} size={30} color="#ffa502" />
                                         <Knob label="Root" value={rootNote} min={36} max={84} onChange={setRootNote} size={30} color="#ffa502" />
+                                        <Knob label="Gate" value={gateLength} min={10} max={128} onChange={setGateLength} size={30} color="#00dfd8" />
+                                        <Knob label="Vel" value={velocity} min={0} max={1} onChange={setVelocity} size={30} color="#00dfd8" />
                                     </div>
                                     <div className="mt-0.5 md:mt-1">
                                         <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">TIME DIV</div>
@@ -1576,7 +1606,7 @@ export default function Arpeggiator({
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
+                                <div className="flex flex-col gap-1 flex-1">
                                     <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">KEY</div>
                                     <div className="grid grid-cols-4 gap-0.5">
                                         {KEY_NAMES.map(key => (
@@ -1604,7 +1634,7 @@ export default function Arpeggiator({
                                 <div className="mt-auto grid grid-cols-4 gap-1 md:gap-2">
                                     <HardButton label={isPlaying ? "STOP" : "RUN"} active={isPlaying} color="green" onClick={togglePlay} />
                                     <HardButton label="HOLD" active={isHoldOn} color="red" onClick={toggleHold} />
-                                    <HardButton label="UNDO" active={heldRootsHistory.length > 0} color="blue" onClick={undo} />
+                                    <HardButton label="UNDO" active={heldIntervalsHistory.length > 0} color="blue" onClick={undo} />
                                     <HardButton label="CLEAR" active={false} color="orange" onClick={clearNotes} />
                                 </div>
                                 <div className="mt-5 text-[8px] md:text-[10px] text-zinc-400 text-center px-1 font-medium">
@@ -1660,7 +1690,7 @@ export default function Arpeggiator({
                         <div className="bg-[#111] p-0.5 rounded-t-sm border-t border-[#333] pb-0 shadow-lg">
                             <div className="text-[7px] md:text-[9px] text-center text-[#555] tracking-[0.3em] mb-0.5 font-bold">VIRTUAL KEYBED CONTROLLER</div>
                         </div>
-                        <VirtualKeyboard key={`kbd-${activeChordNotes.join(',')}-${heldRoots.join(',')}`} heldRoots={heldRoots} activeChordNotes={activeChordNotes} onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} />
+                        <VirtualKeyboard key={`kbd-${activeChordNotes.join(',')}-${heldIntervals.join(',')}-${musicalKey}`} heldIntervals={heldIntervals} musicalKey={musicalKey} activeChordNotes={activeChordNotes} onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} />
                     </div>
 
                     {/* SAVE BUTTON */}
