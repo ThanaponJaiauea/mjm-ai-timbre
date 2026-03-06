@@ -30,6 +30,7 @@ import {
   icon_download,
   icon_subscription,
   icon_vst_plugins,
+  icon_library,
 } from "../../../public/index";
 
 interface NavMainProps {
@@ -68,6 +69,20 @@ export function NavMain({
         >
           <Image alt="create" width={24} height={24} src={icon_create} />
           <span className={`${state === "collapsed" && "hidden"}`}>Create</span>
+        </SidebarMenuButton>
+      </SidebarMenu>
+
+      {/* Timbre Library */}
+      <SidebarMenu>
+        <SidebarMenuButton
+          size="lg"
+          isActive={pathname === "/timbre-library/page.jsx"}
+          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
+        >
+          <Link href="/mjm-ai/chat/timbre-library" onClick={openToggleSidebar} className="flex items-center gap-2">
+            <Image alt="timbre-library" width={24} height={24} src={icon_library} />
+            <span className={`${state === "collapsed" && "hidden"}`}>Timbre Library</span>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenu>
 
