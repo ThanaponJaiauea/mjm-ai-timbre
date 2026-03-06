@@ -76,8 +76,9 @@ export function NavMain({
       <SidebarMenu>
         <SidebarMenuButton
           size="lg"
-          isActive={pathname === "/timbre-library/page.jsx"}
+          isActive={pathname === "/mjm-ai/chat/timbre-library"}
           className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
+          asChild
         >
           <Link href="/mjm-ai/chat/timbre-library" onClick={openToggleSidebar} className="flex items-center gap-2">
             <Image alt="timbre-library" width={24} height={24} src={icon_library} />
