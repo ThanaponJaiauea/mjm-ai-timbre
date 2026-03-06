@@ -55,9 +55,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       },
       {
-        title: "Subscription Plan",
+        title: "Timbre Library",
         url: "/mjm-ai/chat/timbre-library",
         icon: icon_library,
+        isShowSubmenu: false,
+        isActive: pathname === "/mjm-ai/chat/download",
+      },
+      {
+        title: "Subscription Plan",
+        url: "",
+        icon: icon_subscription,
         isShowSubmenu: false,
         isActive: pathname === "/mjm-ai/chat/download",
       },
