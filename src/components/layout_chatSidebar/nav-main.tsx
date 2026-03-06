@@ -2,7 +2,8 @@
 
 "use client";
 import Link from "next/link";
-import { Clock4, EllipsisIcon, Trash, type LucideIcon } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight, Clock4, EllipsisIcon, Trash, type LucideIcon } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -12,6 +13,9 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
 import {
@@ -23,15 +27,9 @@ import {
 import NavChatHistorySkeleton from "./navChatHistorySkeleton";
 
 import en from "@/locales/en.json";
-import Image from "next/image";
-import {
-  icon_create,
-  icon_creator_guide,
-  icon_download,
-  icon_subscription,
-  icon_vst_plugins,
-  icon_library,
-} from "../../../public/index";
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { cn } from "@/lib/utils";
 
 interface NavMainProps {
   openToggleSidebar: () => void;
@@ -45,86 +43,79 @@ interface NavMainProps {
 }
 
 export function NavMain({
-  openToggleSidebar,
+  items,
   state,
   t,
   chatHistory,
   chatHistoryLoading,
   pathname,
-  handleNewChat,
   handDeleteChat,
-}: NavMainProps) {
+}: Readonly<NavMainProps>) {
   return (
     <SidebarGroup className="flex flex-col">
-      {/* Create */}
       <SidebarMenu>
-        <SidebarMenuButton
-          size="lg"
-          tooltip={t.newchat}
-          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
-          onClick={() => {
-            handleNewChat();
-            openToggleSidebar();
-          }}
-        >
-          <Image alt="create" width={24} height={24} src={icon_create} />
-          <span className={`${state === "collapsed" && "hidden"}`}>Create</span>
-        </SidebarMenuButton>
-      </SidebarMenu>
+        {items.map(item => (
+          <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible">
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  tooltip={item.title}
+                  isActive={item.isActive}
+                  className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
+                  onClick={item.onClick}
+                >
+                  <Image src={item.icon} alt="image" width={24} height={24} />
 
-      {/* Timbre Library */}
-      <SidebarMenu>
-        <SidebarMenuButton
-          size="lg"
-          isActive={pathname === "/mjm-ai/chat/timbre-library"}
-          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
-          asChild
-        >
-          <Link href="/mjm-ai/chat/timbre-library" onClick={openToggleSidebar} className="flex items-center gap-2">
-            <Image alt="timbre-library" width={24} height={24} src={icon_library} />
-            <span className={`${state === "collapsed" && "hidden"}`}>Timbre Library</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenu>
-
-      {/* Subscription Plan */}
-      <SidebarMenu>
-        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
-          <Image alt="subscription" width={24} height={24} src={icon_subscription} />
-          <span className={`${state === "collapsed" && "hidden"}`}>Subscription Plan</span>
-        </SidebarMenuButton>
-      </SidebarMenu>
-
-      {/* Creator Guide */}
-      <SidebarMenu>
-        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
-          <Image alt="creator guide" width={24} height={24} src={icon_creator_guide} />
-          <span className={`${state === "collapsed" && "hidden"}`}>Creator Guide</span>
-        </SidebarMenuButton>
-      </SidebarMenu>
-
-      {/* Creator Guide */}
-      <SidebarMenu>
-        <SidebarMenuButton size="lg" className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}>
-          <Image alt="vst plugins" width={24} height={24} src={icon_vst_plugins} />
-          <span className={`${state === "collapsed" && "hidden"}`}>VST Plugins</span>
-        </SidebarMenuButton>
-      </SidebarMenu>
-
-      {/* Download App */}
-      <SidebarMenu>
-        <SidebarMenuButton
-          size="lg"
-          isActive={pathname === "/mjm-ai/chat/download"}
-          tooltip={t.downloadApp}
-          className={`h-10 ${state === "collapsed" && "flex items-center justify-center"}`}
-          asChild
-        >
-          <Link href="/mjm-ai/chat/download" onClick={openToggleSidebar}>
-            <Image alt="download app" width={24} height={24} src={icon_download} />
-            <span className={`${state === "collapsed" && "hidden"}`}>{t.downloadApp}</span>
-          </Link>
-        </SidebarMenuButton>
+                  <Link href={item.url}>
+                    <span className={`${state === "collapsed" && "hidden"}`}>{item.title}</span>
+                  </Link>
+                  {item.isShowSubmenu && (
+                    <ChevronRight
+                      className={cn(
+                        "ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90",
+                        state === "collapsed" && "hidden"
+                      )}
+                    />
+                  )}
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {item.items && (
+                  <SidebarMenuSub>
+                    {item.items.map(subItem => (
+                      <SidebarMenuSubItem key={subItem.title} className="mt-2">
+                        <SidebarMenuSubButton size="md" className=" h-10" isActive={subItem.isActive} asChild>
+                          <Link href={subItem.url}>
+                            {subItem.icon && (
+                              <div className="flex items-center m-1 gap-2 w-52 h-14 tex-sm ">
+                                {subItem.isActive ? (
+                                  <>
+                                    <Image src={subItem.iconActive} alt="image" width={16} height={16} />
+                                    <span className="text-sm font-normal bg-linear-to-r from-[#E759FF] to-[#6174FF] inline-block text-transparent bg-clip-text">
+                                      {subItem.title}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image src={subItem.icon} alt={subItem.title} width={16} height={16} />
+                                    <span className="text-sm font-normal text-[#8F8F8F] inline-block ">
+                                      {subItem.title}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        ))}
       </SidebarMenu>
 
       {/* History */}
