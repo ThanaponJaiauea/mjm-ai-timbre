@@ -42,7 +42,7 @@ const getNavData = (handleNewChat: () => void, openToggleSidebar: () => void): {
     },
     {
       title: "Subscription Plan",
-      url: "",
+      url: "/mjm-ai/chat/subscription-plan",
       icon: icon_subscription,
       isShowSubmenu: false,
     },
