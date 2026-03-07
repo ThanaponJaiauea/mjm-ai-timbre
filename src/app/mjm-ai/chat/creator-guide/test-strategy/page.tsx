@@ -22,37 +22,39 @@ export default function TestStrategyPage() {
         </p>
       </section>
 
-      <section className="flex  gap-12 ">
+      <section className="flex gap-12 justify-between ">
         <div className="flex flex-col justify-center">
-          <p className="text-xl font-semibold">Rule Engine Testing</p>
+          <p className="text-xl font-semibold ml-4">Rule Engine Testing</p>
           <p className="p-4">Ensures music generation rules function properly.</p>
-          <ul className="list-disc ml-8">
+          <ul className="list-disc ml-10">
             <li>Selecting a “Jazz Rule” produces MIDI notes containing appropriate 7th chords</li>
             <li>Generated results follow established music theory principles</li>
           </ul>
         </div>
-        <Image
-          className="w-2/5 pt-6"
-          src="/images/rule-engine-testing.svg"
-          alt="rule engine testing"
-          width={400}
-          height={400}
-        />
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center ">
+            <Image className="mb-2" src="/icons/microphone.svg" alt=" rule engine testing" width={50} height={40} />
+            <p>Rule Engine Testing</p>
+            <p className="text-muted-foreground">Checks pricing and payment accuracy.</p>
+          </div>
+          <div className="ml-auto h-full w-[0.5px] bg-linear-to-b from-white to-white/12"></div>
+        </div>
       </section>
 
       <Separator />
 
-      <section className="flex gap-12 ">
-        <Image
-          className="w-2/5"
-          src="/images/conversion-testing.svg"
-          alt="conversion testing"
-          width={400}
-          height={400}
-        />
-        <div className="flex flex-col justify-center ">
-          <p className="text-xl font-semibold mb-2">Conversion Testing</p>
-          <p className="p-4">Validates audio conversion processes.</p>
+      <section className="flex gap-12 justify-between ">
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center text-center">
+            <Image className="mb-2" src="/icons/conversion.svg" alt=" conversion testing" width={50} height={40} />
+            <p>Conversion Testing</p>
+            <p className="text-muted-foreground">Verifies accurate MIDI-to-audio conversion.</p>
+          </div>
+          <div className="ml-auto h-full w-[0.5px] bg-linear-to-b from-white to-white/12"></div>
+        </div>
+        <div className="flex flex-col justify-center w-3/5">
+          <p className="text-xl font-semibold ml-4">Conversion Testing</p>
+          <p className="p-4 ">Validates audio conversion processes.</p>
           <ul className="list-disc ml-10">
             <li>Tests MIDI → WAV conversion accuracy</li>
             <li>Confirms correct audio duration and sound quality after export</li>
@@ -62,22 +64,23 @@ export default function TestStrategyPage() {
 
       <Separator />
 
-      <section className="flex  gap-12">
+      <section className="flex gap-12 justify-between ">
         <div className="flex flex-col justify-center">
-          <p className="text-xl font-semibold mb-4">Calculation Testing</p>
-          <p className="">Verifies system calculations and transaction logic.</p>
-          <ul className="list-disc ml-8">
+          <p className="text-xl font-semibold ml-4">Calculation Testing</p>
+          <p className="p-4">Verifies system calculations and transaction logic.</p>
+          <ul className="list-disc ml-10">
             <li>Checks pricing calculations</li>
             <li>Ensures payment history and billing records are processed correctly</li>
           </ul>
         </div>
-        <Image
-          className="ml-10"
-          src="/images/calculation-testing.svg"
-          alt="calculation testing"
-          width={500}
-          height={400}
-        />
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center ">
+            <Image className="mb-2" src="/icons/calculation.svg" alt="calculation testing" width={50} height={40} />
+            <p>Calculation Testing</p>
+            <p className="text-muted-foreground">Checks pricing and payment accuracy.</p>
+          </div>
+          <div className="ml-auto h-full w-[0.5px] bg-linear-to-b from-white to-white/12"></div>
+        </div>
       </section>
 
       <Separator />
@@ -89,45 +92,65 @@ export default function TestStrategyPage() {
           expectations.
         </p>
       </section>
-      <section className="flex  gap-12 ">
-        <Image
-          className="w-2/5"
-          src="/images/user-flow-testing.svg"
-          alt="conversion testing"
-          width={400}
-          height={400}
-        />
-        <div className="flex flex-col justify-center ">
-          <p className="text-xl font-semibold mb-4">User Flow Testing</p>
-          <p>
-            Tests the complete user journey: Register → Payment → Slip Upload → Admin Approval → VST Access Ensures
-            users can successfully access features after completing required steps.
+      <section className="flex gap-12 justify-between ">
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center text-center">
+            <Image className="mb-2" src="/icons/user-flow.svg" alt=" conversion testing" width={50} height={40} />
+            <p>User Flow Testing</p>
+            <p className="text-muted-foreground">Validates Core Functions And Components.</p>
+          </div>
+          <div className="ml-auto h-full w-[0.5px] bg-linear-to-b from-white to-white/12"></div>
+        </div>
+        <div className="flex flex-col justify-center w-3/5">
+          <p className="text-xl font-semibold ml-4">User Flow Testing</p>
+          <p className="p-4 ">
+            Tests Full User Journey: Register → Payment → Upload Slip → Admin Approval → VST Access Ensures Successful
+            Feature Access.
           </p>
         </div>
       </section>
 
       <Separator />
 
-      <section className="flex  gap-12 ">
-        <div className="flex flex-col justify-center  ">
-          <p className="text-xl font-semibold mb-2">Offline to Online Workflow</p>
-          <p className="">Tests hybrid system reliability.</p>
-          <ul className="list-disc ml-8">
+      <section className="flex gap-12 justify-between ">
+        <div className="flex flex-col justify-center">
+          <p className="text-xl font-semibold ml-4">Offline to Online Workflow</p>
+          <p className="p-4">Tests hybrid system reliability.</p>
+          <ul className="list-disc ml-10">
             <li>Users generate content while offline</li>
             <li>Once reconnected, all data in the Save List automatically syncs to the Cloud without loss</li>
           </ul>
         </div>
-        <Image className="w-2/5" src="/images/online-workflow.svg" alt="offline testing" width={400} height={400} />
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center ">
+            <Image
+              className="mb-2"
+              src="/icons/offline-online.svg"
+              alt="offline to online testing"
+              width={50}
+              height={40}
+            />
+            <p>Offline to Online Workflow</p>
+            <p className="text-muted-foreground">Tests hybrid system reliability.</p>
+          </div>
+          <div className="ml-auto h-full w-[0.5px] bg-linear-to-b from-white to-white/12"></div>
+        </div>
       </section>
 
       <Separator />
 
-      <section className="flex  gap-12 -mb-10">
-        <Image className="w-2/5" src="/images/vst-workflow.svg" alt="vst workflow" width={400} height={400} />
-        <div className="flex flex-col justify-center  ">
-          <p className="text-xl font-semibold mb-2">VST Workflow Testing</p>
-          <p className="">Ensures stable plugin operation inside DAWs.</p>
-          <ul className="list-disc ml-8">
+      <section className="flex gap-12 justify-between ">
+        <div className="flex w-80">
+          <div className="flex flex-col justify-center items-center text-center">
+            <Image className="mb-2" src="/icons/vst.svg" alt="vst workflow testing" width={50} height={40} />
+            <p>VST Workflow Testing</p>
+            <p className="text-muted-foreground">Ensures stable plugin operation inside DAWs.</p>
+          </div>
+        </div>
+        <div className="flex flex-col justify-center w-3/5">
+          <p className="text-xl font-semibold ml-4">VST Workflow Testing</p>
+          <p className="p-4 ">Ensures stable plugin operation inside DAWs.</p>
+          <ul className="list-disc ml-10">
             <li>Plugin launches correctly in DAW environments</li>
             <li>Drag-and-drop MIDI into tracks works smoothly</li>
             <li>No crashes or workflow interruptions occur</li>
