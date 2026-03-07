@@ -32,6 +32,8 @@ export interface ArpSettings {
     style?: string;
     mood?: string;
     chords?: string[];
+    wavFileUrl?: string;
+    midiFileUrl?: string;
 }
 
 interface ArpeggiatorProps {
@@ -374,6 +376,62 @@ const createMidiDataUri = (sequence: (number | number[] | null)[], bpm: number, 
     let binary = '';
     for (let i = 0; i < midiFile.byteLength; i++) binary += String.fromCharCode(midiFile[i]);
     return 'data:audio/midi;base64,' + btoa(binary);
+};
+
+// สร้าง WAV file จาก AudioBuffer
+const createWavDataUri = (audioBuffer: AudioBuffer): string => {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+
+    const data = [];
+    for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numChannels; channel++) {
+            const sample = audioBuffer.getChannelData(channel)[i];
+            const intSample = Math.max(-1, Math.min(1, sample));
+            data.push(intSample < 0 ? intSample * 0x8000 : intSample * 0x7FFF);
+        }
+    }
+
+    const dataLength = data.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataLength);
+    const view = new DataView(buffer);
+
+    const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+
+    let offset = 44;
+    for (let i = 0; i < data.length; i++) {
+        view.setInt16(offset, data[i], true);
+        offset += 2;
+    }
+
+    let binary = '';
+    for (let i = 0; i < buffer.byteLength; i++) {
+        binary += String.fromCharCode(view.getUint8(i));
+    }
+    return 'data:audio/wav;base64,' + btoa(binary);
 };
 
 // --- UI COMPONENTS ---
@@ -1065,7 +1123,7 @@ export default function Arpeggiator({
     }, [heldIntervals, activeChordNotes]);
 
     // ฟังก์ชัน Save ARP Settings (แสดง confirmation modal)
-    const handleSave = useCallback(() => {
+    const handleSave = useCallback(async () => {
         // ตรวจสอบว่ามีโน๊ตหรือไม่
         if (heldIntervals.length === 0) {
             setModalState({
@@ -1086,7 +1144,65 @@ export default function Arpeggiator({
             type: 'confirm',
             title: 'CONFIRM SAVE',
             message: `Save current arpeggiator settings? (BPM: ${Math.round(bpm)}, Pattern: ${pattern}, Key: ${musicalKey}, Notes: ${heldIntervals.length})`,
-            onConfirm: () => {
+            onConfirm: async () => {
+                // สร้าง arpSequence จาก heldIntervals
+                let arpSeq: number[] = [];
+                for (let i = 0; i < octaveRange; i++) {
+                    const octaveShift = i * 12;
+                    arpSeq.push(...midiNotes.map(note => note + octaveShift));
+                }
+                if (sortNotes) {
+                    arpSeq.sort((a, b) => a - b);
+                }
+
+                // สร้าง MIDI file
+                const exportSequence = generateArpeggioPattern({
+                    arpSequence: arpSeq,
+                    pattern,
+                    sequencerSteps,
+                }, 64);
+                const midiDataUri = createMidiDataUri(exportSequence, bpm, 480, TIME_DIVISIONS[timeDivision], gateLength, velocity);
+
+                // สร้าง WAV file โดย render audio
+                let wavDataUri = '';
+                try {
+                    const audioContext = audioContextRef.current;
+                    if (audioContext) {
+                        // สร้าง offline audio context เพื่อ render
+                        const durationInSeconds = (60 / bpm) * TIME_DIVISIONS[timeDivision] * exportSequence.length * 2; // เพิ่ม buffer
+                        const offlineContext = new OfflineAudioContext(2, Math.floor(audioContext.sampleRate * durationInSeconds), audioContext.sampleRate);
+
+                        // สร้าง oscillator และ schedule ใน offline context
+                        const now = 0;
+                        const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
+                        exportSequence.forEach((midiNote, index) => {
+                            if (midiNote !== null) {
+                                const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
+                                const startTime = now + index * stepDuration;
+                                const noteDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
+                                
+                                notes.forEach(noteNum => {
+                                    const osc = offlineContext.createOscillator();
+                                    const gain = offlineContext.createGain();
+                                    osc.type = waveform;
+                                    osc.frequency.value = 440 * Math.pow(2, (noteNum - 69) / 12);
+                                    gain.gain.setValueAtTime(velocity * masterVolume, startTime);
+                                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
+                                    osc.connect(gain);
+                                    gain.connect(offlineContext.destination);
+                                    osc.start(startTime);
+                                    osc.stop(startTime + noteDuration);
+                                });
+                            }
+                        });
+
+                        const renderedBuffer = await offlineContext.startRendering();
+                        wavDataUri = createWavDataUri(renderedBuffer);
+                    }
+                } catch (error) {
+                    console.warn('Failed to create WAV file:', error);
+                }
+
                 const settings: ArpSettings = {
                     waveform,
                     bpm: Math.round(bpm),
@@ -1106,6 +1222,8 @@ export default function Arpeggiator({
                     style,
                     mood,
                     chords,
+                    midiFileUrl: midiDataUri,
+                    wavFileUrl: wavDataUri,
                 };
                 onSave?.(settings);
                 setModalState({ show: false, type: 'alert', title: '', message: '' });
