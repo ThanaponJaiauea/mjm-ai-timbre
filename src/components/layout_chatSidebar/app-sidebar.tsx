@@ -2,10 +2,16 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
 import * as React from "react";
-import { NavMain, type NavItemType } from "@/components/layout_chatSidebar/nav-main";
+import { useEffect } from "react";
+import { deleteChat } from "@/api/chatHistory";
 import { NavFooter } from "@/components/layout_chatSidebar/nav-footer";
 import { NavHeader } from "@/components/layout_chatSidebar/nav-header";
+import {
+  type NavItemType,
+  NavMain,
+} from "@/components/layout_chatSidebar/nav-main";
 import {
   Sidebar,
   SidebarContent,
@@ -14,15 +20,19 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import { icon_create, icon_creator_guide, icon_download, icon_subscription, icon_library } from "../../../public/index";
-
-import { useRouter } from "next/navigation";
 import { useChatContext } from "@/hooks/ChatContext";
-import { useEffect } from "react";
-import { deleteChat } from "@/api/chatHistory";
+import {
+  icon_create,
+  icon_creator_guide,
+  icon_download,
+  icon_library,
+  icon_subscription,
+} from "../../../public/index";
 
-const getNavData = (handleNewChat: () => void, openToggleSidebar: () => void): { navMain: NavItemType[] } => ({
+const getNavData = (
+  handleNewChat: () => void,
+  openToggleSidebar: () => void
+): { navMain: NavItemType[] } => ({
   navMain: [
     {
       title: "Create",
@@ -103,7 +113,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const { toggleSidebar, state } = useSidebar();
 
-  const { chatHistory, loadChatHistory, chatHistoryLoading, setChatMode, setChatHistory } = useChatContext();
+  const {
+    chatHistory,
+    loadChatHistory,
+    chatHistoryLoading,
+    setChatMode,
+    setChatHistory,
+  } = useChatContext();
 
   useEffect(() => {
     loadChatHistory();
@@ -117,8 +133,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handDeleteChat = async (id: string, isCurrentPage: boolean) => {
     try {
       await deleteChat(id);
-      setChatHistory(prev => prev.filter(chat => chat.id !== id));
-      if (!isCurrentPage) handleNewChat();
+      setChatHistory((prev) => prev.filter((chat) => chat.id !== id));
+      if (!isCurrentPage) {
+        handleNewChat();
+      }
     } catch (error) {
       console.error("Failed to delete chat:", error);
     }
@@ -130,21 +148,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [state, toggleSidebar]);
 
-  const navData = React.useMemo(() => getNavData(handleNewChat, openToggleSidebar), [handleNewChat, openToggleSidebar]);
+  const navData = React.useMemo(
+    () => getNavData(handleNewChat, openToggleSidebar),
+    [handleNewChat, openToggleSidebar]
+  );
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="bg-[#232323]">
-        <NavHeader state={state} toggleSidebar={toggleSidebar} router={router} />
+        <NavHeader
+          router={router}
+          state={state}
+          toggleSidebar={toggleSidebar}
+        />
       </SidebarHeader>
 
       <SidebarContent>
         <NavMain
+          chatHistory={chatHistory}
+          chatHistoryLoading={chatHistoryLoading}
+          handDeleteChat={handDeleteChat}
           items={navData.navMain}
           state={state}
-          chatHistoryLoading={chatHistoryLoading}
-          chatHistory={chatHistory}
-          handDeleteChat={handDeleteChat}
         />
       </SidebarContent>
 
