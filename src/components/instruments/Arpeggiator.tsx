@@ -67,8 +67,46 @@ const SCALE_INTERVALS: Record<Scale, number[]> = {
     'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
     'Freestyle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // เหมือน Chromatic แต่ไม่ transpose
 };
-const KEY_NAMES: MusicalKey[] = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+const KEY_NAMES: (MusicalKey | string)[] = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 const SCALE_NAMES: Scale[] = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Harmonic Minor', 'Melodic Minor', 'Pentatonic Major', 'Pentatonic Minor', 'Blues', 'Chromatic', 'Freestyle'];
+
+// --- CLASSIC TIMBRE PRESETS ---
+const CLASSIC_TIMBRES: TimbrePreset[] = [
+    // Piano Category
+    { id: 'grand-piano', name: 'Grand Piano', category: 'Acoustic', type: 'Piano', waveform: 'triangle', attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.5, filterCutoff: 8000, filterResonance: 0.5, octaveShift: 0, detune: 0, icon: '🎹', color: '#f5f5f5' },
+    { id: 'electric-piano', name: 'Electric Piano', category: 'Electric', type: 'Piano', waveform: 'sine', attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.4, filterCutoff: 5000, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎹', color: '#d4a574' },
+    { id: 'rhodes', name: 'Rhodes', category: 'Electric', type: 'Piano', waveform: 'sine', attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.6, filterCutoff: 3000, filterResonance: 0.4, octaveShift: 0, detune: 10, icon: '🎹', color: '#c4a484' },
+
+    // Synth Category
+    { id: 'supersaw', name: 'SuperSaw', category: 'Synth', type: 'Synth', waveform: 'sawtooth', attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.3, filterCutoff: 6000, filterResonance: 0.7, octaveShift: 0, detune: 20, icon: '🎛️', color: '#ff6b6b' },
+    { id: 'plucky-synth', name: 'Plucky Synth', category: 'Synth', type: 'Pluck', waveform: 'square', attack: 0.001, decay: 0.15, sustain: 0.3, release: 0.1, filterCutoff: 4000, filterResonance: 0.5, octaveShift: 1, detune: 8, icon: '🎛️', color: '#4ecdc4' },
+    { id: 'warm-pad', name: 'Warm Pad', category: 'Synth', type: 'Pad', waveform: 'sawtooth', attack: 0.3, decay: 0.5, sustain: 0.9, release: 1.0, filterCutoff: 2000, filterResonance: 0.3, octaveShift: 0, detune: 15, icon: '🎛️', color: '#a55eea' },
+
+    // Strings Category
+    { id: 'orchestral-strings', name: 'Orchestral Strings', category: 'Acoustic', type: 'Strings', waveform: 'sawtooth', attack: 0.1, decay: 0.3, sustain: 0.8, release: 0.8, filterCutoff: 3500, filterResonance: 0.2, octaveShift: 0, detune: 8, icon: '🎻', color: '#8b4513' },
+    { id: 'synth-strings', name: 'Synth Strings', category: 'Synth', type: 'Strings', waveform: 'sawtooth', attack: 0.05, decay: 0.2, sustain: 0.9, release: 0.6, filterCutoff: 4000, filterResonance: 0.4, octaveShift: 0, detune: 12, icon: '🎻', color: '#cd853f' },
+    { id: 'chamber-strings', name: 'Chamber Strings', category: 'Acoustic', type: 'Strings', waveform: 'triangle', attack: 0.08, decay: 0.4, sustain: 0.7, release: 0.9, filterCutoff: 5000, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎻', color: '#a0522d' },
+
+    // Brass Category
+    { id: 'trumpet-section', name: 'Trumpet Section', category: 'Acoustic', type: 'Brass', waveform: 'sawtooth', attack: 0.05, decay: 0.2, sustain: 0.7, release: 0.4, filterCutoff: 4500, filterResonance: 0.5, octaveShift: 0, detune: 8, icon: '🎺', color: '#ffd700' },
+    { id: 'french-horn', name: 'French Horn', category: 'Acoustic', type: 'Brass', waveform: 'triangle', attack: 0.08, decay: 0.3, sustain: 0.6, release: 0.5, filterCutoff: 3000, filterResonance: 0.4, octaveShift: -1, detune: 5, icon: '🎺', color: '#daa520' },
+    { id: 'synth-brass', name: 'Synth Brass', category: 'Synth', type: 'Brass', waveform: 'square', attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.2, filterCutoff: 5500, filterResonance: 0.6, octaveShift: 0, detune: 15, icon: '🎺', color: '#b8860b' },
+
+    // Bass Category
+    { id: 'sub-bass', name: 'Sub Bass', category: 'Synth', type: 'Bass', waveform: 'sine', attack: 0.01, decay: 0.3, sustain: 0.9, release: 0.2, filterCutoff: 800, filterResonance: 0.2, octaveShift: -1, detune: 0, icon: '🎸', color: '#2d3436' },
+    { id: 'acid-bass', name: 'Acid Bass', category: 'Synth', type: 'Bass', waveform: 'sawtooth', attack: 0.001, decay: 0.2, sustain: 0.7, release: 0.15, filterCutoff: 2500, filterResonance: 0.9, octaveShift: 0, detune: 10, icon: '🎸', color: '#636e72' },
+    { id: 'electric-bass', name: 'Electric Bass', category: 'Electric', type: 'Bass', waveform: 'triangle', attack: 0.01, decay: 0.25, sustain: 0.8, release: 0.3, filterCutoff: 1500, filterResonance: 0.3, octaveShift: -1, detune: 5, icon: '🎸', color: '#8b4513' },
+
+    // Lead Category
+    { id: 'saw-lead', name: 'Saw Lead', category: 'Synth', type: 'Lead', waveform: 'sawtooth', attack: 0.01, decay: 0.1, sustain: 0.7, release: 0.2, filterCutoff: 5000, filterResonance: 0.5, octaveShift: 0, detune: 12, icon: '🎤', color: '#e74c3c' },
+    { id: 'square-lead', name: 'Square Lead', category: 'Synth', type: 'Lead', waveform: 'square', attack: 0.01, decay: 0.15, sustain: 0.6, release: 0.25, filterCutoff: 4500, filterResonance: 0.4, octaveShift: 0, detune: 8, icon: '🎤', color: '#e67e22' },
+    { id: 'soft-lead', name: 'Soft Lead', category: 'Synth', type: 'Lead', waveform: 'triangle', attack: 0.02, decay: 0.2, sustain: 0.8, release: 0.4, filterCutoff: 3500, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎤', color: '#f39c12' },
+
+    // FX Category
+    { id: 'crystal-bell', name: 'Crystal Bell', category: 'FX', type: 'Bell', waveform: 'sine', attack: 0.001, decay: 0.8, sustain: 0.1, release: 1.5, filterCutoff: 8000, filterResonance: 0.2, octaveShift: 2, detune: 3, icon: '🔔', color: '#74b9ff' },
+    { id: 'sweep-up', name: 'Sweep Up', category: 'FX', type: 'Sweep', waveform: 'sawtooth', attack: 0.5, decay: 0.5, sustain: 0.5, release: 0.5, filterCutoff: 8000, filterResonance: 0.8, octaveShift: 0, detune: 20, icon: '🌊', color: '#a29bfe' },
+    { id: 'choir-ahh', name: 'Choir Ahh', category: 'Acoustic', type: 'Choir', waveform: 'sawtooth', attack: 0.1, decay: 0.3, sustain: 0.8, release: 0.8, filterCutoff: 2500, filterResonance: 0.3, octaveShift: 0, detune: 10, icon: '🎵', color: '#fd79a8' },
+];
 
 const GENRE_PRESETS: Record<string, ArpSettings> = {
     'TRANCE': {
@@ -230,6 +268,28 @@ type ArpState = {
     noteIndex: number;
     direction: 'up' | 'down';
 };
+
+// --- CLASSIC TIMBRE TYPES ---
+type TimbreCategory = 'Analog' | 'Digital' | 'Acoustic' | 'Synth' | 'Bass' | 'Lead' | 'Pad' | 'FX' | 'Electric';
+type TimbreType = 'Piano' | 'Synth' | 'Strings' | 'Brass' | 'Guitar' | 'Bass' | 'Drums' | 'Organ' | 'Choir' | 'Bell' | 'Pluck' | 'Arp' | 'Sweep' | 'Lead' | 'Pad';
+
+interface TimbrePreset {
+    id: string;
+    name: string;
+    category: TimbreCategory;
+    type: TimbreType;
+    waveform: Waveform;
+    attack: number;
+    decay: number;
+    sustain: number;
+    release: number;
+    filterCutoff: number;
+    filterResonance: number;
+    octaveShift: number;
+    detune: number;
+    icon: string;
+    color: string;
+}
 
 const calculateNextArpState = (
     currentState: ArpState,
@@ -768,6 +828,25 @@ export default function Arpeggiator({
     const [currentPresetName, setCurrentPresetName] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Classic Timbre Modal State
+    const [showTimbreModal, setShowTimbreModal] = useState(false);
+    const [selectedTimbreId, setSelectedTimbreId] = useState<string | null>(null);
+    const [activeTimbreCategory, setActiveTimbreCategory] = useState<TimbreCategory | 'All'>('All');
+    const [generatedArpPattern, setGeneratedArpPattern] = useState<(number | number[] | null)[]>([]);
+    const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+    const [timbreArpSettings, setTimbreArpSettings] = useState<Partial<ArpSettings>>({});
+
+    // VST Install State
+    const [showVstSearching, setShowVstSearching] = useState(false);
+
+    // Preview oscillators reference
+    const previewOscillatorsRef = useRef<{ osc: OscillatorNode; gain: GainNode }[]>([]);
+    const previewMasterGainRef = useRef<GainNode | null>(null);
+    const previewFilterRef = useRef<BiquadFilterNode | null>(null);
+    const previewCompressorRef = useRef<DynamicsCompressorNode | null>(null);
+    const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isPreviewPlayingRef = useRef<boolean>(false);
+
     const [currentStep, setCurrentStep] = useState<number | null>(null);
     const [currentSeqStep, setCurrentSeqStep] = useState<number>(-1);
     const [sequencerSteps, setSequencerSteps] = useState<boolean[]>(initialSettings?.sequencerSteps || Array(16).fill(true));
@@ -1172,7 +1251,7 @@ export default function Arpeggiator({
                         const durationInSeconds = (60 / bpm) * TIME_DIVISIONS[timeDivision] * exportSequence.length * 2; // เพิ่ม buffer
                         const offlineContext = new OfflineAudioContext(2, Math.floor(audioContext.sampleRate * durationInSeconds), audioContext.sampleRate);
 
-                        // สร้าง oscillator และ schedule ใน offline context
+                        // �����ร้าง oscillator และ schedule ใน offline context
                         const now = 0;
                         const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
                         exportSequence.forEach((midiNote, index) => {
@@ -1240,6 +1319,436 @@ export default function Arpeggiator({
         });
     }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldIntervals, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, style, mood, chords, onSave]);
 
+    // --- CLASSIC TIMBRE MODAL FUNCTIONS ---
+
+    // เปิด Modal ตาม category ที่เลือก
+    const openTimbreModal = useCallback((category: TimbreCategory | 'All') => {
+        setActiveTimbreCategory(category);
+        setShowTimbreModal(true);
+    }, []);
+
+    // Handle Install VST Button Click
+    const handleInstallVst = useCallback(() => {
+        setShowVstSearching(true);
+        // จำลองการค้นหา VST plugins (สามารถปรับให้ทำงานจริงได้)
+        setTimeout(() => {
+            setShowVstSearching(false);
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'VST SEARCH COMPLETE',
+                message: 'No VST plugins found. Please install VST plugins on your system.',
+            });
+        }, 3000); // ค้นหาเป็นเวลา 3 วินาที
+    }, []);
+
+    // เลือก Timbre
+    const selectTimbre = useCallback((timbreId: string) => {
+        setSelectedTimbreId(timbreId);
+    }, []);
+
+    // Generate ARP Pattern จาก Timbre ที่เลือก
+    const generateArpFromTimbre = useCallback(() => {
+        if (!selectedTimbreId) return;
+
+        const timbre = CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId);
+        if (!timbre) return;
+
+        // สร้าง ARP Pattern จากโน๊ตที่กดไว้
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const midiNotes = heldIntervals.map(interval => currentKeyRootMidi + interval);
+
+        if (midiNotes.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO NOTES',
+                message: 'Please add notes before generating. Press keys or enable HOLD to add notes.',
+            });
+            return;
+        }
+
+        // สร้าง arpSequence
+        let arpSeq: number[] = [];
+        for (let i = 0; i < octaveRange; i++) {
+            const octaveShift = i * 12 + timbre.octaveShift * 12;
+            arpSeq.push(...midiNotes.map(note => note + octaveShift));
+        }
+        if (sortNotes) {
+            arpSeq.sort((a, b) => a - b);
+        }
+
+        // Generate pattern
+        const generated = generateArpeggioPattern({
+            arpSequence: arpSeq,
+            pattern,
+            sequencerSteps,
+        }, 64);
+
+        setGeneratedArpPattern(generated);
+
+        // บันทึก settings ของ Timbre
+        setTimbreArpSettings({
+            waveform: timbre.waveform,
+            rootNote: timbre.octaveShift > 0 ? rootNote + timbre.octaveShift * 12 : rootNote,
+        });
+
+        setModalState({
+            show: true,
+            type: 'success',
+            title: 'GENERATED',
+            message: `ARP Pattern generated with ${timbre.name}! Click Preview to listen.`,
+        });
+    }, [selectedTimbreId, heldIntervals, musicalKey, octaveRange, sortNotes, pattern, sequencerSteps, rootNote]);
+
+    // Preview ARP Pattern ด้วย Timbre ที่เลือก
+    const previewTimbreArp = useCallback(async () => {
+        if (generatedArpPattern.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO PATTERN',
+                message: 'Please generate ARP pattern first.',
+            });
+            return;
+        }
+
+        const timbre = selectedTimbreId ? CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId) : null;
+        if (!timbre) return;
+
+        initializeAudio();
+        const context = audioContextRef.current;
+        if (!context) return;
+
+        // ถ้ากำลังเล่นอยู่ ให้หยุดก่อน
+        if (isPreviewPlayingRef.current) {
+            stopPreviewTimbreArp();
+            return;
+        }
+
+        isPreviewPlayingRef.current = true;
+        setIsPreviewPlaying(true);
+
+        try {
+            const now = context.currentTime;
+            const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
+            const gateDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
+
+            // สร้าง master gain node สำหรับ preview - ปรับ volume ให้ดังชัดเจน
+            const previewMasterGain = context.createGain();
+            previewMasterGain.gain.value = masterVolume * 0.6; // เพิ่ม volume ให้ดังขึ้น
+
+            // สร้าง low-pass filter เพื่อตัดความถี่สูงที่ทำให้เสียงแตก
+            const previewFilter = context.createBiquadFilter();
+            previewFilter.type = 'lowpass';
+            previewFilter.frequency.value = Math.min(timbre.filterCutoff, 12000); // เพิ่ม cutoff ให้เสียงสว่างขึ้น
+            previewFilter.Q.value = timbre.filterResonance * 0.2; // ลด resonance ลง
+
+            // สร้าง compressor เพื่อป้องกันเสียงแตก - ปรับ settings ให้พอดี
+            const previewCompressor = context.createDynamicsCompressor();
+            previewCompressor.threshold.value = -25; // เพิ่ม threshold ให้เสียงดังขึ้น
+            previewCompressor.knee.value = 40;
+            previewCompressor.ratio.value = 8; // ลด ratio ลงให้เสียงดังขึ้น
+            previewCompressor.attack.value = 0.003;
+            previewCompressor.release.value = 0.2;
+
+            previewMasterGain.connect(previewFilter);
+            previewFilter.connect(previewCompressor);
+            previewCompressor.connect(context.destination);
+
+            // เก็บ reference
+            previewMasterGainRef.current = previewMasterGain;
+            previewFilterRef.current = previewFilter;
+            previewCompressorRef.current = previewCompressor;
+
+            let maxTime = now;
+            const scheduledOscillators: { osc: OscillatorNode; gain: GainNode }[] = [];
+
+            // คำนวณจำนวน notes สูงสุดที่เล่นพร้อมกัน เพื่อลด volume ต่อ note
+            const maxPolyphony = generatedArpPattern.reduce((max, note) => {
+                if (note === null) return max;
+                const count = Array.isArray(note) ? note.length : 1;
+                return count > max ? count : max;
+            }, 1);
+            const perNoteGain = 1.0 / maxPolyphony; // เพิ่ม gain ให้ดังขึ้น
+
+            // เล่น ARP Pattern ด้วยเสียงของ Timbre
+            generatedArpPattern.forEach((midiNote, index) => {
+                if (midiNote !== null) {
+                    const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
+                    const startTime = now + index * stepDuration;
+                    const stopTime = startTime + gateDuration;
+
+                    notes.forEach(noteNum => {
+                        const osc = context.createOscillator();
+                        const gainNode = context.createGain();
+
+                        osc.type = timbre.waveform;
+                        osc.frequency.value = midiToFreq(noteNum);
+
+                        // ADSR Envelope - ปรับให้เสียงดังขึ้น
+                        const attackTime = Math.max(0.001, timbre.attack * 0.3);
+                        const decayTime = Math.max(0.01, timbre.decay * 0.3);
+                        const releaseTime = Math.max(0.05, timbre.release * 0.5);
+
+                        // เพิ่ม gain ให้ดังขึ้น
+                        const peakGain = (velocity / 127) * perNoteGain * 1.5;
+
+                        gainNode.gain.setValueAtTime(0, startTime);
+                        gainNode.gain.linearRampToValueAtTime(peakGain, startTime + attackTime);
+                        gainNode.gain.linearRampToValueAtTime(peakGain * timbre.sustain, startTime + attackTime + decayTime);
+                        gainNode.gain.setValueAtTime(peakGain * timbre.sustain, stopTime);
+                        gainNode.gain.linearRampToValueAtTime(0, stopTime + releaseTime);
+
+                        osc.connect(gainNode);
+                        gainNode.connect(previewMasterGain);
+                        osc.start(startTime);
+                        osc.stop(stopTime + releaseTime + 0.1);
+
+                        scheduledOscillators.push({ osc, gain: gainNode });
+
+                        if (stopTime + releaseTime > maxTime) {
+                            maxTime = stopTime + releaseTime;
+                        }
+                    });
+                }
+            });
+
+            // เก็บ reference สำหรับหยุด
+            previewOscillatorsRef.current = scheduledOscillators;
+
+            // หยุด preview เมื่อเล่นจบ
+            const endTimeout = setTimeout(() => {
+                setIsPreviewPlaying(false);
+                isPreviewPlayingRef.current = false;
+                previewMasterGain.disconnect();
+                previewFilter.disconnect();
+                previewCompressor.disconnect();
+                scheduledOscillators.forEach(({ osc, gain }) => {
+                    try {
+                        osc.disconnect();
+                        gain.disconnect();
+                    } catch (e) {}
+                });
+                previewOscillatorsRef.current = [];
+                previewMasterGainRef.current = null;
+                previewFilterRef.current = null;
+                previewCompressorRef.current = null;
+                previewTimeoutRef.current = null;
+            }, (maxTime - now) * 1000 + 200);
+
+            previewTimeoutRef.current = endTimeout;
+            scheduledEventsRef.current.push(endTimeout as unknown as number);
+
+        } catch (error) {
+            console.error('Preview error:', error);
+            setIsPreviewPlaying(false);
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'PREVIEW ERROR',
+                message: 'Failed to play preview.',
+            });
+        }
+    }, [generatedArpPattern, selectedTimbreId, bpm, timeDivision, gateLength, masterVolume, velocity, sortNotes, initializeAudio]);
+
+    // หยุด Preview
+    const stopPreviewTimbreArp = useCallback(() => {
+        // Clear timeout
+        if (previewTimeoutRef.current) {
+            try {
+                clearTimeout(previewTimeoutRef.current);
+            } catch (e) {}
+            previewTimeoutRef.current = null;
+        }
+
+        // Clear all scheduled timeouts
+        scheduledEventsRef.current.forEach(id => {
+            try {
+                clearTimeout(id as unknown as number);
+            } catch (e) {}
+        });
+        scheduledEventsRef.current = [];
+
+        // Stop all oscillators immediately
+        const context = audioContextRef.current;
+        if (context) {
+            const now = context.currentTime;
+
+            // Stop all oscillators
+            previewOscillatorsRef.current.forEach(({ osc, gain }) => {
+                try {
+                    // Ramp down gain quickly to prevent clicking
+                    gain.gain.cancelScheduledValues(now);
+                    gain.gain.setValueAtTime(gain.gain.value, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.01);
+
+                    // Stop oscillator
+                    osc.stop(now + 0.02);
+
+                    // Disconnect after stopping
+                    setTimeout(() => {
+                        try {
+                            osc.disconnect();
+                            gain.disconnect();
+                        } catch (e) {}
+                    }, 30);
+                } catch (e) {}
+            });
+
+            // Disconnect master gain, filter and compressor
+            if (previewMasterGainRef.current) {
+                try {
+                    previewMasterGainRef.current.disconnect();
+                } catch (e) {}
+                previewMasterGainRef.current = null;
+            }
+
+            if (previewFilterRef.current) {
+                try {
+                    previewFilterRef.current.disconnect();
+                } catch (e) {}
+                previewFilterRef.current = null;
+            }
+
+            if (previewCompressorRef.current) {
+                try {
+                    previewCompressorRef.current.disconnect();
+                } catch (e) {}
+                previewCompressorRef.current = null;
+            }
+        }
+
+        previewOscillatorsRef.current = [];
+        isPreviewPlayingRef.current = false;
+        setIsPreviewPlaying(false);
+    }, []);
+
+    // Export เป็น MIDI
+    const exportTimbreMidi = useCallback(() => {
+        if (generatedArpPattern.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO PATTERN',
+                message: 'Please generate ARP pattern first.',
+            });
+            return;
+        }
+
+        const timbre = selectedTimbreId ? CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId) : null;
+        const exportBpm = timbreArpSettings.bpm || bpm;
+
+        const midiDataUri = createMidiDataUri(
+            generatedArpPattern,
+            exportBpm,
+            480,
+            TIME_DIVISIONS[timeDivision],
+            gateLength,
+            velocity
+        );
+
+        const link = document.createElement('a');
+        link.href = midiDataUri;
+        link.download = `ARP_${timbre?.name || 'Timbre'}_${new Date().getTime()}.mid`;
+        link.click();
+
+        setModalState({
+            show: true,
+            type: 'success',
+            title: 'EXPORTED',
+            message: 'MIDI file exported successfully!',
+        });
+    }, [generatedArpPattern, selectedTimbreId, timbreArpSettings, bpm, timeDivision, gateLength, velocity]);
+
+    // Export เป็น WAV
+    const exportTimbreWav = useCallback(async () => {
+        if (generatedArpPattern.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO PATTERN',
+                message: 'Please generate ARP pattern first.',
+            });
+            return;
+        }
+
+        const timbre = selectedTimbreId ? CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId) : null;
+        if (!timbre) return;
+
+        const audioContext = audioContextRef.current;
+        if (!audioContext) return;
+
+        try {
+            const exportBpm = timbreArpSettings.bpm || bpm;
+            const stepDuration = (60 / exportBpm) * TIME_DIVISIONS[timeDivision];
+            const gateDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
+            const durationInSeconds = stepDuration * generatedArpPattern.length * 2;
+
+            const offlineContext = new OfflineAudioContext(
+                2,
+                Math.floor(audioContext.sampleRate * durationInSeconds),
+                audioContext.sampleRate
+            );
+
+            const masterGain = offlineContext.createGain();
+            masterGain.gain.value = masterVolume;
+            masterGain.connect(offlineContext.destination);
+
+            const now = 0;
+            generatedArpPattern.forEach((midiNote, index) => {
+                if (midiNote !== null) {
+                    const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
+                    const startTime = now + index * stepDuration;
+                    const stopTime = startTime + gateDuration;
+
+                    notes.forEach(noteNum => {
+                        const osc = offlineContext.createOscillator();
+                        const gainNode = offlineContext.createGain();
+
+                        osc.type = timbre.waveform;
+                        osc.frequency.value = midiToFreq(noteNum);
+
+                        // ADSR Envelope
+                        gainNode.gain.setValueAtTime(0, startTime);
+                        gainNode.gain.linearRampToValueAtTime(velocity, startTime + timbre.attack);
+                        gainNode.gain.linearRampToValueAtTime(velocity * timbre.sustain, startTime + timbre.attack + timbre.decay);
+                        gainNode.gain.linearRampToValueAtTime(0, stopTime + timbre.release);
+
+                        osc.connect(gainNode);
+                        gainNode.connect(masterGain);
+                        osc.start(startTime);
+                        osc.stop(stopTime + timbre.release + 0.1);
+                    });
+                }
+            });
+
+            const renderedBuffer = await offlineContext.startRendering();
+            const wavDataUri = createWavDataUri(renderedBuffer);
+
+            const link = document.createElement('a');
+            link.href = wavDataUri;
+            link.download = `ARP_${timbre.name || 'Timbre'}_${new Date().getTime()}.wav`;
+            link.click();
+
+            setModalState({
+                show: true,
+                type: 'success',
+                title: 'EXPORTED',
+                message: 'WAV file exported successfully!',
+            });
+
+        } catch (error) {
+            console.error('WAV export error:', error);
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'EXPORT ERROR',
+                message: 'Failed to export WAV file.',
+            });
+        }
+    }, [generatedArpPattern, selectedTimbreId, timbreArpSettings, bpm, timeDivision, gateLength, masterVolume, velocity, sortNotes]);
+
     // Initialize audio เมื่อ component mount (สำหรับแสดงใน chat)
     useEffect(() => {
         const handleUserGesture = () => {
@@ -1261,9 +1770,11 @@ export default function Arpeggiator({
     useEffect(() => {
         // Map computer keyboard to MIDI notes (2 octaves starting from C3 + keyboardOctave offset)
         const baseOctave = 3 + keyboardOctave; // Default C3, can be changed with octave buttons
-        const KEY_TO_MIDI: Record<string, number> = {
+        const KEY_TO_MIDI_LOWER: Record<string, number> = {
             // Lower octave (starts from C of baseOctave)
-            'a': 12 * baseOctave, 'w': 12 * baseOctave + 1, 's': 12 * baseOctave + 1, 'e': 12 * baseOctave + 2, 'd': 12 * baseOctave + 3, 'f': 12 * baseOctave + 4, 't': 12 * baseOctave + 5, 'g': 12 * baseOctave + 6, 'y': 12 * baseOctave + 7, 'h': 12 * baseOctave + 8, 'u': 12 * baseOctave + 9, 'j': 12 * baseOctave + 10, 'k': 12 * baseOctave + 11,
+            'a': 12 * baseOctave, 'w': 12 * baseOctave + 1, 's': 12 * baseOctave + 2, 'e': 12 * baseOctave + 3, 'd': 12 * baseOctave + 4, 'f': 12 * baseOctave + 5, 't': 12 * baseOctave + 6, 'g': 12 * baseOctave + 7, 'y': 12 * baseOctave + 8, 'h': 12 * baseOctave + 9, 'u': 12 * baseOctave + 10, 'j': 12 * baseOctave + 11, 'k': 12 * baseOctave + 12
+        };
+        const KEY_TO_MIDI_UPPER: Record<string, number> = {
             // Upper octave (starts from C of baseOctave+1)
             'z': 12 * (baseOctave + 1), 's': 12 * (baseOctave + 1) + 1, 'x': 12 * (baseOctave + 1) + 2, 'd': 12 * (baseOctave + 1) + 3, 'c': 12 * (baseOctave + 1) + 4, 'v': 12 * (baseOctave + 1) + 5, 'g': 12 * (baseOctave + 1) + 6, 'b': 12 * (baseOctave + 1) + 7, 'n': 12 * (baseOctave + 1) + 8, 'm': 12 * (baseOctave + 1) + 9, ',': 12 * (baseOctave + 1) + 10, '.': 12 * (baseOctave + 1) + 11, '/': 12 * (baseOctave + 1) + 12
         };
@@ -1274,21 +1785,23 @@ export default function Arpeggiator({
             if (e.ctrlKey || e.metaKey || e.altKey || target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable) return;
 
             const key = e.key.toLowerCase();
-            if (KEY_TO_MIDI[key] && !pressedKeysRef.current.has(key)) {
+            const midiNote = KEY_TO_MIDI_LOWER[key] || KEY_TO_MIDI_UPPER[key];
+            if (midiNote && !pressedKeysRef.current.has(key)) {
                 e.preventDefault();
                 pressedKeysRef.current.add(key);
-                handleNoteOn(KEY_TO_MIDI[key]);
+                handleNoteOn(midiNote);
             }
         };
 
         const handleKeyUp = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
-            if (KEY_TO_MIDI[key]) {
+            const midiNote = KEY_TO_MIDI_LOWER[key] || KEY_TO_MIDI_UPPER[key];
+            if (midiNote) {
                 e.preventDefault();
                 pressedKeysRef.current.delete(key);
 
                 if (!isHoldOn) {
-                    handleNoteOff(KEY_TO_MIDI[key]);
+                    handleNoteOff(midiNote);
                 }
                 // Hold เปิด: ไม่ลบโน๊ต (latch mode)
             }
@@ -1652,13 +2165,19 @@ export default function Arpeggiator({
                                 </div>
                                 <div className="flex-1">
                                     <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">CLASSIC TIMBRE</div>
-                                    <div className="grid grid-cols-2 gap-0.5 md:gap-1">
-                                        <button className="h-6 md:h-7 rounded-[2px] text-[7px] md:text-[9px] font-bold uppercase border bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]">Analog</button>
-                                        <button className="h-6 md:h-7 rounded-[2px] text-[7px] md:text-[9px] font-bold uppercase border bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]">Digital</button>
-                                    </div>
+                                    <button
+                                        onClick={() => openTimbreModal('All')}
+                                        className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#f5f5f5] to-[#d4a574] text-black border-[#b8956a] shadow-[0_0_8px_rgba(245,245,245,0.3)] hover:shadow-[0_0_15px_rgba(245,245,245,0.5)] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <span className="text-lg">🎼</span>
+                                        <span>Iconic Timbre</span>
+                                    </button>
                                 </div>
                                 <div className="flex-1">
-                                    <button className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#2ed573] to-[#26a65b] text-black border-[#1e8f5f] shadow-[0_0_8px_rgba(46,213,115,0.4)] hover:shadow-[0_0_12px_rgba(46,213,115,0.6)] transition-all">
+                                    <button
+                                        onClick={handleInstallVst}
+                                        className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#2ed573] to-[#26a65b] text-black border-[#1e8f5f] shadow-[0_0_8px_rgba(46,213,115,0.4)] hover:shadow-[0_0_12px_rgba(46,213,115,0.6)] transition-all"
+                                    >
                                         ⬇ Install VST
                                     </button>
                                 </div>
@@ -1728,7 +2247,7 @@ export default function Arpeggiator({
                                     <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">KEY</div>
                                     <div className="grid grid-cols-4 gap-0.5">
                                         {KEY_NAMES.map(key => (
-                                            <button key={key} onClick={() => setMusicalKey(key)} className={`h-6 md:h-7 text-[7px] md:text-[9px] font-bold rounded-[1px] border transition-all ${musicalKey === key ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{key}</button>
+                                            <button key={key} onClick={() => setMusicalKey(key as MusicalKey)} className={`h-6 md:h-7 text-[7px] md:text-[9px] font-bold rounded-[1px] border transition-all ${musicalKey === key ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#222] text-zinc-500 border-[#111] hover:bg-[#333]'}`}>{key}</button>
                                         ))}
                                     </div>
                                     <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5 mt-0.5 md:mt-1">SCALE</div>
@@ -1915,7 +2434,7 @@ export default function Arpeggiator({
                                 <div className="bg-[#1a1a1a] p-3 rounded border border-[#333] text-left">
                                     <div className="text-[9px] text-[#ffa502] font-bold mb-2">💡 TIPS</div>
                                     <ul className="text-[8px] space-y-1 text-zinc-400">
-                                        <li>• <span className="text-[#2ed573]">HOLD ON 🔒</span>: Press key once to toggle note on/off</li>
+                                        <li>• <span className="text-[#2ed573]">HOLD ON ����</span>: Press key once to toggle note on/off</li>
                                         <li>• <span className="text-[#00dfd8]">HOLD OFF 🔓</span>: Hold key down for note (release to stop)</li>
                                         <li>• White keys = natural notes (A,S,D,F,G,H,J,K / Z,X,C,V,B,N,M)</li>
                                         <li>• Black keys = sharps (W,E,T,Y,U / S,D,G,N,.)</li>
@@ -1934,8 +2453,24 @@ export default function Arpeggiator({
                     </div>
                 )}
 
+                {/* VST Searching Popup */}
+                {showVstSearching && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md">
+                        <div className="bg-[#222] border-2 border-[#2ed573] p-8 rounded-lg shadow-[0_0_50px_rgba(46,213,115,0.5)] max-w-sm w-full text-center">
+                            <div className="text-4xl mb-4 animate-pulse">🔍</div>
+                            <div className="text-lg font-bold text-[#2ed573] tracking-widest mb-2">SEARCHING VST</div>
+                            <div className="text-[10px] font-mono text-zinc-400 mb-6">Scanning for VST plugins...</div>
+                            <div className="flex justify-center gap-1">
+                                <div className="w-3 h-3 bg-[#2ed573] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-3 h-3 bg-[#2ed573] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-3 h-3 bg-[#2ed573] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {modalState.show && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget && modalState.type !== 'confirm') closeModal(); }}>
+                    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget && modalState.type !== 'confirm') closeModal(); }}>
                         <div className="bg-[#222] border-2 border-zinc-700 p-6 rounded shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center" onClick={e => e.stopPropagation()}>
                             <div className={`text-lg font-bold tracking-widest mb-2 ${modalState.type === 'alert' ? 'text-red-500' : modalState.type === 'success' ? 'text-[#2ed573]' : 'text-[#ffa502]'}`}>{modalState.title}</div>
                             <div className="text-[11px] font-mono text-zinc-400 mb-6">{modalState.message}</div>
@@ -1947,6 +2482,189 @@ export default function Arpeggiator({
                                     </>
                                 ) : (
                                     <button onClick={closeModal} className="px-6 py-2 bg-zinc-800 text-white text-[10px] font-bold tracking-widest border border-zinc-600 hover:bg-zinc-700">OK</button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Classic Timbre Modal */}
+                {showTimbreModal && (
+                    <div
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+                        onClick={() => setShowTimbreModal(false)}
+                    >
+                        <div
+                            className="bg-[#1a1a1a] border-2 border-[#333] rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.8)] max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="bg-[#111] border-b border-[#333] px-6 py-4 flex items-center justify-between flex-shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">🎼</span>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-[#2ed573] tracking-widest">CLASSIC TIMBRE LIBRARY</h2>
+                                        <p className="text-[10px] text-zinc-500">Select your instrument and generate ARP patterns</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowTimbreModal(false)}
+                                    className="text-zinc-500 hover:text-white transition-colors text-2xl"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* Category Tabs - Fixed position */}
+                            <div className="bg-[#0f0f0f] border-b border-[#333] px-6 py-3 flex gap-2 overflow-x-auto flex-shrink-0 sticky top-0 z-10">
+                                {(['All', 'Acoustic', 'Synth', 'Bass', 'Lead', 'Pad', 'FX'] as (TimbreCategory | 'All')[]).map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setActiveTimbreCategory(cat as TimbreCategory)}
+                                        className={`px-4 py-2 text-[10px] font-bold tracking-widest rounded transition-all whitespace-nowrap ${
+                                            activeTimbreCategory === cat
+                                                ? 'bg-[#2ed573] text-black shadow-[0_0_15px_rgba(46,213,115,0.4)]'
+                                                : 'bg-[#222] text-zinc-500 hover:text-white hover:bg-[#333]'
+                                        }`}
+                                    >
+                                        {cat === 'All' && '🎼'}
+                                        {cat === 'Acoustic' && '🎹'}
+                                        {cat === 'Synth' && '🎛️'}
+                                        {cat === 'Bass' && '🎸'}
+                                        {cat === 'Lead' && '🎤'}
+                                        {cat === 'Pad' && '🌊'}
+                                        {cat === 'FX' && '✨'}
+                                        {' '}{cat.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Timbre Grid */}
+                            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                    {CLASSIC_TIMBRES
+                                        .filter(t => {
+                                            if (activeTimbreCategory === 'All') return true;
+                                            if (activeTimbreCategory === 'Acoustic') return t.category === 'Acoustic' || t.category === 'Electric';
+                                            if (activeTimbreCategory === 'Synth') return t.category === 'Synth';
+                                            if (activeTimbreCategory === 'Bass') return t.type === 'Bass';
+                                            if (activeTimbreCategory === 'Lead') return ['Lead', 'Pluck', 'Arp'].includes(t.type);
+                                            if (activeTimbreCategory === 'Pad') return ['Pad', 'Strings', 'Choir'].includes(t.type);
+                                            if (activeTimbreCategory === 'FX') return t.category === 'FX' || ['Bell', 'Sweep', 'Choir'].includes(t.type);
+                                            return true;
+                                        })
+                                        .map(timbre => (
+                                            <button
+                                                key={timbre.id}
+                                                onClick={() => selectTimbre(timbre.id)}
+                                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 group ${
+                                                    selectedTimbreId === timbre.id
+                                                        ? 'border-[#2ed573] bg-[#2ed573]/10 shadow-[0_0_20px_rgba(46,213,115,0.3)]'
+                                                        : 'border-[#333] bg-[#222] hover:border-[#555] hover:bg-[#2a2a2a]'
+                                                }`}
+                                            >
+                                                <div className="text-4xl mb-2">{timbre.icon}</div>
+                                                <div className="text-[11px] font-bold text-white mb-1">{timbre.name}</div>
+                                                <div className="text-[9px] text-zinc-500">{timbre.type}</div>
+                                                <div
+                                                    className="absolute top-2 right-2 w-3 h-3 rounded-full"
+                                                    style={{ backgroundColor: timbre.color }}
+                                                />
+                                                {selectedTimbreId === timbre.id && (
+                                                    <div className="absolute top-2 left-2 w-5 h-5 bg-[#2ed573] rounded-full flex items-center justify-center">
+                                                        <span className="text-black text-xs">✓</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                </div>
+                            </div>
+
+                            {/* Action Panel - Fixed at bottom */}
+                            <div className="bg-[#111] border-t border-[#333] px-6 py-4 flex-shrink-0">
+                                <div className="flex items-center justify-between gap-4">
+                                    {/* Selected Timbre Info */}
+                                    <div className="flex items-center gap-3 flex-1">
+                                        {selectedTimbreId ? (() => {
+                                            const selectedTimbre = CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId);
+                                            if (!selectedTimbre) return null;
+                                            return (
+                                                <>
+                                                    <span className="text-3xl">{selectedTimbre.icon}</span>
+                                                    <div>
+                                                        <div className="text-[10px] text-zinc-500">SELECTED TIMBRE</div>
+                                                        <div className="text-lg font-bold text-white">{selectedTimbre.name}</div>
+                                                        <div className="text-[9px] text-zinc-400 flex gap-2">
+                                                            <span>Wave: {selectedTimbre.waveform}</span>
+                                                            <span>•</span>
+                                                            <span>Octave: {selectedTimbre.octaveShift > 0 ? '+' : ''}{selectedTimbre.octaveShift}</span>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            );
+                                        })() : (
+                                            <div className="text-zinc-500 text-sm">Select a timbre to continue</div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={generateArpFromTimbre}
+                                            disabled={!selectedTimbreId}
+                                            className="px-6 py-3 bg-[#ffa502] text-black text-[10px] font-bold tracking-widest rounded border border-[#e67e22] hover:bg-[#ffb14d] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(255,165,2,0.3)] hover:shadow-[0_0_25px_rgba(255,165,2,0.5)]"
+                                        >
+                                            ⚡ GENERATE ARP
+                                        </button>
+                                        <button
+                                            onClick={previewTimbreArp}
+                                            disabled={generatedArpPattern.length === 0 && !isPreviewPlaying}
+                                            className={`px-6 py-3 text-[10px] font-bold tracking-widest rounded border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                isPreviewPlaying
+                                                    ? 'bg-red-600 text-white border-red-800 shadow-[0_0_15px_rgba(255,0,0,0.5)] hover:bg-red-700'
+                                                    : 'bg-[#2ed573] text-black border-[#1a9c50] hover:bg-[#00dfd8] shadow-[0_0_15px_rgba(46,213,115,0.3)]'
+                                            }`}
+                                        >
+                                            {isPreviewPlaying ? '⬛ STOP' : '▶ PREVIEW'}
+                                        </button>
+                                        <button
+                                            onClick={exportTimbreMidi}
+                                            disabled={generatedArpPattern.length === 0}
+                                            className="px-4 py-3 bg-[#333] text-zinc-400 text-[10px] font-bold tracking-widest rounded border border-[#222] hover:text-white hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                            title="Export MIDI"
+                                        >
+                                            🎹 MIDI
+                                        </button>
+                                        <button
+                                            onClick={exportTimbreWav}
+                                            disabled={generatedArpPattern.length === 0}
+                                            className="px-4 py-3 bg-[#333] text-zinc-400 text-[10px] font-bold tracking-widest rounded border border-[#222] hover:text-white hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                            title="Export WAV"
+                                        >
+                                            🌊 WAV
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Pattern Status */}
+                                {generatedArpPattern.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-[#333] flex items-center gap-2">
+                                        <div className="text-[9px] text-zinc-500">PATTERN STATUS:</div>
+                                        <div className="flex items-center gap-1">
+                                            <div className={`w-2 h-2 rounded-full ${generatedArpPattern.length > 0 ? 'bg-[#2ed573] animate-pulse' : 'bg-zinc-600'}`} />
+                                            <span className="text-[9px] text-[#2ed573] font-mono">
+                                                {generatedArpPattern.filter(n => n !== null).length} notes generated
+                                            </span>
+                                        </div>
+                                        {timbreArpSettings.waveform && (
+                                            <>
+                                                <span className="text-zinc-600">•</span>
+                                                <span className="text-[9px] text-zinc-400 font-mono">
+                                                    Wave: {timbreArpSettings.waveform}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>
