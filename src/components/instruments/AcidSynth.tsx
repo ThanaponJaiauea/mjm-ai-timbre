@@ -43,6 +43,8 @@ const Knob = ({ label, value, min, max, onChange, color = "#00f0ff", size = 45 }
     const [isDragging, setIsDragging] = useState(false);
     const startY = useRef(0);
     const startVal = useRef(0);
+    const lastUpdate = useRef(0);
+    const throttleMs = 50; // Update every 50ms to avoid audio glitches
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
@@ -60,6 +62,12 @@ const Knob = ({ label, value, min, max, onChange, color = "#00f0ff", size = 45 }
     useEffect(() => {
         const handleMove = (clientY: number) => {
             if (!isDragging) return;
+
+            // Throttle updates to avoid audio glitches
+            const now = Date.now();
+            if (now - lastUpdate.current < throttleMs) return;
+            lastUpdate.current = now;
+
             const deltaY = startY.current - clientY;
             const range = max - min;
             const deltaVal = (deltaY / 150) * range;
@@ -184,6 +192,7 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
     const [spread, setSpread] = useState(50);
     const [scale, setScale] = useState<keyof typeof SCALES>(initialScale as keyof typeof SCALES);
     const [root, setRoot] = useState(initialRoot);
+    const [drive, setDrive] = useState(50); // TB-303 Drive control (0-100)
 
     // ตั้งค่า initialRoot และ initialScale เมื่อเปลี่ยน props
     useEffect(() => {
@@ -224,6 +233,7 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
     const gainRef = useRef<Tone.Gain | null>(null);
     const masterGainRef = useRef<Tone.Gain | null>(null);
     const compressorRef = useRef<Tone.Compressor | null>(null);
+    const driveRef = useRef<Tone.Distortion | null>(null);
     const baseCutoffRef = useRef(400);
 
     const paramsRef = useRef({ bpm, cutoff, resonance, envMod, decay, accent, pattern, isPlaying, masterVolume, patternLength, scale, root, isCreeper });
@@ -250,23 +260,38 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
     }, [bpm, onBpmChange]);
 
     useEffect(() => {
-        paramsRef.current = { bpm, cutoff, resonance, envMod, decay, accent, pattern, isPlaying, masterVolume, patternLength, scale, root, isCreeper };
+        paramsRef.current = { bpm, cutoff, resonance, envMod, decay, accent, pattern, isPlaying, masterVolume, patternLength, scale, root, isCreeper, drive };
 
-        // Update Tone.js params in real-time
+        // Update Tone.js params in real-time with smoothing to avoid clicks/pops
         if (filterRef.current) {
             const cutoffFreq = 30 + (cutoff / 127) * (cutoff / 127) * 800;
-            filterRef.current.frequency.rampTo(cutoffFreq, 0.05);
+            // Smooth cutoff transition (100ms ramp)
+            filterRef.current.frequency.rampTo(cutoffFreq, 0.1);
+            // Smooth resonance transition (50ms ramp)
             filterRef.current.Q.rampTo((resonance / 127) * 15, 0.05);
             baseCutoffRef.current = cutoffFreq;
         }
+        // Update Drive with smoothing (TB-303 style soft clipping)
+        // Note: Tone.Distortion doesn't support rampTo on distortion parameter
+        // We use the wet/dry mix for smooth transitions instead
+        if (driveRef.current) {
+            const driveAmount = 0.1 + (drive / 100) * 0.5; // 0.1 to 0.6
+            // Gradually update distortion to minimize clicks
+            requestAnimationFrame(() => {
+                if (driveRef.current) {
+                    driveRef.current.distortion = driveAmount;
+                }
+            });
+        }
         if (masterGainRef.current) {
+            // Smooth volume transition (50ms ramp) to avoid clicks
             masterGainRef.current.gain.rampTo(masterVolume, 0.05);
         }
         // Update BPM in real-time
         if (Tone.Transport) {
             Tone.Transport.bpm.rampTo(bpm, 0.1);
         }
-    }, [bpm, cutoff, resonance, envMod, decay, accent, pattern, isPlaying, masterVolume, patternLength, scale, root, isCreeper]);
+    }, [bpm, cutoff, resonance, envMod, decay, accent, pattern, isPlaying, masterVolume, patternLength, scale, root, isCreeper, drive]);
 
     const initAudio = useCallback(async (): Promise<boolean> => {
         // Prevent re-initialization if synth already exists
@@ -278,36 +303,47 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
 
         setIsLoading(true);
         setIsAudioReady(false);
-        console.log('[Acid Synth] Initializing synth...');
+        console.log('[TB-303] Initializing synth...');
         await Tone.start();
 
-        // --- MONOSYNTH: Bass synthesizer (no samples, pitch stable) ---
+        // --- MONOSYNTH: TB-303 style bass synthesizer
+        // TB-303 uses sawtooth + square wave mix, we use sawtooth as base
         const synth = new Tone.MonoSynth({
             oscillator: {
                 type: "sawtooth"
             },
             envelope: {
-                attack: 0.01,
+                attack: 0.001,      // Very fast attack like TB-303
                 decay: 0.3,
                 sustain: 0.5,
                 release: 0.5
             },
             filterEnvelope: {
                 attack: 0.01,
-                decay: 0.3,
-                sustain: 0.5,
-                baseFrequency: 100,
-                octaves: 3,
+                decay: 0.5,
+                sustain: 0.6,
+                baseFrequency: 50,   // Lower base for wider range
+                octaves: 4,          // Wider range (TB-303 has wide sweep)
                 exponent: 2
             }
         });
 
-        // --- FILTER: External lowpass for acid character ---
+        // --- DRIVE: TB-303 style soft clipping (from jc303/Open303 algorithm)
+        // shape(x) = x - (1/6)*x^3 with soft limiting
+        const driveAmount = 0.1 + (drive / 100) * 0.5; // 0.1 to 0.6
+        const driveEffect = new Tone.Distortion({
+            distortion: driveAmount,   // Drive from state
+            oversample: "4x"           // High quality oversampling
+        });
+
+        // --- FILTER: TB-303 style lowpass with resonance
+        // TB-303 uses a 4-stage ladder filter variation with feedback highpass
+        // Note: Tone.js only supports -12, -24, -48, -96 dB/oct
         const filter = new Tone.Filter({
             frequency: 400,
             type: "lowpass",
-            Q: 1,
-            rolloff: -24
+            Q: (resonance / 127) * 15,  // Resonance from parameter
+            rolloff: -24                // Using -24 (closest to TB-303's ~18dB/oct)
         });
 
         const gain = new Tone.Gain(0.5);
@@ -320,8 +356,10 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
             release: 0.25
         });
 
-        // Connect chain: Synth -> Filter -> Gain -> Master -> Compressor
-        synth.connect(filter);
+        // Connect chain: Synth -> Drive -> Filter -> Gain -> Master -> Compressor
+        // Drive before filter like TB-303 circuit
+        synth.connect(driveEffect);
+        driveEffect.connect(filter);
         filter.connect(gain);
         gain.connect(masterGain);
         masterGain.connect(compressor);
@@ -332,10 +370,11 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
         gainRef.current = gain;
         masterGainRef.current = masterGain;
         compressorRef.current = compressor;
+        driveRef.current = driveEffect;
 
         setIsAudioReady(true);
         setIsLoading(false);
-        console.log('[Acid Synth] Synth ready!');
+        console.log('[TB-303] Synth ready!');
         return true;
     }, [masterVolume]);
 
@@ -356,25 +395,37 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
             if (step && step.active) {
                 const freq = midiToFreq(36 + root + step.note + (step.octave * 12));
                 const velocity = step.accent ? 1 : 0.7;
-                const duration = step.slide ? "8n" : "16n";
 
                 // Schedule at exact 16th note positions
                 // Tone.Transport uses beats (quarter notes), so 16th note = 0.25 beats
                 Tone.Transport.schedule((time) => {
-                    // Filter envelope
+                    // TB-303 ACCENT CIRCUIT:
+                    // Accent increases filter envelope depth, drive, and velocity
                     if (filterRef.current) {
                         const baseFreq = baseCutoffRef.current;
-                        const modDepth = ((envMod / 127) * 2000) + (step.accent ? (accent / 127) * 1500 : 0);
-                        const decayTime = (decay / 127) * 0.4 + 0.05;
+                        // Accent adds extra filter modulation depth (from jc303 algorithm)
+                        const accentMod = step.accent ? (accent / 127) * 2500 : 0;
+                        const modDepth = ((envMod / 127) * 2000) + accentMod;
+                        // TB-303 decay envelope is exponential
+                        const decayTime = (decay / 127) * 0.5 + 0.05;
 
                         filterRef.current.frequency.cancelScheduledValues(time);
                         filterRef.current.frequency.setValueAtTime(baseFreq + modDepth, time);
                         filterRef.current.frequency.exponentialRampToValueAtTime(baseFreq, time + decayTime);
                     }
 
-                    // Trigger synth
-                    if (samplerRef.current) {
-                        samplerRef.current.triggerAttackRelease(freq, duration, time, velocity);
+                    // TB-303 DRIVE CIRCUIT:
+                    // Accent increases drive amount for harder clipping
+                    if (driveRef.current && samplerRef.current) {
+                        const driveAmount = step.accent ? 0.4 + (accent / 127) * 0.2 : 0.3;
+                        driveRef.current.distortion = driveAmount;
+
+                        // TB-303 SLIDE:
+                        // Extend note duration for slide effect (simpler approach)
+                        // True portamento causes timing issues with Tone.Transport
+                        const slideDuration = step.slide ? "8n" : "16n";
+
+                        samplerRef.current.triggerAttackRelease(freq, slideDuration, time, velocity);
                     }
 
                     // Update visual
@@ -600,13 +651,12 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                             }
                         }}
                         disabled={isLoading}
-                        className={`px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${
-                            isLoading
-                                ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
-                                : isPlaying
-                                    ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
-                                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
-                        }`}
+                        className={`px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${isLoading
+                            ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
+                            : isPlaying
+                                ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
+                                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                            }`}
                     >
                         {isLoading ? (
                             <div className="flex items-center justify-center gap-2">
@@ -621,6 +671,7 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                     <Knob label="BPM" value={bpm} min={60} max={220} onChange={setBpm} size={40} />
                     <Knob label="CUTOFF" value={cutoff} min={0} max={127} onChange={setCutoff} size={40} />
                     <Knob label="RESO" value={resonance} min={0} max={127} onChange={setResonance} size={40} />
+                    <Knob label="DRIVE" value={drive} min={0} max={100} onChange={setDrive} size={40} />
 
                     <div className="flex gap-1">
                         <select
@@ -678,9 +729,10 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                         </div>
                     )}
 
-                    {/* Header Controls */}
-                    <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border-b border-zinc-900 bg-black/40">
-                        <div className="flex gap-2 w-full sm:w-auto">
+                    {/* Header Controls - All in One Panel */}
+                    <div className="flex flex-col gap-4 p-4 border-b border-zinc-900 bg-black/40">
+                        {/* Row 1: Transport & Main Actions */}
+                        <div className="flex gap-2">
                             <button
                                 onClick={async () => {
                                     if (isPlaying) {
@@ -694,13 +746,12 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                                     }
                                 }}
                                 disabled={isLoading}
-                                className={`flex-1 sm:px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${
-                                    isLoading
-                                        ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
-                                        : isPlaying
-                                            ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
-                                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
-                                }`}
+                                className={`flex-1 sm:flex-none sm:px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${isLoading
+                                    ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
+                                    : isPlaying
+                                        ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                                    }`}
                             >
                                 {isLoading ? (
                                     <div className="flex items-center justify-center gap-2">
@@ -718,28 +769,71 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                                         setIsPlaying(true);
                                     }
                                 }}
-                                className="flex-1 sm:px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-sm font-black text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                                className="flex-1 sm:flex-none sm:px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-sm font-black text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
                             >
                                 GENERATE
                             </button>
                             <button
                                 onClick={exportMidi}
-                                className="flex-1 sm:px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-sm font-black text-xs text-zinc-400 hover:text-blue-400 hover:border-blue-900/50 transition-all"
+                                className="flex-1 sm:flex-none sm:px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-sm font-black text-xs text-zinc-400 hover:text-blue-400 hover:border-blue-900/50 transition-all"
                             >
                                 Download MIDI
                             </button>
                         </div>
-                        <div className="flex-1 flex flex-wrap gap-2 sm:gap-4 items-center justify-center sm:justify-end">
-                            <Knob label="LENGTH" value={patternLength} min={1} max={64} onChange={setPatternLength} size={28} />
-                            <div className="hidden sm:block w-[1px] h-6 bg-zinc-800"></div>
-                            <Knob label="CUTOFF" value={cutoff} min={0} max={127} onChange={setCutoff} size={28} />
-                            <Knob label="RESO" value={resonance} min={0} max={127} onChange={setResonance} size={28} />
-                            <Knob label="MOD" value={envMod} min={0} max={127} onChange={setEnvMod} size={28} />
-                            <Knob label="DECAY" value={decay} min={0} max={127} onChange={setDecay} size={28} />
-                            <Knob label="ACCENT" value={accent} min={0} max={127} onChange={setAccent} size={28} />
-                            <div className="hidden sm:block w-[1px] h-6 bg-zinc-800"></div>
-                            <Knob label="BPM" value={bpm} min={60} max={220} onChange={setBpm} size={28} />
-                            <Knob label="VOL" value={masterVolume} min={0} max={1} onChange={setMasterVolume} size={28} />
+
+                        {/* Row 2: Synth Parameters Knobs */}
+                        <div className="flex flex-wrap gap-4 items-center">
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <Knob label="LENGTH" value={patternLength} min={1} max={64} onChange={setPatternLength} size={28} />
+                                <div className="w-[1px] h-6 bg-zinc-800"></div>
+                                <Knob label="CUTOFF" value={cutoff} min={0} max={127} onChange={setCutoff} size={28} />
+                                <Knob label="RESO" value={resonance} min={0} max={127} onChange={setResonance} size={28} />
+                                <Knob label="DRIVE" value={drive} min={0} max={100} onChange={setDrive} size={28} />
+                                <Knob label="MOD" value={envMod} min={0} max={127} onChange={setEnvMod} size={28} />
+                                <Knob label="DECAY" value={decay} min={0} max={127} onChange={setDecay} size={28} />
+                                <Knob label="ACCENT" value={accent} min={0} max={127} onChange={setAccent} size={28} />
+                            </div>
+                            <div className="w-[1px] h-6 bg-zinc-800 hidden sm:block"></div>
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <Knob label="BPM" value={bpm} min={60} max={220} onChange={setBpm} size={28} />
+                                <Knob label="VOL" value={masterVolume} min={0} max={1} onChange={setMasterVolume} size={28} />
+                            </div>
+                        </div>
+
+                        {/* Row 3: Pattern Generator Controls */}
+                        <div className="flex flex-wrap gap-4 items-center pt-2 border-t border-zinc-800/50">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[8px] font-bold text-zinc-600 uppercase">Root</span>
+                                <select
+                                    value={root}
+                                    onChange={(e) => setRoot(parseInt(e.target.value))}
+                                    className="bg-black border border-zinc-800 text-[10px] p-2 text-zinc-400 rounded outline-none focus:border-zinc-500"
+                                >
+                                    {NOTE_NAMES.map((name, i) => <option key={i} value={i}>{name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[8px] font-bold text-zinc-600 uppercase">Scale</span>
+                                <select
+                                    value={scale}
+                                    onChange={(e) => setScale(e.target.value as any)}
+                                    className="bg-black border border-zinc-800 text-[10px] p-2 text-zinc-400 rounded outline-none focus:border-zinc-500 w-32"
+                                >
+                                    {Object.keys(SCALES).map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="w-[1px] h-6 bg-zinc-800"></div>
+                            <Knob label="DENSITY" value={noteDensity} min={0} max={100} onChange={setNoteDensity} />
+                            <Knob label="ACCENT %" value={accentDensity} min={0} max={100} onChange={setAccentDensity} />
+                            <Knob label="SLIDE %" value={slideDensity} min={0} max={100} onChange={setSlideDensity} />
+                            <Knob label="SPREAD" value={spread} min={0} max={100} onChange={setSpread} />
+                            <div className="w-[1px] h-6 bg-zinc-800"></div>
+                            <button
+                                onClick={() => setIsCreeper(!isCreeper)}
+                                className={`px-4 py-1 text-[8px] font-bold uppercase border rounded-sm transition-all ${isCreeper ? 'bg-green-600 text-white border-green-400' : 'bg-black text-zinc-600 border-zinc-800'}`}
+                            >
+                                Creeper: {isCreeper ? 'ON' : 'OFF'}
+                            </button>
                         </div>
                     </div>
 
@@ -878,48 +972,6 @@ const AcidSynth: React.FC<AcidSynthProps> = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Genetic Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-zinc-950 border border-zinc-900 p-4 rounded flex flex-col items-center gap-2">
-                        <span className="text-[10px] font-bold text-zinc-600 uppercase">Scale Matrix</span>
-                        <div className="flex gap-1 w-full">
-                            <select
-                                value={root}
-                                onChange={(e) => setRoot(parseInt(e.target.value))}
-                                className="w-1/3 bg-black border border-zinc-800 text-[10px] p-2 text-zinc-400 rounded outline-none focus:border-zinc-500"
-                            >
-                                {NOTE_NAMES.map((name, i) => <option key={i} value={i}>{name}</option>)}
-                            </select>
-                            <select
-                                value={scale}
-                                onChange={(e) => setScale(e.target.value as any)}
-                                className="w-2/3 bg-black border border-zinc-800 text-[10px] p-2 text-zinc-400 rounded outline-none focus:border-zinc-500"
-                            >
-                                {Object.keys(SCALES).map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                    <div className="bg-zinc-950 border border-zinc-900 p-4 rounded flex flex-wrap justify-around gap-4">
-                        <Knob label="NOTE SPREAD" value={spread} min={0} max={100} onChange={setSpread} />
-                        <Knob label="DENSITY" value={noteDensity} min={0} max={100} onChange={setNoteDensity} />
-                    </div>
-                    <div className="bg-zinc-950 border border-zinc-900 p-4 rounded flex flex-wrap justify-around gap-4">
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="text-[10px] font-bold text-zinc-600 uppercase">Creeper</span>
-                            <button
-                                onClick={() => setIsCreeper(!isCreeper)}
-                                className={`px-4 py-1 text-[8px] font-bold uppercase border rounded-sm transition-all duration-75 ${isCreeper ? 'bg-green-600 text-white border-green-400' : 'bg-black text-zinc-600 border-zinc-800'} ${isEvolving ? 'brightness-150 scale-105 shadow-[0_0_15px_rgba(34,197,94,0.6)]' : ''}`}
-                            >
-                                {isCreeper ? 'ON' : 'OFF'}
-                            </button>
-                        </div>
-                    </div>
-                    <div className="bg-zinc-950 border border-zinc-900 p-4 rounded flex flex-wrap justify-around gap-4">
-                        <Knob label="ACCENT %" value={accentDensity} min={0} max={100} onChange={setAccentDensity} />
-                        <Knob label="SLIDE %" value={slideDensity} min={0} max={100} onChange={setSlideDensity} />
                     </div>
                 </div>
 

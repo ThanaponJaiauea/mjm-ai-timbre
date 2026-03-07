@@ -1,6 +1,6 @@
 # Music Synth Components
 
-Reusable components for Arpeggiator and Acid Synth - คัดลอกฟังก์ชันเต็มจากหน้า `/arp` และ `/acid`
+Reusable components for Arpeggiator and TB-303 - คัดลอกฟังก์ชันเต็มจากหน้า `/arp` และ `/acid`
 
 ## Components
 
@@ -112,9 +112,9 @@ export default function MusicStudio() {
                 />
             </section>
 
-            {/* Acid Synth Section */}
+            {/* TB-303 Section */}
             <section>
-                <h2 className="text-xl mb-4">Acid Synth</h2>
+                <h2 className="text-xl mb-4">TB-303</h2>
                 <AcidSynth
                     initialBpm={140}
                     initialScale="Minor"

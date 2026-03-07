@@ -219,7 +219,7 @@ const AcidSynth = () => {
 
         setIsLoading(true);
         setIsAudioReady(false);
-        console.log('[Acid Synth] Initializing synth...');
+        console.log('[TB-303] Initializing synth...');
         await Tone.start();
 
         // --- MONOSYNTH: Bass synthesizer (no samples, pitch stable) ---
@@ -276,7 +276,7 @@ const AcidSynth = () => {
 
         setIsAudioReady(true);
         setIsLoading(false);
-        console.log('[Acid Synth] Synth ready!');
+        console.log('[TB-303] Synth ready!');
         return true;
     }, [masterVolume]);
 
@@ -519,7 +519,7 @@ const AcidSynth = () => {
 
                 {/* Visual Matrix Container */}
                 <div className="border border-zinc-800 bg-zinc-950 overflow-hidden shadow-2xl rounded-sm sm:rounded-md relative">
-                    
+
                     {/* Loading Overlay */}
                     {isLoading && (
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -552,13 +552,12 @@ const AcidSynth = () => {
                                     }
                                 }}
                                 disabled={isLoading}
-                                className={`flex-1 sm:px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${
-                                    isLoading
-                                        ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
-                                        : isPlaying
-                                            ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
-                                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
-                                }`}
+                                className={`flex-1 sm:px-6 py-2 rounded-sm font-black text-xs border transition-all relative overflow-hidden ${isLoading
+                                    ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
+                                    : isPlaying
+                                        ? 'bg-zinc-800 border-zinc-700 text-zinc-300'
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                                    }`}
                             >
                                 {isLoading ? (
                                     <div className="flex items-center justify-center gap-2">

@@ -1,10 +1,17 @@
 /** @format */
 
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronRight, Clock4, EllipsisIcon, Trash } from "lucide-react";
 
+import { ChevronRight, Clock4, EllipsisIcon, Trash } from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -17,70 +24,77 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-
+import { useLanguage } from "@/hooks/LanguageProvider";
+import { cn } from "@/lib/utils";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 import NavChatHistorySkeleton from "./navChatHistorySkeleton";
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
-import { useLanguage } from "@/hooks/LanguageProvider";
-import { type StaticImageData } from "next/image";
-
 export interface NavSubItemType {
-  title: string;
-  url: string;
   icon: string;
   iconActive: string;
+  title: string;
+  url: string;
 }
 
 export interface NavItemType {
-  title: string;
-  url: string;
   icon: string | StaticImageData;
   isShowSubmenu: boolean;
-  onClick?: () => void;
   items?: NavSubItemType[];
+  onClick?: () => void;
+  title: string;
+  url: string;
 }
 
 interface NavMainProps {
-  items: NavItemType[];
-  state: "collapsed" | "expanded";
   chatHistory: { id: string; title: string }[];
   chatHistoryLoading: boolean;
   handDeleteChat: (id: string, isCurrentPage: boolean) => void;
+  items: NavItemType[];
+  state: "collapsed" | "expanded";
 }
 
-export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDeleteChat }: Readonly<NavMainProps>) {
+export function NavMain({
+  items,
+  state,
+  chatHistory,
+  chatHistoryLoading,
+  handDeleteChat,
+}: Readonly<NavMainProps>) {
   const pathname = usePathname();
   const { t } = useLanguage();
   return (
     <SidebarGroup className="flex flex-col">
       <SidebarMenu>
-        {items.map(item => (
-          <Collapsible key={item.title} asChild defaultOpen={pathname === item.url} className="group/collapsible">
+        {items.map((item) => (
+          <Collapsible
+            asChild
+            className="group/collapsible"
+            defaultOpen={pathname === item.url}
+            key={item.title}
+          >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
+                  className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
+                  isActive={pathname === item.url}
+                  onClick={item.onClick}
                   size="lg"
                   tooltip={
                     typeof t[item.title as keyof typeof t] === "string"
                       ? (t[item.title as keyof typeof t] as string)
                       : item.title
                   }
-                  isActive={pathname === item.url}
-                  className={`h-10 ${state === "collapsed" && "flex items-center justify-center"} `}
-                  onClick={item.onClick}
                 >
-                  <Image src={item.icon} alt="image" width={24} height={24} />
+                  <Image alt="image" height={24} src={item.icon} width={24} />
 
                   <Link href={item.url}>
-                    <span className={`${state === "collapsed" && "hidden"}`}>{item.title}</span>
+                    <span className={`${state === "collapsed" && "hidden"}`}>
+                      {item.title}
+                    </span>
                   </Link>
                   {item.isShowSubmenu && (
                     <ChevronRight
@@ -95,23 +109,38 @@ export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDel
               <CollapsibleContent>
                 {item.items && (
                   <SidebarMenuSub>
-                    {item.items.map(subItem => (
-                      <SidebarMenuSubItem key={subItem.title} className="mt-2">
-                        <SidebarMenuSubButton size="md" className=" h-10" isActive={pathname === subItem.url} asChild>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuSubItem className="mt-2" key={subItem.title}>
+                        <SidebarMenuSubButton
+                          asChild
+                          className="h-10"
+                          isActive={pathname === subItem.url}
+                          size="md"
+                        >
                           <Link href={subItem.url}>
                             {subItem.icon && (
-                              <div className="flex items-center m-1 gap-2 w-52 h-14 tex-sm ">
+                              <div className="tex-sm m-1 flex h-14 w-52 items-center gap-2">
                                 {pathname === subItem.url ? (
                                   <>
-                                    <Image src={subItem.iconActive} alt="image" width={16} height={16} />
-                                    <span className="text-sm font-normal bg-linear-to-r from-[#E759FF] to-[#6174FF] inline-block text-transparent bg-clip-text">
+                                    <Image
+                                      alt="image"
+                                      height={16}
+                                      src={subItem.iconActive}
+                                      width={16}
+                                    />
+                                    <span className="inline-block bg-linear-to-r from-[#E759FF] to-[#6174FF] bg-clip-text font-normal text-sm text-transparent">
                                       {subItem.title}
                                     </span>
                                   </>
                                 ) : (
                                   <>
-                                    <Image src={subItem.icon} alt={subItem.title} width={16} height={16} />
-                                    <span className="text-sm font-normal text-[#8F8F8F] inline-block ">
+                                    <Image
+                                      alt={subItem.title}
+                                      height={16}
+                                      src={subItem.icon}
+                                      width={16}
+                                    />
+                                    <span className="inline-block font-normal text-[#8F8F8F] text-sm">
                                       {subItem.title}
                                     </span>
                                   </>
@@ -132,7 +161,7 @@ export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDel
 
       {/* History */}
       <SidebarGroup className={`${state === "collapsed" ? "hidden" : "flex"}`}>
-        <SidebarGroupLabel className="flex gap-2 text-[14px] font-normal text-[#6A6A6A]">
+        <SidebarGroupLabel className="flex gap-2 font-normal text-[#6A6A6A] text-[14px]">
           <Clock4 />
           {t.labelHistory}
         </SidebarGroupLabel>
@@ -143,14 +172,20 @@ export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDel
               {chatHistoryLoading ? (
                 <NavChatHistorySkeleton />
               ) : (
-                chatHistory.map(el => {
+                chatHistory.map((el) => {
                   const isActive = el.id === pathname.split("/")[3];
 
                   return (
                     <SidebarMenuItem key={el.id}>
-                      <SidebarMenuButton isActive={isActive} aria-current={isActive ? "page" : undefined} asChild>
+                      <SidebarMenuButton
+                        aria-current={isActive ? "page" : undefined}
+                        asChild
+                        isActive={isActive}
+                      >
                         <Link href={`/mjm-ai/chat/${el.id}`}>
-                          <span className="w-45 text-[14px] truncate">{el.title}</span>
+                          <span className="w-45 truncate text-[14px]">
+                            {el.title}
+                          </span>
                         </Link>
                       </SidebarMenuButton>
                       <DropdownMenu>
@@ -159,8 +194,11 @@ export function NavMain({ items, state, chatHistory, chatHistoryLoading, handDel
                             <EllipsisIcon />
                           </SidebarMenuAction>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent side="right" align="start">
-                          <DropdownMenuItem variant="destructive" onClick={() => handDeleteChat(el.id, isActive)}>
+                        <DropdownMenuContent align="start" side="right">
+                          <DropdownMenuItem
+                            onClick={() => handDeleteChat(el.id, isActive)}
+                            variant="destructive"
+                          >
                             <Trash />
                             {t.delete}
                           </DropdownMenuItem>
