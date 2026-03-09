@@ -3,106 +3,64 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import { useVSTBridge } from '../../hooks/useVSTBridge';
 import '../../app/arp/arp.css';
+import { Knob, HardButton, Led, ModulePanel, Screw, StepButton, VirtualKeyboard, ArpDisplay } from './ui';
 
-// --- TYPES ---
-type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle';
-type Pattern = 'Up' | 'Down' | 'UpDown' | 'Random';
-type PlaybackState = 'stopped' | 'playing';
-type TimeDivision = '1/4' | '1/8' | '1/16' | '1/32';
-type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
-type Scale = 'Major' | 'Minor' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Locrian' | 'Harmonic Minor' | 'Melodic Minor' | 'Pentatonic Major' | 'Pentatonic Minor' | 'Blues' | 'Chromatic' | 'Freestyle';
+export type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle';
+export type Pattern = 'Up' | 'Down' | 'UpDown' | 'Random';
+export type PlaybackState = 'stopped' | 'playing';
+export type TimeDivision = '1/4' | '1/8' | '1/16' | '1/32';
+export type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
+export type Scale = 'Major' | 'Minor' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Locrian' | 'Harmonic Minor' | 'Melodic Minor' | 'Pentatonic Major' | 'Pentatonic Minor' | 'Blues' | 'Chromatic' | 'Freestyle';
+export type TimbreCategory = 'Analog' | 'Digital' | 'Acoustic' | 'Synth' | 'Bass' | 'Lead' | 'Pad' | 'FX' | 'Electric';
+export type TimbreType = 'Piano' | 'Synth' | 'Strings' | 'Brass' | 'Guitar' | 'Bass' | 'Drums' | 'Organ' | 'Choir' | 'Bell' | 'Pluck' | 'Arp' | 'Sweep' | 'Lead' | 'Pad';
+export type ArpState = { noteIndex: number; direction: 'up' | 'down' };
+export interface TimbrePreset {
+    id: string; name: string; category: TimbreCategory; type: TimbreType; waveform: Waveform;
+    attack: number; decay: number; sustain: number; release: number;
+    filterCutoff: number; filterResonance: number; octaveShift: number; detune: number;
+    icon: string; color: string;
+}
 
 export interface ArpSettings {
-    waveform: Waveform;
-    bpm: number;
-    timeDivision: TimeDivision;
-    pattern: Pattern;
-    octaveRange: number;
-    gateLength: number;
-    velocity: number;
-    rootNote: number;
-    masterVolume: number;
-    heldRoots: number[];
-    sortNotes: boolean;
-    sequencerSteps: boolean[];
-    heldNotes?: (string | string[])[];
-    name?: string;
-    musicalKey?: MusicalKey;
-    scale?: Scale;
-    style?: string;
-    mood?: string;
-    chords?: string[];
-    wavFileUrl?: string;
-    midiFileUrl?: string;
+    waveform: Waveform; bpm: number; timeDivision: TimeDivision; pattern: Pattern;
+    octaveRange: number; gateLength: number; velocity: number; rootNote: number;
+    masterVolume: number; heldRoots: number[]; sortNotes: boolean; sequencerSteps: boolean[];
+    heldNotes?: (string | string[])[]; name?: string; musicalKey?: MusicalKey; scale?: Scale;
+    style?: string; mood?: string; chords?: string[]; wavFileUrl?: string; midiFileUrl?: string;
 }
 
 interface ArpeggiatorProps {
-    compact?: boolean;
-    onPlayChange?: (isPlaying: boolean) => void;
-    onBpmChange?: (bpm: number) => void;
-    onPatternChange?: (pattern: Pattern) => void;
-    onWaveformChange?: (waveform: Waveform) => void;
-    onPresetChange?: (presetName: string) => void;
-    onSequenceChange?: (sequence: (number | number[] | null)[]) => void;
-    initialSettings?: Partial<ArpSettings>;
-    onSave?: (settings: ArpSettings) => void;
+    compact?: boolean; onPlayChange?: (isPlaying: boolean) => void; onBpmChange?: (bpm: number) => void;
+    onPatternChange?: (pattern: Pattern) => void; onWaveformChange?: (waveform: Waveform) => void;
+    onPresetChange?: (presetName: string) => void; onSequenceChange?: (sequence: (number | number[] | null)[]) => void;
+    initialSettings?: Partial<ArpSettings>; onSave?: (settings: ArpSettings) => void;
 }
 
-// --- CONSTANTS ---
 const TIME_DIVISIONS: Record<TimeDivision, number> = { '1/4': 1, '1/8': 0.5, '1/16': 0.25, '1/32': 0.125 };
 const ROOT_NOTES: Record<string, number> = { 'C': 60, 'C#': 61, 'Db': 61, 'D': 62, 'D#': 63, 'Eb': 63, 'E': 64, 'F': 65, 'F#': 66, 'Gb': 66, 'G': 67, 'G#': 68, 'Ab': 68, 'A': 69, 'A#': 70, 'Bb': 70, 'B': 71 };
-const SCALE_INTERVALS: Record<Scale, number[]> = {
-    'Major': [0, 2, 4, 5, 7, 9, 11],
-    'Minor': [0, 2, 3, 5, 7, 8, 10],
-    'Dorian': [0, 2, 3, 5, 7, 9, 10],
-    'Phrygian': [0, 1, 3, 5, 7, 8, 10],
-    'Lydian': [0, 2, 4, 6, 7, 9, 11],
-    'Mixolydian': [0, 2, 4, 5, 7, 9, 10],
-    'Locrian': [0, 1, 3, 5, 6, 8, 10],
-    'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11],
-    'Melodic Minor': [0, 2, 3, 5, 7, 9, 11],
-    'Pentatonic Major': [0, 2, 4, 7, 9],
-    'Pentatonic Minor': [0, 3, 5, 7, 10],
-    'Blues': [0, 3, 5, 6, 7, 10],
-    'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-    'Freestyle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // เหมือน Chromatic แต่ไม่ transpose
-};
+const SCALE_INTERVALS: Record<Scale, number[]> = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Melodic Minor': [0, 2, 3, 5, 7, 9, 11], 'Pentatonic Major': [0, 2, 4, 7, 9], 'Pentatonic Minor': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 'Freestyle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
 const KEY_NAMES: (MusicalKey | string)[] = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 const SCALE_NAMES: Scale[] = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Harmonic Minor', 'Melodic Minor', 'Pentatonic Major', 'Pentatonic Minor', 'Blues', 'Chromatic', 'Freestyle'];
 
-// --- CLASSIC TIMBRE PRESETS ---
 const CLASSIC_TIMBRES: TimbrePreset[] = [
-    // Piano Category
     { id: 'grand-piano', name: 'Grand Piano', category: 'Acoustic', type: 'Piano', waveform: 'triangle', attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.5, filterCutoff: 8000, filterResonance: 0.5, octaveShift: 0, detune: 0, icon: '🎹', color: '#f5f5f5' },
     { id: 'electric-piano', name: 'Electric Piano', category: 'Electric', type: 'Piano', waveform: 'sine', attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.4, filterCutoff: 5000, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎹', color: '#d4a574' },
     { id: 'rhodes', name: 'Rhodes', category: 'Electric', type: 'Piano', waveform: 'sine', attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.6, filterCutoff: 3000, filterResonance: 0.4, octaveShift: 0, detune: 10, icon: '🎹', color: '#c4a484' },
-
-    // Synth Category
     { id: 'supersaw', name: 'SuperSaw', category: 'Synth', type: 'Synth', waveform: 'sawtooth', attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.3, filterCutoff: 6000, filterResonance: 0.7, octaveShift: 0, detune: 20, icon: '🎛️', color: '#ff6b6b' },
     { id: 'plucky-synth', name: 'Plucky Synth', category: 'Synth', type: 'Pluck', waveform: 'square', attack: 0.001, decay: 0.15, sustain: 0.3, release: 0.1, filterCutoff: 4000, filterResonance: 0.5, octaveShift: 1, detune: 8, icon: '🎛️', color: '#4ecdc4' },
     { id: 'warm-pad', name: 'Warm Pad', category: 'Synth', type: 'Pad', waveform: 'sawtooth', attack: 0.3, decay: 0.5, sustain: 0.9, release: 1.0, filterCutoff: 2000, filterResonance: 0.3, octaveShift: 0, detune: 15, icon: '🎛️', color: '#a55eea' },
-
-    // Strings Category
     { id: 'orchestral-strings', name: 'Orchestral Strings', category: 'Acoustic', type: 'Strings', waveform: 'sawtooth', attack: 0.1, decay: 0.3, sustain: 0.8, release: 0.8, filterCutoff: 3500, filterResonance: 0.2, octaveShift: 0, detune: 8, icon: '🎻', color: '#8b4513' },
     { id: 'synth-strings', name: 'Synth Strings', category: 'Synth', type: 'Strings', waveform: 'sawtooth', attack: 0.05, decay: 0.2, sustain: 0.9, release: 0.6, filterCutoff: 4000, filterResonance: 0.4, octaveShift: 0, detune: 12, icon: '🎻', color: '#cd853f' },
     { id: 'chamber-strings', name: 'Chamber Strings', category: 'Acoustic', type: 'Strings', waveform: 'triangle', attack: 0.08, decay: 0.4, sustain: 0.7, release: 0.9, filterCutoff: 5000, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎻', color: '#a0522d' },
-
-    // Brass Category
     { id: 'trumpet-section', name: 'Trumpet Section', category: 'Acoustic', type: 'Brass', waveform: 'sawtooth', attack: 0.05, decay: 0.2, sustain: 0.7, release: 0.4, filterCutoff: 4500, filterResonance: 0.5, octaveShift: 0, detune: 8, icon: '🎺', color: '#ffd700' },
     { id: 'french-horn', name: 'French Horn', category: 'Acoustic', type: 'Brass', waveform: 'triangle', attack: 0.08, decay: 0.3, sustain: 0.6, release: 0.5, filterCutoff: 3000, filterResonance: 0.4, octaveShift: -1, detune: 5, icon: '🎺', color: '#daa520' },
     { id: 'synth-brass', name: 'Synth Brass', category: 'Synth', type: 'Brass', waveform: 'square', attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.2, filterCutoff: 5500, filterResonance: 0.6, octaveShift: 0, detune: 15, icon: '🎺', color: '#b8860b' },
-
-    // Bass Category
     { id: 'sub-bass', name: 'Sub Bass', category: 'Synth', type: 'Bass', waveform: 'sine', attack: 0.01, decay: 0.3, sustain: 0.9, release: 0.2, filterCutoff: 800, filterResonance: 0.2, octaveShift: -1, detune: 0, icon: '🎸', color: '#2d3436' },
     { id: 'acid-bass', name: 'Acid Bass', category: 'Synth', type: 'Bass', waveform: 'sawtooth', attack: 0.001, decay: 0.2, sustain: 0.7, release: 0.15, filterCutoff: 2500, filterResonance: 0.9, octaveShift: 0, detune: 10, icon: '🎸', color: '#636e72' },
     { id: 'electric-bass', name: 'Electric Bass', category: 'Electric', type: 'Bass', waveform: 'triangle', attack: 0.01, decay: 0.25, sustain: 0.8, release: 0.3, filterCutoff: 1500, filterResonance: 0.3, octaveShift: -1, detune: 5, icon: '🎸', color: '#8b4513' },
-
-    // Lead Category
     { id: 'saw-lead', name: 'Saw Lead', category: 'Synth', type: 'Lead', waveform: 'sawtooth', attack: 0.01, decay: 0.1, sustain: 0.7, release: 0.2, filterCutoff: 5000, filterResonance: 0.5, octaveShift: 0, detune: 12, icon: '🎤', color: '#e74c3c' },
     { id: 'square-lead', name: 'Square Lead', category: 'Synth', type: 'Lead', waveform: 'square', attack: 0.01, decay: 0.15, sustain: 0.6, release: 0.25, filterCutoff: 4500, filterResonance: 0.4, octaveShift: 0, detune: 8, icon: '🎤', color: '#e67e22' },
     { id: 'soft-lead', name: 'Soft Lead', category: 'Synth', type: 'Lead', waveform: 'triangle', attack: 0.02, decay: 0.2, sustain: 0.8, release: 0.4, filterCutoff: 3500, filterResonance: 0.3, octaveShift: 0, detune: 5, icon: '🎤', color: '#f39c12' },
-
-    // FX Category
     { id: 'crystal-bell', name: 'Crystal Bell', category: 'FX', type: 'Bell', waveform: 'sine', attack: 0.001, decay: 0.8, sustain: 0.1, release: 1.5, filterCutoff: 8000, filterResonance: 0.2, octaveShift: 2, detune: 3, icon: '🔔', color: '#74b9ff' },
     { id: 'sweep-up', name: 'Sweep Up', category: 'FX', type: 'Sweep', waveform: 'sawtooth', attack: 0.5, decay: 0.5, sustain: 0.5, release: 0.5, filterCutoff: 8000, filterResonance: 0.8, octaveShift: 0, detune: 20, icon: '🌊', color: '#a29bfe' },
     { id: 'choir-ahh', name: 'Choir Ahh', category: 'Acoustic', type: 'Choir', waveform: 'sawtooth', attack: 0.1, decay: 0.3, sustain: 0.8, release: 0.8, filterCutoff: 2500, filterResonance: 0.3, octaveShift: 0, detune: 10, icon: '🎵', color: '#fd79a8' },
@@ -264,32 +222,7 @@ const parseMidiNotes = (buffer: ArrayBuffer, bpm: number) => {
     return notes;
 };
 
-type ArpState = {
-    noteIndex: number;
-    direction: 'up' | 'down';
-};
-
-// --- CLASSIC TIMBRE TYPES ---
-type TimbreCategory = 'Analog' | 'Digital' | 'Acoustic' | 'Synth' | 'Bass' | 'Lead' | 'Pad' | 'FX' | 'Electric';
-type TimbreType = 'Piano' | 'Synth' | 'Strings' | 'Brass' | 'Guitar' | 'Bass' | 'Drums' | 'Organ' | 'Choir' | 'Bell' | 'Pluck' | 'Arp' | 'Sweep' | 'Lead' | 'Pad';
-
-interface TimbrePreset {
-    id: string;
-    name: string;
-    category: TimbreCategory;
-    type: TimbreType;
-    waveform: Waveform;
-    attack: number;
-    decay: number;
-    sustain: number;
-    release: number;
-    filterCutoff: number;
-    filterResonance: number;
-    octaveShift: number;
-    detune: number;
-    icon: string;
-    color: string;
-}
+// === CONSTANTS & HELPER FUNCTIONS ===
 
 const calculateNextArpState = (
     currentState: ArpState,
@@ -494,299 +427,10 @@ const createWavDataUri = (audioBuffer: AudioBuffer): string => {
     return 'data:audio/wav;base64,' + btoa(binary);
 };
 
-// --- UI COMPONENTS ---
+// === UI COMPONENTS MOVED TO ./ui/ FOLDER ===
+// Components: Knob, HardButton, Led, ModulePanel, Screw, StepButton, VirtualKeyboard, ArpGrid, ArpDisplay
 
-const Knob = ({ label, value, min, max, onChange, color = "#2ed573", size = 60 }: any) => {
-    const [isDragging, setIsDragging] = useState(false);
-    const startY = useRef(0);
-    const startVal = useRef(0);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
-        startY.current = e.clientY;
-        startVal.current = value;
-        document.body.style.cursor = 'ns-resize';
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            const deltaY = startY.current - e.clientY;
-            const range = max - min;
-            const deltaVal = (deltaY / 150) * range;
-            let newVal = startVal.current + deltaVal;
-            newVal = Math.max(min, Math.min(max, newVal));
-            onChange(Number(newVal));
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-            document.body.style.cursor = 'default';
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, max, min, onChange]);
-
-    const percentage = (value - min) / (max - min);
-    const rotation = -145 + (percentage * 290);
-
-    return (
-        <div className="flex flex-col items-center gap-2 group relative">
-            <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest select-none" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.05)' }}>{label}</div>
-            <div
-                className="relative rounded-full bg-[#1a1a1a] shadow-[0_5px_10px_rgba(0,0,0,0.5),0_0_0_1px_#000] cursor-ns-resize"
-                style={{ width: size, height: size }}
-                onMouseDown={handleMouseDown}
-            >
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="#555" strokeWidth="2" strokeDasharray="1, 4" transform="rotate(125 50 50)" strokeDashoffset="0" />
-                </svg>
-                <div
-                    className="absolute top-1/2 left-1/2 rounded-full shadow-lg"
-                    style={{
-                        width: size * 0.75,
-                        height: size * 0.75,
-                        transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-                        background: 'conic-gradient(#333, #111, #333)',
-                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.5)'
-                    }}
-                >
-                    <div className="absolute top-[10%] left-1/2 w-[2px] h-[30%] -translate-x-1/2 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 5px ${color}` }}></div>
-                </div>
-            </div>
-            <div className="text-[9px] font-mono text-zinc-500 select-none bg-black/40 px-1.5 py-0.5 rounded border border-white/5 shadow-inner">
-                {value < 1 && value > 0 ? value.toFixed(2) : Math.round(value)}
-            </div>
-        </div>
-    );
-};
-
-const HardButton = ({ label, active, onClick, color = "red" }: { label: React.ReactNode, active: boolean, onClick: () => void, color?: string }) => {
-    const activeColors: Record<string, string> = {
-        red: 'from-red-600 to-red-800 border-red-900 text-white shadow-[0_0_15px_rgba(255,0,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
-        green: 'from-green-600 to-green-800 border-green-900 text-white shadow-[0_0_15px_rgba(0,255,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
-        blue: 'from-blue-600 to-blue-800 border-blue-900 text-white shadow-[0_0_15px_rgba(0,0,255,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
-        orange: 'from-orange-500 to-orange-700 border-orange-900 text-white shadow-[0_0_15px_rgba(255,165,0,0.5),inset_0_0_5px_rgba(0,0,0,0.5)]',
-    };
-
-    return (
-        <button
-            onClick={onClick}
-            className={`
-                h-10 px-4 rounded-sm border-t border-x border-b-2
-                transition-all duration-100 active:translate-y-[1px] active:shadow-none
-                font-bold text-[10px] tracking-widest uppercase flex items-center justify-center
-                ${active
-                    ? `bg-gradient-to-b ${activeColors[color]}`
-                    : 'bg-gradient-to-b from-[#333] to-[#222] border-[#111] border-t-[#444] text-zinc-400 shadow-[0_4px_6px_rgba(0,0,0,0.3)] hover:text-zinc-200'
-                }
-            `}
-        >
-            {label}
-        </button>
-    )
-};
-
-const Led = ({ active, color = "#2ed573" }: { active: boolean, color?: string }) => (
-    <div
-        className={`w-2 h-2 rounded-full transition-all duration-75 border border-black/50 ${active ? 'opacity-100 bg-white' : 'opacity-30 bg-zinc-600'}`}
-        style={{
-            backgroundColor: active ? color : undefined,
-            boxShadow: active ? `0 0 8px ${color}, inset 0 0 2px rgba(255,255,255,0.8)` : 'none'
-        }}
-    />
-);
-
-const ModulePanel = ({ title, children, className = "" }: { title: string, children: React.ReactNode, className?: string }) => (
-    <div className={`
-        relative bg-[#2a2a2a] rounded p-4 pt-6
-        border border-[#111]
-        shadow-[inset_2px_2px_5px_rgba(0,0,0,0.5),inset_-1px_-1px_1px_rgba(255,255,255,0.05)]
-        ${className}
-    `}>
-        <div className="absolute -top-2.5 left-3 bg-[#222] px-2 py-0.5 border border-[#111] rounded-sm shadow-md z-10">
-            <span className="text-[10px] font-mono font-black text-[#888] tracking-[0.2em] uppercase text-shadow-sm">
-                {title}
-            </span>
-        </div>
-        {children}
-    </div>
-);
-
-const Screw = ({ className }: { className?: string }) => (
-    <div className={`w-3 h-3 rounded-full bg-[radial-gradient(circle_at_30%_30%,#666,#111)] shadow-[0_1px_2px_rgba(0,0,0,0.8)] flex items-center justify-center border border-[#111] ${className}`}>
-        <div className="w-[80%] h-[1px] bg-[#1a1a1a] rotate-45"></div>
-        <div className="w-[80%] h-[1px] bg-[#1a1a1a] -rotate-45 absolute"></div>
-    </div>
-);
-
-const StepButton = ({ index, active, current, onClick }: { index: number, active: boolean, current: boolean, onClick: () => void }) => {
-    const isAccent = index % 4 === 0;
-    return (
-        <div className="flex flex-col items-center gap-0.5 md:gap-1">
-            <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full border border-black/50 transition-all duration-75 ${current ? 'bg-red-500 shadow-[0_0_8px_#f00]' : active ? 'bg-red-900/50' : 'bg-[#111]'}`}></div>
-            <button
-                onClick={onClick}
-                className={`
-          w-6 md:w-8 h-8 md:h-12 rounded-[2px] relative overflow-hidden transition-transform active:scale-[0.98]
-          border-b-[3px] md:border-b-[4px] border-r-[1px] border-l-[1px] border-t-[1px]
-          ${active
-                        ? isAccent
-                            ? 'bg-[#ff9f43] border-[#d35400] shadow-[0_0_10px_rgba(255,159,67,0.4)]'
-                            : 'bg-[#fffa65] border-[#f1c40f] shadow-[0_0_10px_rgba(255,250,101,0.4)]'
-                        : 'bg-[#333] border-[#111] shadow-inner'
-                    }
-        `}
-            >
-                <div className={`absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none ${active ? 'opacity-100' : 'opacity-10'}`}></div>
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-black text-black/50">{index + 1}</div>
-            </button>
-        </div>
-    );
-};
-
-const VirtualKeyboard = ({ heldIntervals, musicalKey, activeChordNotes, onNoteOn, onNoteOff }: { heldIntervals: number[], musicalKey: MusicalKey, activeChordNotes?: number[], onNoteOn: (n: number) => void, onNoteOff: (n: number) => void }) => {
-    const keys = useMemo(() => {
-        let startMidi = 48;
-        let endMidi = 72;
-
-        // ใช้ activeChordNotes ถ้ามี (จาก heldNotes) ไม่อย่างนั้นใช้ heldIntervals + musicalKey
-        const displayNotes = activeChordNotes && activeChordNotes.length > 0 
-            ? activeChordNotes 
-            : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
-
-        if (displayNotes.length > 0) {
-            const minHeld = Math.min(...displayNotes);
-            const maxHeld = Math.max(...displayNotes);
-            if (minHeld < startMidi) startMidi = Math.max(0, minHeld - 2);
-            if (maxHeld > endMidi) endMidi = Math.min(127, maxHeld + 2);
-        }
-
-        const startOctave = Math.floor(startMidi / 12);
-        startMidi = Math.min(startMidi, startOctave * 12);
-
-        const generatedKeys = [];
-        for (let i = startMidi; i <= endMidi; i++) {
-            const noteName = midiToNoteName(i);
-            generatedKeys.push({ note: noteName, midi: i, type: noteName.includes('#') ? 'black' : 'white' });
-        }
-        return generatedKeys;
-    }, [heldIntervals, musicalKey, activeChordNotes]);
-
-    const whiteKeys = keys.filter(k => k.type === 'white');
-    const whiteKeyWidthPct = 100 / whiteKeys.length;
-
-    return (
-        <div className="w-full relative h-[120px] select-none bg-zinc-950 rounded-b-md overflow-hidden shadow-inner border-t-4 border-zinc-900">
-            {whiteKeys.map((key, index) => {
-                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldIntervals + musicalKey
-                const displayNotes = activeChordNotes && activeChordNotes.length > 0 
-                    ? activeChordNotes 
-                    : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
-                const isPressed = displayNotes.includes(key.midi);
-                return (
-                    <button
-                        key={key.midi}
-                        onMouseDown={() => onNoteOn(key.midi)} onMouseUp={() => onNoteOff(key.midi)} onMouseLeave={() => onNoteOff(key.midi)}
-                        onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
-                        className={`absolute top-0 h-full border-l border-b-8 border-r border-zinc-300 rounded-b-md active:bg-zinc-200 transition-all duration-75 shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] ${
-                            isPressed
-                                ? 'bg-gradient-to-b from-[#60a5fa] to-[#2563eb] border-b-[#2563eb] shadow-[0_0_20px_rgba(96,165,250,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
-                                : 'bg-[#f0f0f0]'
-                        }`}
-                        style={{ width: `${whiteKeyWidthPct}%`, left: `${index * whiteKeyWidthPct}%`, zIndex: 1 }}
-                    >
-                        <span className={`absolute bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold ${isPressed ? 'text-white drop-shadow-[0_0_3px_rgba(0,0,0,0.8)]' : 'text-zinc-400'}`}>{key.note}</span>
-                    </button>
-                );
-            })}
-            {keys.filter(k => k.type === 'black').map((key) => {
-                const whiteKeyIndex = whiteKeys.findIndex(wk => wk.midi === key.midi - 1);
-                if (whiteKeyIndex === -1) return null;
-                const blackKeyWidthPct = whiteKeyWidthPct * 0.65;
-                const leftPosPct = ((whiteKeyIndex + 1) * whiteKeyWidthPct) - (blackKeyWidthPct / 2);
-                // ใช้ activeChordNotes ถ้ามี ไม่อย่างนั้นใช้ heldIntervals + musicalKey
-                const displayNotes = activeChordNotes && activeChordNotes.length > 0 
-                    ? activeChordNotes 
-                    : heldIntervals.map(interval => ROOT_NOTES[musicalKey] + interval);
-                const isPressed = displayNotes.includes(key.midi);
-                return (
-                    <button
-                        key={key.midi}
-                        onMouseDown={() => onNoteOn(key.midi)} onMouseUp={() => onNoteOff(key.midi)} onMouseLeave={() => onNoteOff(key.midi)}
-                        onTouchStart={(e) => { e.preventDefault(); onNoteOn(key.midi); }} onTouchEnd={(e) => { e.preventDefault(); onNoteOff(key.midi); }}
-                        className={`absolute top-0 h-[60%] border-b-8 border-x-2 border-black rounded-b-sm z-10 shadow-[2px_2px_5px_rgba(0,0,0,0.5),inset_0_5px_10px_rgba(255,255,255,0.1)] transition-all duration-75 ${
-                            isPressed
-                                ? 'bg-gradient-to-b from-[#93c5fd] to-[#3b82f6] border-b-[#3b82f6] shadow-[0_0_20px_rgba(147,197,255,0.8),inset_0_0_10px_rgba(255,255,255,0.5)] scale-[0.98] translate-y-[2px]'
-                                : 'bg-gradient-to-b from-[#333] to-black'
-                        }`}
-                        style={{ width: `${blackKeyWidthPct}%`, left: `${leftPosPct}%` }}
-                    />
-                );
-            })}
-        </div>
-    );
-};
-
-const ArpGrid = memo(({ sequence }: { sequence: (number | number[] | null)[] }) => {
-    const totalSteps = Math.max(16, sequence.length);
-    const validNotes = sequence.flatMap(n => Array.isArray(n) ? n : [n]).filter((n): n is number => n !== null);
-    const pitchRange = useMemo(() => {
-        if (validNotes.length === 0) return Array.from({ length: 25 }, (_, i) => 72 - i);
-        const min = Math.min(48, Math.min(...validNotes) - 4);
-        const max = Math.max(84, Math.max(...validNotes) + 4);
-        return Array.from({ length: max - min + 1 }, (_, i) => max - i);
-    }, [sequence, validNotes]);
-
-    return (
-        <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${totalSteps}, 1fr)`, gridTemplateRows: `repeat(${pitchRange.length}, 1fr)` }}>
-            <div className="absolute inset-0 opacity-20 pointer-events-none"
-                style={{
-                    backgroundImage: 'linear-gradient(#1a1a1a 1px, transparent 1px), linear-gradient(90deg, #1a1a1a 1px, transparent 1px)',
-                    backgroundSize: `${100 / totalSteps}% ${100 / pitchRange.length}%`
-                }}
-            />
-            {pitchRange.map(pitch => (
-                Array.from({ length: totalSteps }).map((_, step) => {
-                    const note = sequence[step];
-                    const isOn = Array.isArray(note) ? note.includes(pitch) : note === pitch;
-                    return (
-                        <div key={`${pitch}-${step}`} className={`${isOn ? 'bg-[#2ed573] shadow-[0_0_10px_#2ed573,0_0_20px_#2ed573]' : ''} border-r border-b border-white/5`}></div>
-                    )
-                })
-            ))}
-        </div>
-    );
-});
-ArpGrid.displayName = 'ArpGrid';
-
-const ArpDisplay = memo(({ sequence, currentStep }: { sequence: (number | number[] | null)[], currentStep: number | null }) => {
-    const totalSteps = Math.max(16, sequence.length);
-
-    return (
-        <div className="relative w-full h-full bg-[#050505] overflow-hidden rounded-sm shadow-[inset_0_0_20px_rgba(0,0,0,1)] border-8 border-zinc-800 border-b-zinc-700 border-t-zinc-900">
-            <ArpGrid sequence={sequence} />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_4px,3px_100%] pointer-events-none mix-blend-overlay"></div>
-            <div className="absolute inset-0 bg-radial-gradient(circle, transparent 60%, black 100%) opacity-50 pointer-events-none z-10"></div>
-            {currentStep !== null && (
-                <div
-                    className="absolute top-0 bottom-0 bg-white/10 border-l border-white/30 z-10 transition-transform duration-75 shadow-[0_0_10px_white]"
-                    style={{ width: `${100 / totalSteps}%`, left: 0, transform: `translateX(${currentStep * 100}%)` }}
-                />
-            )}
-        </div>
-    )
-});
-ArpDisplay.displayName = 'ArpDisplay';
-
-type SavedMidi = { name: string; data: string; settings?: ArpSettings; };
+export type SavedMidi = { name: string; data: string; settings?: ArpSettings; };
 
 // --- MAIN COMPONENT ---
 
@@ -1465,10 +1109,10 @@ export default function Arpeggiator({
             const scheduledOscillators: { osc: OscillatorNode; gain: GainNode }[] = [];
 
             // คำนวณจำนวน notes สูงสุดที่เล่นพร้อมกัน เพื่อลด volume ต่อ note
-            const maxPolyphony = generatedArpPattern.reduce((max, note) => {
+            const maxPolyphony = generatedArpPattern.reduce((max: number, note) => {
                 if (note === null) return max;
                 const count = Array.isArray(note) ? note.length : 1;
-                return count > max ? count : max;
+                return Math.max(count, max);
             }, 1);
             const perNoteGain = 1.0 / maxPolyphony; // เพิ่ม gain ให้ดังขึ้น
 

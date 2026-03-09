@@ -15,7 +15,7 @@ import ChordRecommend from "@/components/ChordRecommend";
 import ChatPromptInput from "./chatPromptInput";
 import { ModelSelected } from "@/components/modal/model_selected";
 import { get_all_by_type, save_arp_settings } from "@/api/music";
-import Arpeggiator from "@/components/instruments/Arpeggiator";
+import Arpeggiator, { ArpSettings } from "@/components/instruments/Arpeggiator";
 import AcidSynth from "@/components/instruments/AcidSynth";
 
 import { Inter } from "next/font/google";
@@ -33,7 +33,7 @@ interface Props {
 export function Chat({ id, initialMessages }: Props) {
   const { loadChatHistory, chatMode } = useChatContext();
 
-  const [arp, setArp] = useState(null);
+  const [arp, setArp] = useState<ArpSettings | null>(null);
   console.log("arp", arp);
 
   const [acid, setAcid] = useState(null);
