@@ -7,28 +7,25 @@ import { icon_controlPlay, icon_stop } from "../../public/index";
 export default function CardListMusic({ data, icon_data }) {
   const [selectedStyleId, setSelectedStyleId] = useState(null);
   const [playingId, setPlayingId] = useState(null);
-  const audioRef = useRef(null); // ✅ เก็บ Audio instance
+  const audioRef = useRef(null);
 
   const togglePlay = (e, idx) => {
     e.stopPropagation();
 
     const wavUrl = data[idx]?.instrument_Arps?.[0]?.wav_file_url;
 
-    if (!wavUrl) return; // ไม่มีไฟล์ก็ไม่ต้องทำอะไร
+    if (!wavUrl) return;
 
     if (playingId === idx) {
-      // ✅ กด stop — หยุดเล่น
       audioRef.current?.pause();
       audioRef.current = null;
       setPlayingId(null);
     } else {
-      // ✅ หยุดเพลงก่อนหน้าก่อน
       audioRef.current?.pause();
 
-      // ✅ เล่นเพลงใหม่
       const audio = new Audio(wavUrl);
       audio.play();
-      audio.onended = () => setPlayingId(null); // reset เมื่อเล่นจบ
+      audio.onended = () => setPlayingId(null);
       audioRef.current = audio;
       setPlayingId(idx);
     }

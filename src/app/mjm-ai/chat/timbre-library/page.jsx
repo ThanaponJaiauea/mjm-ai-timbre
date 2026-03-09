@@ -33,19 +33,25 @@ export default function TimbreLibraryPage() {
       <div className="flex justify-between items-center mt-6">
         {/* Menu */}
         <div className="flex gap-2 p-2 bg-[#141414] rounded-full">
-          {menuList.map(menu =>
+          {menuList.map((menu) =>
             menu === "Instrument" ? (
               <div className="relative" key={menu}>
                 <button
                   className={`px-6 py-2 rounded-full font-medium focus:outline-none flex items-center ${selectedMenu === menu ? "bg-[#232323] text-[#E759FF]" : "bg-transparent  text-[#8F8F8F]"}`}
                   onClick={() => {
                     setSelectedMenu(menu);
-                    setShowInstrumentDropdown(prev => !prev);
+                    setShowInstrumentDropdown((prev) => !prev);
                   }}
                 >
                   Instrument
                   <span className="ml-2">
-                    <Image src="/icons/icon_dropdown.png" alt="dropdown" width={14} height={14} className="inline" />
+                    <Image
+                      src="/icons/icon_dropdown.png"
+                      alt="dropdown"
+                      width={14}
+                      height={14}
+                      className="inline"
+                    />
                   </span>
                 </button>
                 {/* Dropdown slide down */}
@@ -83,7 +89,7 @@ export default function TimbreLibraryPage() {
               >
                 {menu}
               </button>
-            )
+            ),
           )}
         </div>
         {/* Search */}
@@ -94,7 +100,12 @@ export default function TimbreLibraryPage() {
             className="bg-[#232323] text-white pl-12 pr-4 py-2 rounded-full outline-none w-full"
           />
           <span className="absolute left-5 top-1/2 transform -translate-y-1/2">
-            <Image src="/icons/icon_search.png" alt="search" width={16} height={16} />
+            <Image
+              src="/icons/icon_search.png"
+              alt="search"
+              width={16}
+              height={16}
+            />
           </span>
         </div>
       </div>
@@ -108,9 +119,18 @@ export default function TimbreLibraryPage() {
         </div>
         {/* Center Box */}
         <div className="flex flex-col items-center justify-center mt-16">
-          <Image src="/icons/icon_music_add.png" alt="Library Empty" width={112} height={112} />
-          <div className="mt-8 text-[22px] font-semibold">Your library is empty</div>
-          <div className="mt-2 text-[16px] text-gray-400">Start creating music and your songs will show up here.</div>
+          <Image
+            src="/icons/icon_music_add.png"
+            alt="Library Empty"
+            width={112}
+            height={112}
+          />
+          <div className="mt-8 text-[22px] font-semibold">
+            Your library is empty
+          </div>
+          <div className="mt-2 text-[16px] text-gray-400">
+            Start creating music and your songs will show up here.
+          </div>
         </div>
       </div>
       {/* Section Trending */}
