@@ -14,8 +14,12 @@ import icon_download from "./icons/icon_download.png";
 import icon_mjm from "./icons/icon_mjm.png";
 import icon_library from "./icons/icon_library.png";
 import icon_dropdown from "./icons/icon_dropdown.png";
+import icon_upload from "./icons/icon_upload.png";
+import icon_file_image from "./icons/icon_file_image.png";
+import icon_remove from "./icons/icon_remove.png";
 
 export {
+  icon_remove,
   icon_instrument1,
   icon_instrument2,
   icon_instrument3,
@@ -32,4 +36,6 @@ export {
   icon_mjm,
   icon_library,
   icon_dropdown,
+  icon_upload,
+  icon_file_image
 };

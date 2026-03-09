@@ -13,19 +13,39 @@ export default function Box_transaction_history({ data }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-[#8F8F8F] text-sm border-b border-white/5">
-                <th className="pb-4 font-normal">Date Time</th>
-                <th className="pb-4 font-normal">Subscription</th>
-                <th className="pb-4 font-normal">Amount</th>
-                <th className="pb-4 font-normal">Status</th>
-                <th className="pb-4 font-normal text-center">Invoice</th>
+              <tr className="border-b border-white/5">
+                {[
+                  "Date Time",
+                  "Subscription",
+                  "Amount",
+                  "Status",
+                  "Invoice",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="pb-4 font-medium text-sm bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(to right, #E759FF, #6174FF)",
+                    }}
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="text-sm">
-              {data.map(item => (
-                <tr key={item.id} className="border-b border-white/5 last:border-none">
-                  <td className="py-4 text-white/80">{new Date(item.createdAt).toLocaleDateString("en-GB")}</td>
-                  <td className="py-4 text-white/80">{item.subscription} Plans</td>
+              {data.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-white/5 last:border-none"
+                >
+                  <td className="py-4 text-white/80">
+                    {new Date(item.createdAt).toLocaleDateString("en-GB")}
+                  </td>
+                  <td className="py-4 text-white/80">
+                    {item.subscriptionPlan} Plans
+                  </td>
                   <td className="py-4 text-white/80">{item.amount}</td>
                   <td className="py-4">
                     <span
@@ -77,7 +97,11 @@ export default function Box_transaction_history({ data }) {
             </button>
 
             <div className="overflow-y-auto">
-              <img src={selectedImage} alt="Payment Slip" className="w-full h-auto rounded-lg object-contain" />
+              <img
+                src={selectedImage}
+                alt="Payment Slip"
+                className="w-full h-auto rounded-lg object-contain"
+              />
             </div>
           </div>
         </div>

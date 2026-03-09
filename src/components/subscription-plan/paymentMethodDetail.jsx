@@ -1,32 +1,56 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createPayment } from "../../api/createPayment";
+import { createPayment } from "../../api/payment";
+import {
+  icon_upload,
+  icon_file_image,
+  icon_remove,
+} from "../../../public/index";
+import Image from "next/image";
 
-export default function PaymentMethodDetail({ price, onBack, subscription, onSuccess }) {
+export default function PaymentMethodDetail({
+  price,
+  onBack,
+  subscriptionPlan,
+  onSuccess,
+}) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef(null);
 
-  const handleFileChange = e => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (selectedFile) {
+      const allowedTypes = [
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+        "image/webp",
+      ];
+
+      if (!allowedTypes.includes(selectedFile.type)) {
+        alert("กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ (PNG, JPG) เท่านั้นครับ");
+        setFile(null);
+        e.target.value = "";
+        return;
+      }
+
+      setFile(selectedFile);
     }
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      alert("Please upload your payment slip first.");
-      return;
-    }
+    if (!file) return;
 
     setLoading(true);
 
     const formData = new FormData();
     formData.append("image", file);
     formData.append("price", String(price).replace(/,/g, ""));
-    formData.append("subscription", subscription);
+    formData.append("subscriptionPlan", subscriptionPlan);
 
     try {
       const data = await createPayment(formData);
@@ -39,36 +63,47 @@ export default function PaymentMethodDetail({ price, onBack, subscription, onSuc
       setFile(null);
       onBack();
     } catch (err) {
-      console.error("Error submitting payment:", err.response?.data || err.message);
+      console.error(
+        "Error submitting payment:",
+        err.response?.data || err.message,
+      );
       alert("Failed to submit payment. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const isSubmitDisabled = !file || loading;
+
   return (
     <div className="bg-[#242327] border border-white/5 rounded-[30px] p-8">
-      <button onClick={onBack} className="text-[#8F8F8F] text-sm mb-4 hover:text-white">
+      <button
+        onClick={onBack}
+        className="text-[#8F8F8F] text-sm mb-4 hover:text-white"
+      >
         ← Back to plans
       </button>
 
       <h3 className="text-lg font-medium text-white">Payment Method</h3>
 
       <p className="text-sm text-[#8F8F8F] mt-2">
-        Please transfer the total amount of <span className="text-purple-400 font-bold text-lg">{price}</span> THB to
-        the company bank account below. After payment, upload your payment slip for verification. Activation may take
-        1-24 hours after approval.
+        Please transfer the total amount of{" "}
+        <span className="text-purple-400 font-bold text-lg">{price}</span> THB
+        to the company bank account below. After payment, upload your payment
+        slip for verification. Activation may take 1-24 hours after approval.
       </p>
 
       <div className="mt-6 space-y-2 bg-[#1A1A1A] p-6 rounded-2xl border border-white/5">
         <p className="text-sm">
-          <span className="text-[#8F8F8F]">Company Name:</span> Yojoies Technology Co.,Ltd.
+          <span className="text-[#8F8F8F]">Company Name:</span> Yojoies
+          Technology Co.,Ltd.
         </p>
         <p className="text-sm">
           <span className="text-[#8F8F8F]">Bank Name:</span> SCB
         </p>
         <p className="text-sm">
-          <span className="text-[#8F8F8F]">Account Name:</span> Yojoies Technology Co.,Ltd.
+          <span className="text-[#8F8F8F]">Account Name:</span> Yojoies
+          Technology Co.,Ltd.
         </p>
         <p className="text-sm">
           <span className="text-[#8F8F8F]">Account Number:</span> 1234567890
@@ -80,43 +115,80 @@ export default function PaymentMethodDetail({ price, onBack, subscription, onSuc
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
-        accept="image/png, image/jpeg"
       />
 
-      {/* Upload Area */}
       <div
         onClick={() => !loading && fileInputRef.current.click()}
         className={`mt-6 border-2 border-dashed ${file ? "border-purple-500" : "border-white/10"} rounded-2xl p-8 flex flex-col items-center justify-center hover:border-purple-500/50 transition-colors ${loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         {file ? (
-          <div className="text-center">
-            <p className="text-purple-400 text-sm font-medium truncate max-w-[200px]">{file.name}</p>
-            <p className="text-[10px] text-[#8F8F8F] mt-1">Click to change file</p>
+          <div className="w-full flex items-center justify-around">
+            <div className="flex items-center gap-4 w-full">
+              <Image
+                src={icon_file_image}
+                width={26}
+                height={26}
+                alt="upload icon"
+              />
+              <p className="text-purple-400 text-sm font-medium truncate max-w-[300px]">
+                Payment Slip {file.name}
+              </p>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setFile(null);
+                fileInputRef.current.value = "";
+              }}
+              className="w-[10%] flex items-center justify-end gap-1 text-[10px] cursor-pointer"
+            >
+              <Image
+                src={icon_remove}
+                width={18}
+                height={18}
+                alt="upload icon"
+              />
+            </button>
           </div>
         ) : (
           <>
-            <p className="text-[#8F8F8F] text-sm">Upload your payment slip</p>
-            <p className="text-[10px] text-[#555] mt-1">Compatible file types: JPG, PNG</p>
+            <Image src={icon_upload} width={30} height={30} alt="upload icon" />
+            <p className="text-[#8F8F8F] text-sm mt-1">
+              Upload your payment slip
+            </p>
+            <p className="text-[10px] text-[#555] mt-1">
+              Compatible file types: JPG, PNG, WEBP
+            </p>
           </>
         )}
       </div>
 
       <button
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={isSubmitDisabled}
         className={`w-full mt-6 py-3 rounded-full font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
-          loading ? "bg-gray-600 text-gray-300 cursor-not-allowed" : "bg-white text-black hover:bg-gray-200"
+          isSubmitDisabled
+            ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+            : "bg-white text-black hover:bg-gray-200"
         }`}
       >
         {loading ? (
           <>
             <svg
-              className="animate-spin h-5 w-5 text-white"
+              className="animate-spin h-5 w-5 text-gray-400"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
               <path
                 className="opacity-75"
                 fill="currentColor"

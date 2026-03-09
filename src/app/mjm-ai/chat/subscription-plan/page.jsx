@@ -9,16 +9,22 @@ import Box_transaction_history from "../../../../components/subscription-plan/bo
 import { useState, useEffect } from "react";
 import Model_popUp from "../../../../components/modal/model_popUp";
 import PaymentMethodDetail from "../../../../components/subscription-plan/paymentMethodDetail";
-import { getPaymentByUserId } from "../../../../api/createPayment";
+import { getPaymentByUserId, getSubscription } from "../../../../api/payment";
 
 export default function SubscriptionPlan() {
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore((state) => state.user);
   const [selectPrice, setSelectPrice] = useState(null);
 
   const [confirmedPlan, setConfirmedPlan] = useState(null);
 
   const [openModel, setOpenModel] = useState(false);
+
+  // data api
   const [historyData, setHistoryData] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+
+  const [subLoading, setSubLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
 
   const handleConfirm = () => {
     setConfirmedPlan(selectPrice);
@@ -30,14 +36,53 @@ export default function SubscriptionPlan() {
     try {
       const res = await getPaymentByUserId();
       setHistoryData(res.data.data);
+      return res.data.data;
     } catch (error) {
       console.error("Error fetching payments:", error);
     }
   };
 
+  const fetchSubscription = async () => {
+    try {
+      const res = await getSubscription();
+      setSubscription(res.data.data);
+    } catch {
+      setSubscription(null);
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchSubscription();
   }, []);
+
+  const startPolling = () => {
+    setIsPolling(true);
+    const interval = setInterval(async () => {
+      const data = await fetchHistory();
+      const hasPending = data?.some((item) => item.status === "PENDING");
+      if (!hasPending) {
+        clearInterval(interval);
+        setIsPolling(false);
+        fetchSubscription();
+      }
+    }, 5000);
+
+    setTimeout(
+      () => {
+        clearInterval(interval);
+        setIsPolling(false);
+      },
+      5 * 60 * 1000,
+    );
+  };
+
+  const isSubscriptionActive =
+    subscription?.status === "APPROVED" &&
+    subscription?.nextBillingDate &&
+    new Date(subscription.nextBillingDate) > new Date();
 
   return (
     <div className="w-[95%] max-w-[1200px] m-auto py-10 text-white">
@@ -45,7 +90,9 @@ export default function SubscriptionPlan() {
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-semibold">Subscription</h1>
-          <p className="text-[#8F8F8F] text-sm mt-1">Manage payments & history.</p>
+          <p className="text-[#8F8F8F] text-sm mt-1">
+            Manage payments & history.
+          </p>
         </div>
         {user && <UserMenu />}
       </div>
@@ -57,19 +104,26 @@ export default function SubscriptionPlan() {
           {confirmedPlan ? (
             <PaymentMethodDetail
               price={confirmedPlan?.price}
-              subscription={confirmedPlan?.subscription}
+              subscriptionPlan={confirmedPlan?.subscriptionPlan}
               onBack={() => setConfirmedPlan(null)}
-              onSuccess={fetchHistory}
+              onSuccess={() => {
+                fetchHistory();
+                startPolling();
+              }}
             />
           ) : (
             <Box_payment_method
-              onSelectPrice={price => {
+              isSubscriptionActive={isSubscriptionActive}
+              onSelectPrice={(price) => {
                 setSelectPrice(price);
                 setOpenModel(true);
               }}
             />
           )}
-          <Box_current_subscription />
+          <Box_current_subscription
+            subscription={subscription}
+            loading={subLoading}
+          />
         </div>
 
         {/* Right : Transaction History */}
@@ -77,7 +131,11 @@ export default function SubscriptionPlan() {
       </div>
 
       {openModel && selectPrice && (
-        <Model_popUp PriceData={selectPrice} onClose={() => setOpenModel(false)} onConfirm={handleConfirm} />
+        <Model_popUp
+          PriceData={selectPrice}
+          onClose={() => setOpenModel(false)}
+          onConfirm={handleConfirm}
+        />
       )}
     </div>
   );

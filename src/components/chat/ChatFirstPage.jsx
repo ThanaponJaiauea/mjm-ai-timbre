@@ -21,17 +21,33 @@ import {
 
 const montserrat = Montserrat();
 
-const ideasDataMoc = [{ title: "Lofi, Key C, 120 BPM, Drums" }, { title: "Pop, Key F, 120 BPM, Drums" }];
+const ideasDataMoc = [
+  { title: "Lofi, Key C, 120 BPM, Drums" },
+  { title: "Pop, Key F, 120 BPM, Drums" },
+];
 
-const icon_instrument_data = [icon_instrument1, icon_instrument2, icon_instrument3, icon_instrument4, icon_instrument5];
+const icon_instrument_data = [
+  icon_instrument1,
+  icon_instrument2,
+  icon_instrument3,
+  icon_instrument4,
+  icon_instrument5,
+];
 
-export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOption, isStreaming }) {
+export default function ChatFirstPage({
+  value,
+  onChange,
+  onSubmit,
+  onSelectOption,
+  isStreaming,
+}) {
   const router = useRouter();
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore((state) => state.user);
 
   const [selectedIdea, setSelectedIdea] = useState(null);
 
   const [musicStyleData, setMusicStyleData] = useState([]);
+  console.log("musicStyleData", musicStyleData);
 
   const handleSignIn = () => {
     router.push("?auth=signin");
@@ -56,7 +72,13 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
   return (
     <section className="flex flex-col items-center relative w-full p-4">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <Image src={bg_ChatFirstPage} alt="Background" fill priority className="object-cover" />
+        <Image
+          src={bg_ChatFirstPage}
+          alt="Background"
+          fill
+          priority
+          className="object-cover"
+        />
       </div>
 
       <div className="flex justify-end w-full gap-4">
@@ -72,10 +94,12 @@ export default function ChatFirstPage({ value, onChange, onSubmit, onSelectOptio
 
       <div className="mt-20 flex flex-col items-center gap-8">
         <div>
-          <h1 className={`font-bold text-[70px] ${montserrat.className}`}>CREATIVE AI MUSIC</h1>
+          <h1 className={`font-bold text-[70px] ${montserrat.className}`}>
+            CREATIVE AI MUSIC
+          </h1>
           <p className="text-center text-sm">
-            Create unique sounds instantly with AI and turn your creative ideas into <br /> original, personalized music
-            in just seconds.
+            Create unique sounds instantly with AI and turn your creative ideas
+            into <br /> original, personalized music in just seconds.
           </p>
         </div>
         <div className="w-full flex flex-col items-center gap-3">
