@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import { useVSTBridge } from '../../hooks/useVSTBridge';
-import * as Tone from 'tone';
 import '../../app/arp/arp.css';
 import { Knob, HardButton, Led, ModulePanel, Screw, StepButton, VirtualKeyboard, ArpDisplay } from './ui';
 
@@ -42,47 +41,6 @@ const ROOT_NOTES: Record<string, number> = { 'C': 60, 'C#': 61, 'Db': 61, 'D': 6
 const SCALE_INTERVALS: Record<Scale, number[]> = { 'Major': [0, 2, 4, 5, 7, 9, 11], 'Minor': [0, 2, 3, 5, 7, 8, 10], 'Dorian': [0, 2, 3, 5, 7, 9, 10], 'Phrygian': [0, 1, 3, 5, 7, 8, 10], 'Lydian': [0, 2, 4, 6, 7, 9, 11], 'Mixolydian': [0, 2, 4, 5, 7, 9, 10], 'Locrian': [0, 1, 3, 5, 6, 8, 10], 'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], 'Melodic Minor': [0, 2, 3, 5, 7, 9, 11], 'Pentatonic Major': [0, 2, 4, 7, 9], 'Pentatonic Minor': [0, 3, 5, 7, 10], 'Blues': [0, 3, 5, 6, 7, 10], 'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 'Freestyle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
 const KEY_NAMES: (MusicalKey | string)[] = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 const SCALE_NAMES: Scale[] = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian', 'Harmonic Minor', 'Melodic Minor', 'Pentatonic Major', 'Pentatonic Minor', 'Blues', 'Chromatic', 'Freestyle'];
-
-// Mapping ชื่อเสียงไปยัง SoundFont folder names (ใช้กับ FluidR3_GM)
-// หมายเหตุ: เสียง Acoustic/Electric ใช้ SoundFont (เสียงจริง) / เสียง Synth ใช้ Waveform (สังเคราะห์)
-const TIMBRE_SOUNDFONT_MAP: Record<string, string> = {
-    // === PIANO (เปียโน) ===
-    'grand-piano': 'grand_piano',        // 🎹 Grand Piano - เสียงเปียโนใหญ่จริง
-    'electric-piano': 'electric_piano',  // 🎹 Electric Piano - เสียงไฟฟ้าเปียโนจริง
-    'rhodes': 'electric_piano',          // 🎹 Rhodes - ใช้ electric_piano แทน
-
-    // === STRINGS (เครื่องสาย) ===
-    'orchestral-strings': 'string_ensemble',  // 🎻 Orchestral Strings - เสียงเครื่องสายรวมจริง
-    'chamber-strings': 'string_ensemble',     // 🎻 Chamber Strings - เสียงเครื่องสายห้องประชุม
-    'synth-strings': '',                      // 🎻 Synth Strings - Synth (ใช้ waveform)
-
-    // === BRASS (เครื่องเป่าทองเหลือง) ===
-    'trumpet-section': 'trumpet',       // 🎺 Trumpet Section - เสียงทรัมเป็ตจริง
-    'french-horn': 'french_horn',       // 🎺 French Horn - เสียงเฟรนช์ฮอร์นจริง
-    'synth-brass': '',                  // 🎺 Synth Brass - Synth (ใช้ waveform)
-
-    // === BASS (เบส) ===
-    'sub-bass': 'electric_bass',        // 🎸 Sub Bass - ใช้เสียงเบสไฟฟ้าจริง (ลด octave)
-    'electric-bass': 'electric_bass',   // 🎸 Electric Bass - เสียงเบสไฟฟ้าจริง
-    'acid-bass': '',                    // 🎸 Acid Bass - Synth (ใช้ waveform)
-
-    // === LEAD (ทำนองหลัก) ===
-    'saw-lead': '',                     // 🎤 Saw Lead - Synth (ใช้ waveform)
-    'square-lead': '',                  // 🎤 Square Lead - Synth (ใช้ waveform)
-    'soft-lead': '',                    // 🎤 Soft Lead - Synth (ใช้ waveform)
-
-    // === BELL/FX (กระดิ่ง/เอฟเฟกต์) ===
-    'crystal-bell': 'celesta',          // 🔔 Crystal Bell - เสียงเซเลสตาจริง
-    'sweep-up': '',                     // 🌊 Sweep Up - FX Synth (ใช้ waveform)
-
-    // === CHOIR (เสียงร้อง) ===
-    'choir-ahh': 'choir_aahs',          // 🎵 Choir Ahh - เสียงร้องจริง
-
-    // === PAD/SYNTH (เสียงพื้นหลัง/สังเคราะห์) ===
-    'warm-pad': '',                     // 🎛️ Warm Pad - Synth (ใช้ waveform)
-    'plucky-synth': '',                 // 🎛️ Plucky Synth - Synth (ใช้ waveform)
-    'supersaw': '',                     // 🎛️ SuperSaw - Synth (ใช้ waveform)
-};
 
 const CLASSIC_TIMBRES: TimbrePreset[] = [
     { id: 'grand-piano', name: 'Grand Piano', category: 'Acoustic', type: 'Piano', waveform: 'triangle', attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.5, filterCutoff: 8000, filterResonance: 0.5, octaveShift: 0, detune: 0, icon: '🎹', color: '#f5f5f5' },
@@ -534,11 +492,6 @@ export default function Arpeggiator({
     const isPreviewPlayingRef = useRef<boolean>(false);
     const previewTimbreArpRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
-    // Sampler reference สำหรับ Classic Timbre Library (ใช้เสียงจริงจาก SoundFont)
-    const samplersRef = useRef<Map<string, Tone.Sampler>>(new Map());
-    const currentSamplerRef = useRef<Tone.Sampler | null>(null);
-    const isSamplerLoadingRef = useRef<boolean>(false);
-
     const [currentStep, setCurrentStep] = useState<number | null>(null);
     const [currentSeqStep, setCurrentSeqStep] = useState<number>(-1);
     const [sequencerSteps, setSequencerSteps] = useState<boolean[]>(initialSettings?.sequencerSteps || Array(16).fill(true));
@@ -631,8 +584,6 @@ export default function Arpeggiator({
             if (audioContextRef.current) {
                 audioContextRef.current.close();
             }
-            // ทำลาย Samplers ทั้งหมด
-            disposeSamplers();
         };
     }, []);
 
@@ -793,79 +744,6 @@ export default function Arpeggiator({
             });
         }
     }, [masterVolume]);
-
-    // โหลด Sampler สำหรับ Classic Timbre (ใช้เสียงจริงจาก SoundFont)
-    const loadTimbreSampler = useCallback(async (timbreId: string) => {
-        const soundfontName = TIMBRE_SOUNDFONT_MAP[timbreId];
-
-        // ถ้าไม่มี SoundFont (synth sounds) ให้ใช้ waveform แทน
-        if (!soundfontName) {
-            console.log(`[Sampler] No SoundFont for ${timbreId}, using waveform`);
-            return null;
-        }
-
-        // ตรวจสอบว่าโหลดอยู่แล้วหรือไม่
-        if (isSamplerLoadingRef.current) {
-            console.log('[Sampler] Already loading, skipping...');
-            return null;
-        }
-
-        // ตรวจสอบว่ามีใน cache แล้วหรือไม่
-        const cachedSampler = samplersRef.current.get(timbreId);
-        if (cachedSampler) {
-            console.log(`[Sampler] Using cached sampler for ${timbreId}`);
-            currentSamplerRef.current = cachedSampler;
-            return cachedSampler;
-        }
-
-        try {
-            isSamplerLoadingRef.current = true;
-            console.log(`[Sampler] Loading SoundFont: ${soundfontName}`);
-
-            // ใช้ SoundFont จาก GitHub - ใช้โน้ตพื้นฐาน C4, C5, C6, C7 เท่านั้น
-            // หมายเหตุ: ไฟล์ SoundFont ใช้ชื่อโน้ตแบบไม่มี octave sign (เช่น C4.mp3)
-            const baseUrl = `https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/FluidR3_GM/${soundfontName}/`;
-
-            // สร้าง Sampler จาก SoundFont (ใช้โน้ตพื้นฐาน 4 โน้ต)
-            const sampler = new Tone.Sampler({
-                urls: {
-                    'C4': 'C4.mp3',
-                    'C5': 'C5.mp3',
-                    'C6': 'C6.mp3',
-                    'C7': 'C7.mp3',
-                },
-                release: 1,
-                baseUrl: baseUrl,
-            }).toDestination();
-
-            await sampler.loaded;
-            console.log(`[Sampler] Loaded ${soundfontName} successfully from ${baseUrl}`);
-
-            // เก็บเข้า cache
-            samplersRef.current.set(timbreId, sampler);
-            currentSamplerRef.current = sampler;
-            isSamplerLoadingRef.current = false;
-            return sampler;
-        } catch (error) {
-            console.error(`[Sampler] Error loading ${soundfontName}:`, error);
-            console.warn(`[Sampler] Falling back to waveform for ${timbreId}`);
-            isSamplerLoadingRef.current = false;
-            return null;
-        }
-    }, []);
-
-    // หยุดและทำลาย Sampler ทั้งหมด (ใช้เมื่อ unmount)
-    const disposeSamplers = useCallback(() => {
-        samplersRef.current.forEach((sampler) => {
-            try {
-                sampler.dispose();
-            } catch (e) {
-                console.error('[Sampler] Error disposing sampler:', e);
-            }
-        });
-        samplersRef.current.clear();
-        currentSamplerRef.current = null;
-    }, []);
 
     // State สำหรับ Undo
     const [heldIntervalsHistory, setHeldIntervalsHistory] = useState<number[][]>([]);
@@ -1273,40 +1151,21 @@ export default function Arpeggiator({
             const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
             const gateDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
 
-            // ตรวจสอบว่าเสียงนี้มี SoundFont หรือไม่
-            const hasSoundFont = TIMBRE_SOUNDFONT_MAP[timbre.id] && TIMBRE_SOUNDFONT_MAP[timbre.id] !== '';
-            let sampler: Tone.Sampler | null = null;
-            let samplerLoaded = false;
-
-            if (hasSoundFont) {
-                // โหลด Sampler สำหรับเสียงนี้
-                sampler = await loadTimbreSampler(timbre.id);
-                // ตรวจสอบว่า sampler โหลดสำเร็จและพร้อมใช้งาน
-                if (sampler && sampler.loaded) {
-                    await sampler.loaded;
-                    samplerLoaded = true;
-                    console.log('[Preview] Sampler ready, using real samples');
-                } else {
-                    console.warn('[Preview] Sampler not loaded, falling back to waveform');
-                    sampler = null;
-                }
-            }
-
             // สร้าง master gain node สำหรับ preview - ลด volume เพื่อป้องกันเสียงแตก
             const previewMasterGain = context.createGain();
-            previewMasterGain.gain.value = masterVolume * 0.5; // ลดจาก 0.8 เป็น 0.5
+            previewMasterGain.gain.value = masterVolume * 0.5;
 
             // สร้าง low-pass filter เพื่อตัดความถี่สูงที่ทำให้เสียงแตก
             const previewFilter = context.createBiquadFilter();
             previewFilter.type = 'lowpass';
-            previewFilter.frequency.value = Math.min(timbre.filterCutoff, 10000); // ลดจาก 12000 เป็น 10000
-            previewFilter.Q.value = timbre.filterResonance * 0.1; // ลดจาก 0.2 เป็น 0.1
+            previewFilter.frequency.value = Math.min(timbre.filterCutoff, 10000);
+            previewFilter.Q.value = timbre.filterResonance * 0.1;
 
-            // สร้าง compressor เพื่อป้องกันเสียงแตก - ปรับให้บีบอัดมากขึ้น
+            // สร้าง compressor เพื่อป้องกันเสียงแตก
             const previewCompressor = context.createDynamicsCompressor();
-            previewCompressor.threshold.value = -30; // ลดจาก -25 เป็น -30
+            previewCompressor.threshold.value = -30;
             previewCompressor.knee.value = 40;
-            previewCompressor.ratio.value = 12; // เพิ่มจาก 8 เป็น 12
+            previewCompressor.ratio.value = 12;
             previewCompressor.attack.value = 0.003;
             previewCompressor.release.value = 0.2;
 
@@ -1328,9 +1187,9 @@ export default function Arpeggiator({
                 const count = Array.isArray(note) ? note.length : 1;
                 return Math.max(count, max);
             }, 1);
-            const perNoteGain = 0.7 / maxPolyphony; // ลดจาก 1.0 เป็น 0.7 เพื่อป้องกันเสียงแตก
+            const perNoteGain = 0.7 / maxPolyphony;
 
-            // ฟังก์ชันสร้าง Oscillator สำหรับโน้ต (ใช้เมื่อ Sampler ไม่พร้อม)
+            // ฟังก์ชันสร้าง Oscillator สำหรับโน้ต
             const createOscillatorForNote = (
                 freq: number,
                 startTime: number,
@@ -1349,7 +1208,7 @@ export default function Arpeggiator({
                 const decayTime = Math.max(0.01, timbreData.decay * 0.3);
                 const releaseTime = Math.max(0.05, timbreData.release * 0.5);
 
-                const peakGain = velocity * perNoteGain * 1.0; // ลดจาก 1.5 เป็น 1.0
+                const peakGain = velocity * perNoteGain * 1.0;
 
                 gainNode.gain.setValueAtTime(0, startTime);
                 gainNode.gain.linearRampToValueAtTime(peakGain, startTime + attackTime);
@@ -1365,7 +1224,7 @@ export default function Arpeggiator({
                 scheduledOscillators.push({ osc, gain: gainNode });
             };
 
-            // เล่น ARP Pattern ด้วยเสียงของ Timbre
+            // เล่น ARP Pattern ด้วยเสียงของ Timbre (ใช้ waveform)
             generatedArpPattern.forEach((midiNote, index) => {
                 if (midiNote !== null) {
                     const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
@@ -1374,21 +1233,7 @@ export default function Arpeggiator({
 
                     notes.forEach(noteNum => {
                         const freq = midiToFreq(noteNum);
-
-                        if (sampler && samplerLoaded) {
-                            // ใช้ Sampler (เสียงจริงจาก SoundFont)
-                            try {
-                                const samplerVelocity = Math.max(0.1, Math.min(0.8, perNoteGain * velocity * 1.2)); // ลดจาก 1.5 เป็น 1.2
-                                sampler.triggerAttackRelease(freq, gateDuration, startTime, samplerVelocity);
-                            } catch (sampleError) {
-                                console.warn('[Preview] Sample trigger failed, using oscillator:', sampleError);
-                                // Fallback ไปใช้ oscillator ถ้า sample play ไม่ได้
-                                createOscillatorForNote(freq, startTime, gateDuration, timbre, previewMasterGain);
-                            }
-                        } else {
-                            // ใช้ Oscillator (waveform สังเคราะห์)
-                            createOscillatorForNote(freq, startTime, gateDuration, timbre, previewMasterGain);
-                        }
+                        createOscillatorForNote(freq, startTime, gateDuration, timbre, previewMasterGain);
 
                         if (stopTime + gateDuration > maxTime) {
                             maxTime = stopTime + gateDuration;
@@ -1433,7 +1278,7 @@ export default function Arpeggiator({
                 message: 'Failed to play preview.',
             });
         }
-    }, [generatedArpPattern, selectedTimbreId, bpm, timeDivision, gateLength, masterVolume, velocity, sortNotes, initializeAudio, loadTimbreSampler]);
+    }, [generatedArpPattern, selectedTimbreId, bpm, timeDivision, gateLength, masterVolume, velocity, sortNotes, initializeAudio]);
 
     // Set ref for previewTimbreArp
     useEffect(() => {
