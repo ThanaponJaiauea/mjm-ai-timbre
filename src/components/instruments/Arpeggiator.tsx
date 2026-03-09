@@ -472,7 +472,7 @@ export default function Arpeggiator({
     const [currentPresetName, setCurrentPresetName] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
-    // Classic Timbre Modal State
+    // Timbre Modal State
     const [showTimbreModal, setShowTimbreModal] = useState(false);
     const [selectedTimbreId, setSelectedTimbreId] = useState<string | null>(null);
     const [activeTimbreCategory, setActiveTimbreCategory] = useState<TimbreCategory | 'All'>('All');
@@ -490,6 +490,7 @@ export default function Arpeggiator({
     const previewCompressorRef = useRef<DynamicsCompressorNode | null>(null);
     const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isPreviewPlayingRef = useRef<boolean>(false);
+    const previewTimbreArpRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
     const [currentStep, setCurrentStep] = useState<number | null>(null);
     const [currentSeqStep, setCurrentSeqStep] = useState<number>(-1);
@@ -573,10 +574,10 @@ export default function Arpeggiator({
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('keydown', handleUserGesture);
         };
-        
+
         document.addEventListener('click', handleUserGesture);
         document.addEventListener('keydown', handleUserGesture);
-        
+
         return () => {
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('keydown', handleUserGesture);
@@ -963,13 +964,21 @@ export default function Arpeggiator({
         });
     }, [waveform, bpm, timeDivision, pattern, octaveRange, gateLength, velocity, rootNote, masterVolume, heldIntervals, sortNotes, sequencerSteps, musicalKey, scale, activeChordNotes, style, mood, chords, onSave]);
 
-    // --- CLASSIC TIMBRE MODAL FUNCTIONS ---
+    // --- TIMBRE MODAL FUNCTIONS ---
 
-    // เปิด Modal ตาม category ที่เลือก
+    // เปิด Modal ตาม category ที่เลือก (หยุดเสียง preview และ ARP ก่อน)
     const openTimbreModal = useCallback((category: TimbreCategory | 'All') => {
+        // หยุดเสียง preview ที่กำลังเล่นอยู่
+        if (isPreviewPlayingRef.current) {
+            stopPreviewTimbreArp();
+        }
+        // หยุดเสียง ARP ที่กำลังเล่นอยู่
+        if (isPlaying) {
+            setIsPlaying(false);
+        }
         setActiveTimbreCategory(category);
         setShowTimbreModal(true);
-    }, []);
+    }, [isPlaying]);
 
     // Handle Install VST Button Click
     const handleInstallVst = useCallback(() => {
@@ -986,10 +995,61 @@ export default function Arpeggiator({
         }, 3000); // ค้นหาเป็นเวลา 3 วินาที
     }, []);
 
-    // เลือก Timbre
-    const selectTimbre = useCallback((timbreId: string) => {
+    // เลือก Timbre (generate และเล่นทันที)
+    const selectTimbre = useCallback(async (timbreId: string) => {
         setSelectedTimbreId(timbreId);
-    }, []);
+
+        // Generate ARP pattern ใหม่ทันทีที่เปลี่ยนเสียง
+        const timbre = CLASSIC_TIMBRES.find(t => t.id === timbreId);
+        if (!timbre || heldIntervals.length === 0) return;
+
+        const currentKeyRootMidi = ROOT_NOTES[musicalKey];
+        const midiNotes = heldIntervals.map(interval => currentKeyRootMidi + interval);
+
+        // สร้าง arpSequence
+        let arpSeq: number[] = [];
+        for (let i = 0; i < octaveRange; i++) {
+            const octaveShift = i * 12 + timbre.octaveShift * 12;
+            arpSeq.push(...midiNotes.map(note => note + octaveShift));
+        }
+        if (sortNotes) {
+            arpSeq.sort((a, b) => a - b);
+        }
+
+        // Generate pattern
+        const generated = generateArpeggioPattern({
+            arpSequence: arpSeq,
+            pattern,
+            sequencerSteps,
+        }, 64);
+
+        setGeneratedArpPattern(generated);
+        setTimbreArpSettings({
+            waveform: timbre.waveform,
+            rootNote: timbre.octaveShift > 0 ? rootNote + timbre.octaveShift * 12 : rootNote,
+        });
+
+        // เล่นเสียงทันทีหลังจากเปลี่ยนเสียง
+        // รอเล็กน้อยให้ state update เสร็จ
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // เรียก preview โดยตรง (ใช้ ref แทน)
+        const context = audioContextRef.current;
+        if (context) {
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+
+            // หยุดเสียงเก่าก่อน
+            if (isPreviewPlayingRef.current) {
+                stopPreviewTimbreArp();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            // เล่นเสียงใหม่ทันที
+            previewTimbreArpRef.current();
+        }
+    }, [heldIntervals, musicalKey, octaveRange, sortNotes, pattern, sequencerSteps, rootNote]);
 
     // Generate ARP Pattern จาก Timbre ที่เลือก
     const generateArpFromTimbre = useCallback(() => {
@@ -1037,12 +1097,10 @@ export default function Arpeggiator({
             rootNote: timbre.octaveShift > 0 ? rootNote + timbre.octaveShift * 12 : rootNote,
         });
 
-        setModalState({
-            show: true,
-            type: 'success',
-            title: 'GENERATED',
-            message: `ARP Pattern generated with ${timbre.name}! Click Preview to listen.`,
-        });
+        // เล่นเสียงทันทีหลังจาก generate (ใช้ ref)
+        setTimeout(() => {
+            previewTimbreArpRef.current();
+        }, 100);
     }, [selectedTimbreId, heldIntervals, musicalKey, octaveRange, sortNotes, pattern, sequencerSteps, rootNote]);
 
     // Preview ARP Pattern ด้วย Timbre ที่เลือก
@@ -1058,16 +1116,31 @@ export default function Arpeggiator({
         }
 
         const timbre = selectedTimbreId ? CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId) : null;
-        if (!timbre) return;
+        if (!timbre) {
+            console.error('[Preview] Timbre not found');
+            return;
+        }
+
+        console.log('[Preview] Starting preview with timbre:', timbre.name, 'waveform:', timbre.waveform);
 
         initializeAudio();
         const context = audioContextRef.current;
-        if (!context) return;
+        if (!context) {
+            console.error('[Preview] Audio context not available');
+            return;
+        }
 
-        // ถ้ากำลังเล่นอยู่ ให้หยุดก่อน
+        // Force resume audio context (สำคัญมาก!)
+        if (context.state === 'suspended') {
+            await context.resume();
+            console.log('[Preview] Audio context resumed');
+        }
+
+        // หยุดเสียง preview เก่าก่อนเล่นเสียงใหม่
         if (isPreviewPlayingRef.current) {
             stopPreviewTimbreArp();
-            return;
+            // รอเล็กน้อยให้เสียงเก่าหยุดสนิท
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
 
         isPreviewPlayingRef.current = true;
@@ -1078,21 +1151,21 @@ export default function Arpeggiator({
             const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
             const gateDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
 
-            // สร้าง master gain node สำหรับ preview - ปรับ volume ให้ดังชัดเจน
+            // สร้าง master gain node สำหรับ preview - ลด volume เพื่อป้องกันเสียงแตก
             const previewMasterGain = context.createGain();
-            previewMasterGain.gain.value = masterVolume * 0.6; // เพิ่ม volume ให้ดังขึ้น
+            previewMasterGain.gain.value = masterVolume * 0.5;
 
             // สร้าง low-pass filter เพื่อตัดความถี่สูงที่ทำให้เสียงแตก
             const previewFilter = context.createBiquadFilter();
             previewFilter.type = 'lowpass';
-            previewFilter.frequency.value = Math.min(timbre.filterCutoff, 12000); // เพิ่ม cutoff ให้เสียงสว่างขึ้น
-            previewFilter.Q.value = timbre.filterResonance * 0.2; // ลด resonance ลง
+            previewFilter.frequency.value = Math.min(timbre.filterCutoff, 10000);
+            previewFilter.Q.value = timbre.filterResonance * 0.1;
 
-            // สร้าง compressor เพื่อป้องกันเสียงแตก - ปรับ settings ให้พอดี
+            // สร้าง compressor เพื่อป้องกันเสียงแตก
             const previewCompressor = context.createDynamicsCompressor();
-            previewCompressor.threshold.value = -25; // เพิ่ม threshold ให้เสียงดังขึ้น
+            previewCompressor.threshold.value = -30;
             previewCompressor.knee.value = 40;
-            previewCompressor.ratio.value = 8; // ลด ratio ลงให้เสียงดังขึ้น
+            previewCompressor.ratio.value = 12;
             previewCompressor.attack.value = 0.003;
             previewCompressor.release.value = 0.2;
 
@@ -1114,9 +1187,44 @@ export default function Arpeggiator({
                 const count = Array.isArray(note) ? note.length : 1;
                 return Math.max(count, max);
             }, 1);
-            const perNoteGain = 1.0 / maxPolyphony; // เพิ่ม gain ให้ดังขึ้น
+            const perNoteGain = 0.7 / maxPolyphony;
 
-            // เล่น ARP Pattern ด้วยเสียงของ Timbre
+            // ฟังก์ชันสร้าง Oscillator สำหรับโน้ต
+            const createOscillatorForNote = (
+                freq: number,
+                startTime: number,
+                gateDuration: number,
+                timbreData: TimbrePreset,
+                outputGain: GainNode
+            ) => {
+                const osc = context.createOscillator();
+                const gainNode = context.createGain();
+
+                osc.type = timbreData.waveform;
+                osc.frequency.value = freq;
+
+                // ADSR Envelope
+                const attackTime = Math.max(0.001, timbreData.attack * 0.3);
+                const decayTime = Math.max(0.01, timbreData.decay * 0.3);
+                const releaseTime = Math.max(0.05, timbreData.release * 0.5);
+
+                const peakGain = velocity * perNoteGain * 1.0;
+
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(peakGain, startTime + attackTime);
+                gainNode.gain.linearRampToValueAtTime(peakGain * timbreData.sustain, startTime + attackTime + decayTime);
+                gainNode.gain.setValueAtTime(peakGain * timbreData.sustain, startTime + gateDuration);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + gateDuration + releaseTime);
+
+                osc.connect(gainNode);
+                gainNode.connect(outputGain);
+                osc.start(startTime);
+                osc.stop(startTime + gateDuration + releaseTime + 0.1);
+
+                scheduledOscillators.push({ osc, gain: gainNode });
+            };
+
+            // เล่น ARP Pattern ด้วยเสียงของ Timbre (ใช้ waveform)
             generatedArpPattern.forEach((midiNote, index) => {
                 if (midiNote !== null) {
                     const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
@@ -1124,35 +1232,11 @@ export default function Arpeggiator({
                     const stopTime = startTime + gateDuration;
 
                     notes.forEach(noteNum => {
-                        const osc = context.createOscillator();
-                        const gainNode = context.createGain();
+                        const freq = midiToFreq(noteNum);
+                        createOscillatorForNote(freq, startTime, gateDuration, timbre, previewMasterGain);
 
-                        osc.type = timbre.waveform;
-                        osc.frequency.value = midiToFreq(noteNum);
-
-                        // ADSR Envelope - ปรับให้เสียงดังขึ้น
-                        const attackTime = Math.max(0.001, timbre.attack * 0.3);
-                        const decayTime = Math.max(0.01, timbre.decay * 0.3);
-                        const releaseTime = Math.max(0.05, timbre.release * 0.5);
-
-                        // เพิ่ม gain ให้ดังขึ้น
-                        const peakGain = (velocity / 127) * perNoteGain * 1.5;
-
-                        gainNode.gain.setValueAtTime(0, startTime);
-                        gainNode.gain.linearRampToValueAtTime(peakGain, startTime + attackTime);
-                        gainNode.gain.linearRampToValueAtTime(peakGain * timbre.sustain, startTime + attackTime + decayTime);
-                        gainNode.gain.setValueAtTime(peakGain * timbre.sustain, stopTime);
-                        gainNode.gain.linearRampToValueAtTime(0, stopTime + releaseTime);
-
-                        osc.connect(gainNode);
-                        gainNode.connect(previewMasterGain);
-                        osc.start(startTime);
-                        osc.stop(stopTime + releaseTime + 0.1);
-
-                        scheduledOscillators.push({ osc, gain: gainNode });
-
-                        if (stopTime + releaseTime > maxTime) {
-                            maxTime = stopTime + releaseTime;
+                        if (stopTime + gateDuration > maxTime) {
+                            maxTime = stopTime + gateDuration;
                         }
                     });
                 }
@@ -1195,6 +1279,11 @@ export default function Arpeggiator({
             });
         }
     }, [generatedArpPattern, selectedTimbreId, bpm, timeDivision, gateLength, masterVolume, velocity, sortNotes, initializeAudio]);
+
+    // Set ref for previewTimbreArp
+    useEffect(() => {
+        previewTimbreArpRef.current = previewTimbreArp;
+    }, [previewTimbreArp]);
 
     // หยุด Preview
     const stopPreviewTimbreArp = useCallback(() => {
@@ -1808,7 +1897,7 @@ export default function Arpeggiator({
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">CLASSIC TIMBRE</div>
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">TIMBRE</div>
                                     <button
                                         onClick={() => openTimbreModal('All')}
                                         className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#f5f5f5] to-[#d4a574] text-black border-[#b8956a] shadow-[0_0_8px_rgba(245,245,245,0.3)] hover:shadow-[0_0_15px_rgba(245,245,245,0.5)] transition-all flex items-center justify-center gap-2"
@@ -2132,7 +2221,7 @@ export default function Arpeggiator({
                     </div>
                 )}
 
-                {/* Classic Timbre Modal */}
+                {/* Timbre Modal */}
                 {showTimbreModal && (
                     <div
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
@@ -2147,7 +2236,7 @@ export default function Arpeggiator({
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">🎼</span>
                                     <div>
-                                        <h2 className="text-xl font-bold text-[#2ed573] tracking-widest">CLASSIC TIMBRE LIBRARY</h2>
+                                        <h2 className="text-xl font-bold text-[#2ed573] tracking-widest">TIMBRE LIBRARY</h2>
                                         <p className="text-[10px] text-zinc-500">Select your instrument and generate ARP patterns</p>
                                     </div>
                                 </div>
@@ -2255,19 +2344,21 @@ export default function Arpeggiator({
                                     <div className="flex gap-2">
                                         <button
                                             onClick={generateArpFromTimbre}
-                                            disabled={!selectedTimbreId}
+                                            disabled={!selectedTimbreId || heldIntervals.length === 0}
                                             className="px-6 py-3 bg-[#ffa502] text-black text-[10px] font-bold tracking-widest rounded border border-[#e67e22] hover:bg-[#ffb14d] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(255,165,2,0.3)] hover:shadow-[0_0_25px_rgba(255,165,2,0.5)]"
+                                            title="Generate ARP pattern from selected timbre"
                                         >
-                                            ⚡ GENERATE ARP
+                                            ⚡ GENERATE
                                         </button>
                                         <button
-                                            onClick={previewTimbreArp}
-                                            disabled={generatedArpPattern.length === 0 && !isPreviewPlaying}
+                                            onClick={isPreviewPlaying ? stopPreviewTimbreArp : previewTimbreArp}
+                                            disabled={!selectedTimbreId || generatedArpPattern.length === 0}
                                             className={`px-6 py-3 text-[10px] font-bold tracking-widest rounded border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                                 isPreviewPlaying
                                                     ? 'bg-red-600 text-white border-red-800 shadow-[0_0_15px_rgba(255,0,0,0.5)] hover:bg-red-700'
                                                     : 'bg-[#2ed573] text-black border-[#1a9c50] hover:bg-[#00dfd8] shadow-[0_0_15px_rgba(46,213,115,0.3)]'
                                             }`}
+                                            title={isPreviewPlaying ? 'Stop preview' : 'Play preview'}
                                         >
                                             {isPreviewPlaying ? '⬛ STOP' : '▶ PREVIEW'}
                                         </button>
