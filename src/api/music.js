@@ -13,3 +13,9 @@ export const generate_settings = async data => await axios.post("/music/analyze_
 export const save_arp_settings = async data => await axios.post("/music/save_arp_settings", data);
 
 export const getMusicStyle = async () => await axios.get("/music/getMusicStyle");
+
+export const getMyTimble = async () => await axios.get("/music/getMyTimble");
+
+export const getTranding = async () => await axios.get("/music/getTranding");
+
+
