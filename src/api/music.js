@@ -16,6 +16,11 @@ export const getMusicStyle = async () => await axios.get("/music/getMusicStyle")
 
 export const getMyTimble = async () => await axios.get("/music/getMyTimble");
 
+export const deleteMyTimble = async (id) => await axios.delete(`/music/${id}`);
+
 export const getTranding = async () => await axios.get("/music/getTranding");
+
+
+
 
 

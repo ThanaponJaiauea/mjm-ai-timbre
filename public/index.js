@@ -19,8 +19,14 @@ import icon_file_image from "./icons/icon_file_image.png";
 import icon_remove from "./icons/icon_remove.png";
 import bg_instrument_Bass from "./images/bg_instrument_Bass.png";
 import bg_instrument_arp from "./images/bg_instrume_arp.png";
+import icon_download2 from "./icons/icon_download2.png";
+import icon_remove2 from "./icons/icon_remove2.png";
+import icon_share from "./icons/icon_share.png";
 
 export {
+  icon_share,
+  icon_remove2,
+  icon_download2,
   bg_instrument_Bass,
   bg_instrument_arp,
   icon_remove,

@@ -134,3 +134,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* TrendingSwiper.jsx */
+.scrollbar-hide {
+  -webkit-overflow-scrolling: touch; /* ทำให้การเลื่อนบน iOS ลื่นไหล */
+  scrollbar-width: none; /* ซ่อน scrollbar ใน Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* ซ่อน scrollbar ใน Chrome, Safari, Edge */
+}
