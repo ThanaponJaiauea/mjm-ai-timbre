@@ -1,0 +1,17 @@
+dist
+dist-installer
+installer-temp
+node_modules
+.git
+.gitignore
+.vscode
+*.md
+*.json
+*.ts
+*.iss
+scripts
+src
+renderer
+vite.config.ts
+tsconfig.json
+!icon.png

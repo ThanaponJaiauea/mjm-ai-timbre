@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
-import { useVSTBridge } from '../../hooks/useVSTBridge';
-import '../../app/arp/arp.css';
+import { useVSTBridge } from './hooks/useVSTBridge';
+import './arp.css';
 import { Knob, HardButton, Led, ModulePanel, Screw, StepButton, VirtualKeyboard, ArpDisplay } from './ui';
 
 export type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle';
@@ -482,6 +482,16 @@ export default function Arpeggiator({
 
     // VST Install State
     const [showVstSearching, setShowVstSearching] = useState(false);
+    
+    // Check if running in Electron desktop app
+    const [isDesktopApp, setIsDesktopApp] = useState(false);
+    
+    useEffect(() => {
+        // Check if running in Electron
+        if (window.electron) {
+            setIsDesktopApp(true);
+        }
+    }, []);
 
     // Preview oscillators reference
     const previewOscillatorsRef = useRef<{ osc: OscillatorNode; gain: GainNode }[]>([]);
@@ -982,6 +992,7 @@ export default function Arpeggiator({
 
     // Handle Download Desktop App Button Click
     const [isDownloading, setIsDownloading] = useState(false);
+    const [vstPlugins, setVstPlugins] = useState<any[]>([]);
 
     const handleInstallVst = useCallback(() => {
         // ดาวน์โหลดจากโฟลเดอร์ public ในเครื่อง - เพิ่ม timestamp เพื่อ bypass cache
@@ -1003,10 +1014,8 @@ export default function Arpeggiator({
                     type: 'success',
                     title: '✅ DOWNLOAD STARTED',
                     message: 'Your download should have started.\n\n' +
-                             '📁 File: MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe\n\n' +
-                             '⚠️ Note: If the file icon shows as Inno Setup on first download,\n' +
-                             'this is Windows cache. The file is correct!\n\n' +
-                             'To fix: Clear Windows icon cache or download again.'
+                             'If it didn\'t, please check your browser\'s download settings\n' +
+                             'or click the Download button again.'
                 });
             }, 3000);
         } else {
@@ -1018,6 +1027,55 @@ export default function Arpeggiator({
                 title: '⚠️ POPUP BLOCKED',
                 message: 'Your browser blocked the download popup.\n\n' +
                          'Please allow popups for this site and try again.'
+            });
+        }
+    }, []);
+
+    // Handle Scan VST Plugins
+    const handleScanVst = useCallback(async () => {
+        if (!window.electronAPI) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: '⚠️ DESKTOP APP REQUIRED',
+                message: 'VST scanning is only available in the Desktop App.\n\n' +
+                         'Please download and install the Desktop App to scan VST plugins.'
+            });
+            return;
+        }
+
+        setShowVstSearching(true);
+
+        try {
+            const plugins = await window.electronAPI.scanVst();
+            setShowVstSearching(false);
+            setVstPlugins(plugins);
+
+            if (plugins.length === 0) {
+                setModalState({
+                    show: true,
+                    type: 'alert',
+                    title: '⚠️ NO VST PLUGINS FOUND',
+                    message: 'No VST plugins were found in the default folders.\n\n' +
+                             'Please make sure you have VST2 (.dll) or VST3 (.vst3) plugins installed.'
+                });
+            } else {
+                setModalState({
+                    show: true,
+                    type: 'success',
+                    title: `✅ FOUND ${plugins.length} VST PLUGINS`,
+                    message: `Successfully scanned and found ${plugins.length} VST plugin(s).\n\n` +
+                             `You can now load these plugins in the app.`
+                });
+            }
+        } catch (error) {
+            setShowVstSearching(false);
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: '❌ SCAN ERROR',
+                message: 'An error occurred while scanning for VST plugins.\n\n' +
+                         error instanceof Error ? error.message : 'Unknown error'
             });
         }
     }, []);
@@ -1933,14 +1991,26 @@ export default function Arpeggiator({
                                         <span>Iconic Timbre</span>
                                     </button>
                                 </div>
-                                <div className="flex-1">
-                                    <button
-                                        onClick={handleInstallVst}
-                                        className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#2ed573] to-[#26a65b] text-black border-[#1e8f5f] shadow-[0_0_8px_rgba(46,213,115,0.4)] hover:shadow-[0_0_12px_rgba(46,213,115,0.6)] transition-all"
-                                    >
-                                        🖥️ Download Desktop
-                                    </button>
-                                </div>
+                                {!isDesktopApp && (
+                                    <div className="flex-1">
+                                        <button
+                                            onClick={handleInstallVst}
+                                            className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#2ed573] to-[#26a65b] text-black border-[#1e8f5f] shadow-[0_0_8px_rgba(46,213,115,0.4)] hover:shadow-[0_0_12px_rgba(46,213,115,0.6)] transition-all"
+                                        >
+                                            🖥️ Download Desktop
+                                        </button>
+                                    </div>
+                                )}
+                                {isDesktopApp && (
+                                    <div className="flex-1">
+                                        <button
+                                            onClick={handleScanVst}
+                                            className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#ffa502] to-[#ff7f50] text-black border-[#cc8400] shadow-[0_0_8px_rgba(255,165,2,0.4)] hover:shadow-[0_0_12px_rgba(255,165,2,0.6)] transition-all"
+                                        >
+                                            🔍 Scan VST
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </ModulePanel>
                     </div>

@@ -42,3 +42,13 @@ next-env.d.ts
 
 # skills
 .agents
+
+# desktop app - ignore build outputs and generated files
+/mjm-ai-timbre-desktop/node_modules/
+/mjm-ai-timbre-desktop/dist/
+/mjm-ai-timbre-desktop/dist-installer/
+/mjm-ai-timbre-desktop/installer-temp/
+/mjm-ai-timbre-desktop/icon-build.ico
+/mjm-ai-timbre-desktop/icon-square.png
+/mjm-ai-timbre-desktop/icon.ico
+/mjm-ai-timbre-desktop/icon-copy.ico

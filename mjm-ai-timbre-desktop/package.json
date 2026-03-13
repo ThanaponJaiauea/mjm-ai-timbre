@@ -1,0 +1,74 @@
+{
+  "name": "mjm-ai-timbre-desktop",
+  "version": "1.0.0",
+  "description": "Arpeggiator Desktop App with VST Support",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "pack": "electron-builder --dir",
+    "dist": "npm run build && node scripts/create-installer.js",
+    "dist:win": "npm run build && node scripts/create-installer.js",
+    "dist:win:portable": "npm run build && node scripts/build-win.js",
+    "dist:win:installer": "npm run build && node scripts/create-installer.js",
+    "dist:mac": "npm run build && electron-packager . --platform=darwin --arch=x64 --out=dist --overwrite",
+    "dist:linux": "npm run build && electron-packager . --platform=linux --arch=x64 --out=dist --overwrite"
+  },
+  "author": "MJM AI Timbre",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "archiver": "^6.0.2",
+    "autoprefixer": "^10.4.16",
+    "electron": "^28.0.0",
+    "electron-packager": "^17.1.2",
+    "fs-extra": "^11.3.4",
+    "jimp": "^1.6.0",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.4.32",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "vite-plugin-electron": "^0.28.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "build": {
+    "appId": "com.mjm-ai.timbre",
+    "productName": "MJM AI Timbre Arpeggiator",
+    "icon": "icon.ico",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer/**/*",
+      "src/**/*",
+      "icon.png",
+      "icon.ico"
+    ],
+    "win": {
+      "target": "zip",
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MJM AI Timbre"
+    },
+    "npmRebuild": false
+  }
+}

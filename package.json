@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "build:all": "node scripts/copy-desktop-app.js && next build",
+    "start": "next start",
+    "desktop:build": "cd mjm-ai-timbre-desktop && npm run dist:win",
+    "desktop:copy": "node scripts/copy-desktop-app.js"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.96",

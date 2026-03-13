@@ -1,0 +1,57 @@
+# =========================
+# 1. ฝั่ง Web Development (Next.js / Node.js)
+# =========================
+node_modules/
+.next/
+out/
+build/
+dist/
+.npm/
+# Log ขยะของ Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# 2. ฝั่ง Trading Bot (Python / Freqtrade)
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.pytest_cache/
+
+# ข้อมูล Freqtrade (ตัวสูบ Context มหาศาล)
+user_data/data/
+user_data/backtest_results/
+user_data/hyperopts/
+user_data/plot/
+*.sqlite
+
+# =========================
+# 3. ไฟล์ Logs และ Data ขนาดใหญ่
+# =========================
+*.log
+*.csv
+*.tsv
+# ให้ระวังไฟล์ .json ขนาดใหญ่ เช่น ไฟล์เก็บประวัติแท่งเทียน
+# ถ้ามีให้ระบุชื่อไฟล์นั้นๆ หรือโฟลเดอร์นั้นๆ ลงไป เช่น data/*.json
+
+# =========================
+# 4. Environment Variables & Secrets (เพื่อความปลอดภัย)
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# 5. OS & Editor (Docker, VS Code, Mac/Windows)
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
