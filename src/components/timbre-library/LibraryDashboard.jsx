@@ -25,7 +25,7 @@ export default function LibraryDashboard({
         {myTimble ? (
           <AudioLibraryList
             data={myTimble}
-            limit={3}
+            limit={2}
             showTrash={true}
             onDelete={onDelete}
           />

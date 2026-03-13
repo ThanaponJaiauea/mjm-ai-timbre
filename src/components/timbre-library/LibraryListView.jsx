@@ -4,7 +4,14 @@ import React, { useState } from "react";
 import AudioLibraryList from "./AudioLibraryList";
 import { useEffect } from "react";
 
-export default function LibraryListView({ title, data, onBack, styleAllData }) {
+export default function LibraryListView({
+  title,
+  data,
+  onBack,
+  styleAllData,
+  isSearching,
+  onStyleSelect,
+}) {
   const [selectedStyle, setSelectedStyle] = useState("");
   const styles = styleAllData?.items || [];
 
@@ -43,7 +50,11 @@ export default function LibraryListView({ title, data, onBack, styleAllData }) {
               <button
                 key={index}
                 type="button"
-                onClick={() => setSelectedStyle(style)}
+                onClick={() => {
+                  const next = selectedStyle === style ? "" : style;
+                  setSelectedStyle(next);
+                  onStyleSelect(next);
+                }}
                 className={`cursor-pointer px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border
           ${
             isActive
@@ -60,7 +71,15 @@ export default function LibraryListView({ title, data, onBack, styleAllData }) {
 
       {/* Music List */}
       <div className="mt-4">
-        <AudioLibraryList data={data} showTrash={title === "My Timble"} />
+        {isSearching ? (
+          <div className="text-gray-500 text-center py-10">Searching...</div>
+        ) : data?.data?.length === 0 ? (
+          <div className="text-gray-500 text-center py-10">
+            No results found
+          </div>
+        ) : (
+          <AudioLibraryList data={data} showTrash={title === "My Timble"} />
+        )}
       </div>
     </div>
   );

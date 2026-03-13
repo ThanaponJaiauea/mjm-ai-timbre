@@ -6,6 +6,7 @@ import {
   getMyTimble,
   get_all_by_type,
   deleteMyTimble,
+  search,
 } from "@/api/music";
 import LibraryListView from "../../../../components/timbre-library/LibraryListView";
 import LibraryDashboard from "../../../../components/timbre-library/LibraryDashboard";
@@ -18,6 +19,11 @@ export default function TimbreLibraryPage() {
   const [myTimble, setMyTimble] = useState(null);
   const [styleAllData, setStyleAllData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Fetch Data
   useEffect(() => {
@@ -42,11 +48,53 @@ export default function TimbreLibraryPage() {
     fetchData();
   }, []);
 
+  // source map ตาม selectedMenu
+  const getSource = () => {
+    if (selectedMenu === "My Timble") return "my";
+    if (selectedMenu === "Trending") return "trending";
+    if (selectedMenu === "ARP") return "arp";
+    return null;
+  };
+
+  const handleSearch = async (q) => {
+    const src = getSource();
+    if (!src) return;
+
+    if (!q.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await search({ q, source: src });
+      console.log("handleSearch:", res.data.data);
+
+      setSearchResults(res.data.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSetMenu = (menu) => {
+    setSelectedMenu(menu);
+    setSearchQuery("");
+    setSearchResults(null);
+  };
+
   const getData = () => {
-    if (selectedMenu === "My Timble") return myTimble;
-    if (selectedMenu === "Trending") return trandingData;
-    if (selectedMenu === "ARP") return trandingData;
-    if (selectedMenu === "BASS") return;
+    const base = (() => {
+      if (selectedMenu === "My Timble") return myTimble;
+      if (selectedMenu === "Trending") return trandingData;
+      if (selectedMenu === "ARP") return trandingData;
+    })();
+
+    if (searchResults !== null) {
+      return { ...base, data: searchResults };
+    }
+    return base;
   };
 
   if (isLoading) {
@@ -54,8 +102,6 @@ export default function TimbreLibraryPage() {
   }
 
   const handleDeleteMyTimble = async (id) => {
-    console.log("handleDeleteMyTimble", id);
-
     try {
       await deleteMyTimble(id);
       const my = await getMyTimble();
@@ -67,6 +113,29 @@ export default function TimbreLibraryPage() {
       console.error("Delete error:", error);
     }
   };
+
+  const handleStyleSelect = async (styleName) => {
+    const src = getSource();
+    if (!src) return;
+
+    // clear → แสดง data เดิม
+    if (!styleName) {
+      setSearchResults(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await search({ style_name: styleName, source: src });
+
+      setSearchResults(res.data.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <div className="w-[90%] mx-auto flex flex-col gap-4 min-h-screen text-white pb-20">
       <div className="text-[40px] font-bold mt-10">Library</div>
@@ -74,14 +143,17 @@ export default function TimbreLibraryPage() {
       <LibraryNavbar
         selectedMenu={selectedMenu}
         setSelectedMenu={setSelectedMenu}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
       />
 
       {selectedMenu === "All" ? (
         <LibraryDashboard
           myTimble={myTimble}
           trandingData={trandingData}
-          onSeeAll={(menu) => setSelectedMenu(menu)}
-          onDelete={(id) => handleDeleteMyTimble(id)}
+          onSeeAll={handleSetMenu}
+          onDelete={handleDeleteMyTimble}
         />
       ) : (
         <LibraryListView
@@ -90,6 +162,8 @@ export default function TimbreLibraryPage() {
           data={getData()}
           onBack={() => setSelectedMenu("All")}
           styleAllData={styleAllData}
+          isSearching={isSearching}
+          onStyleSelect={handleStyleSelect}
         />
       )}
     </div>

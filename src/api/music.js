@@ -22,5 +22,16 @@ export const getTranding = async () => await axios.get("/music/getTranding");
 
 
 
+export const search = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== "" && v !== null) query.append(k, v);
+  });
+  return await axios.get(`/music/search_music?${query.toString()}`);
+};
+
+
+
+
 
 

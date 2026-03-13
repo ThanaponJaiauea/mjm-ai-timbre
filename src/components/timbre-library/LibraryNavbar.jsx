@@ -3,9 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 
-export default function LibraryNavbar({ selectedMenu, setSelectedMenu }) {
-  console.log("selectedMenu", selectedMenu);
-
+export default function LibraryNavbar({
+  selectedMenu,
+  setSelectedMenu,
+  searchQuery,
+  onSearchChange,
+  onSearch,
+}) {
   const [showInstrumentDropdown, setShowInstrumentDropdown] = useState(false);
   const menuList = ["All", "My Timble", "Trending", "Instrument"];
 
@@ -87,17 +91,34 @@ export default function LibraryNavbar({ selectedMenu, setSelectedMenu }) {
         <div className="relative w-[250px]">
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearch(searchQuery)}
             placeholder="Search your idea"
-            className="bg-[#232323] text-white pl-12 pr-4 py-2 rounded-full outline-none w-full border border-transparent focus:border-[#E759FF] transition-all"
+            className="bg-[#232323] text-white pl-12 pr-10 py-2 rounded-full outline-none w-full border border-transparent focus:border-[#E759FF] transition-all"
           />
-          <span className="absolute left-5 top-1/2 transform -translate-y-1/2 opacity-60">
+          {searchQuery && (
+            <button
+              onClick={() => {
+                onSearchChange("");
+                onSearch("");
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+            >
+              ✕
+            </button>
+          )}
+          <button
+            onClick={() => onSearch(searchQuery)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100"
+          >
             <Image
               src="/icons/icon_search.png"
               alt="search"
               width={16}
               height={16}
             />
-          </span>
+          </button>
         </div>
       )}
     </div>
