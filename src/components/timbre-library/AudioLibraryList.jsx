@@ -3,13 +3,12 @@
 /** @format */
 
 import React, { useState, useRef, useEffect } from "react";
-import WavRow from "./Wavrow";
-import MidiRow from "./Midirow";
 import {
   icon_share,
   icon_remove2,
   icon_download2,
 } from "../../../public/index";
+import AudioRow from "./AudioRow";
 
 const defaultBadgeStyle = {
   background: "#0f0f0f",
@@ -94,7 +93,8 @@ export default function AudioLibraryList({
 
         return (
           <React.Fragment key={item.id}>
-            <WavRow
+            <AudioRow
+              type="wav"
               item={item}
               instrument={data.instrument}
               isSelected={wavSelected}
@@ -105,7 +105,6 @@ export default function AudioLibraryList({
               onToggleMenu={() =>
                 setMenuOpenId(menuOpenId === item.id ? null : item.id)
               }
-              showTrash={showTrash}
               onDelete={onDelete}
               onDurationLoaded={(id, dur) =>
                 setDurationsMap((prev) => ({ ...prev, [id]: dur }))
@@ -117,14 +116,14 @@ export default function AudioLibraryList({
             />
 
             {item.midi_file_url && (
-              <MidiRow
+              <AudioRow
+                type="midi"
                 item={item}
                 instrument={data.instrument}
-                showTrash={showTrash}
-                onDelete={onDelete}
-                displayTime={formatDuration(durationsMap[item.id])}
                 isSelected={midiSelected}
                 onSelect={() => setSelectedId(`midi-${item.id}`)}
+                onDelete={onDelete}
+                displayTime={formatDuration(durationsMap[item.id])}
                 badgeStyle={
                   midiSelected ? selectedBadgeStyle : defaultBadgeStyle
                 }
