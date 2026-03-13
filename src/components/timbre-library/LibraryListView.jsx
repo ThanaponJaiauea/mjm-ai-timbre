@@ -11,6 +11,12 @@ export default function LibraryListView({
   styleAllData,
   isSearching,
   onStyleSelect,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+  onLoadPrev,
+  hasPrev,
+  currentPage,
 }) {
   const [selectedStyle, setSelectedStyle] = useState("");
   const styles = styleAllData?.items || [];
@@ -73,12 +79,25 @@ export default function LibraryListView({
       <div className="mt-4">
         {isSearching ? (
           <div className="text-gray-500 text-center py-10">Searching...</div>
-        ) : data?.data?.length === 0 ? (
+        ) : !data || !data.data ? (
+          <div className="text-gray-500 text-center py-10">
+            No data available
+          </div>
+        ) : data.data.length === 0 ? (
           <div className="text-gray-500 text-center py-10">
             No results found
           </div>
         ) : (
-          <AudioLibraryList data={data} showTrash={title === "My Timble"} />
+          <AudioLibraryList
+            data={data}
+            showTrash={title === "My Timble"}
+            onLoadMore={onLoadMore}
+            onLoadPrev={onLoadPrev}
+            hasMore={hasMore}
+            hasPrev={hasPrev}
+            isLoadingMore={isLoadingMore}
+            currentPage={currentPage}
+          />
         )}
       </div>
     </div>

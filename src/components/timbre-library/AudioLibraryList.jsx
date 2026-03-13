@@ -48,13 +48,18 @@ const menuIcons = {
 };
 
 const modelDataNoTrash = modelData.filter((el) => el.title !== "Move To Trash");
-// ------------------------------------------------
 
 export default function AudioLibraryList({
   data,
   limit,
   showTrash = false,
   onDelete,
+  onLoadMore,
+  onLoadPrev,
+  hasMore = false,
+  hasPrev = false,
+  isLoadingMore = false,
+  currentPage = 1,
 }) {
   const musicList = data?.data || [];
   const displayList = limit ? musicList.slice(0, limit) : musicList;
@@ -90,7 +95,6 @@ export default function AudioLibraryList({
       {displayList.map((item) => {
         const wavSelected = selectedId === item.id;
         const midiSelected = selectedId === `midi-${item.id}`;
-
         return (
           <React.Fragment key={item.id}>
             <AudioRow
@@ -114,7 +118,6 @@ export default function AudioLibraryList({
               menuItems={menuItems}
               menuIcons={menuIcons}
             />
-
             {item.midi_file_url && (
               <AudioRow
                 type="midi"
@@ -135,6 +138,27 @@ export default function AudioLibraryList({
           </React.Fragment>
         );
       })}
+
+      {/* Pagination */}
+      {(hasPrev || hasMore) && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button
+            onClick={onLoadPrev}
+            disabled={!hasPrev || isLoadingMore}
+            className="px-4 py-2 rounded-full bg-[#232323] text-white disabled:opacity-30 hover:bg-[#333] transition cursor-pointer"
+          >
+            ← Prev
+          </button>
+          <span className="text-gray-500 text-sm">Page {currentPage}</span>
+          <button
+            onClick={onLoadMore}
+            disabled={!hasMore || isLoadingMore}
+            className="px-4 py-2 rounded-full bg-[#232323] text-white disabled:opacity-30 hover:bg-[#333] transition cursor-pointer"
+          >
+            {isLoadingMore ? "Loading..." : "Next →"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

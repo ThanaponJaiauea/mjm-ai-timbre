@@ -123,14 +123,18 @@ export default function AudioRow({
       const shareUrl = isWav ? item.wav_file_url : item.midi_file_url;
 
       try {
+        await navigator.clipboard.writeText(shareUrl);
+      } catch (err) {
+        console.error("Copy failed:", err);
+      }
+
+      try {
         if (navigator.share) {
           await navigator.share({ title: filename, url: shareUrl });
         }
       } catch (err) {
         if (err.name !== "AbortError") console.error(err);
       }
-
-      await navigator.clipboard.writeText(shareUrl);
     }
 
     if (el.title === "Move To Trash") onDelete?.(item.id);

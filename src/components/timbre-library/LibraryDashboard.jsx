@@ -35,7 +35,7 @@ export default function LibraryDashboard({
       </section>
 
       {/* Trending Section */}
-      <section className="overflow-hidden">
+      <section>
         <div className="flex items-center mb-6">
           <span className="text-[24px] font-semibold">Trending 🔥</span>
           <button

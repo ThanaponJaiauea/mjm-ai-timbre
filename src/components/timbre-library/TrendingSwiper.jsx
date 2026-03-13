@@ -86,12 +86,12 @@ export default function TrendingSwiper({ data }) {
   if (!data?.data || data.data.length === 0) return null;
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full ">
       {/* Left Arrow */}
       {canScrollLeft && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-[40%] -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 flex items-center justify-center bg-[#1A1A1A] border border-[#374151] rounded-full text-white text-lg hover:bg-[#252525] transition-all"
+          className="absolute -left-5 top-[40%] -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1A1A1A] border border-[#374151] rounded-full text-white text-lg hover:bg-[#252525] transition-all"
         >
           ‹
         </button>
@@ -167,7 +167,7 @@ export default function TrendingSwiper({ data }) {
       {canScrollRight && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-[40%] -translate-y-1/2 translate-x-4 z-10 w-8 h-8 flex items-center justify-center bg-[#1A1A1A] border border-[#374151] rounded-full text-white text-lg hover:bg-[#252525] transition-all"
+          className="absolute -right-5 top-[40%] -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1A1A1A] border border-[#374151] rounded-full text-white text-lg hover:bg-[#252525] transition-all"
         >
           ›
         </button>

@@ -12,6 +12,7 @@ import LibraryListView from "../../../../components/timbre-library/LibraryListVi
 import LibraryDashboard from "../../../../components/timbre-library/LibraryDashboard";
 import LibraryNavbar from "../../../../components/timbre-library/LibraryNavbar";
 import Loading from "../../../../components/loading/Loading";
+import { useRef } from "react";
 
 export default function TimbreLibraryPage() {
   const [selectedMenu, setSelectedMenu] = useState("All");
@@ -25,6 +26,12 @@ export default function TimbreLibraryPage() {
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
+  // pagination state
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const cachedStateRef = useRef(null);
+
   // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
@@ -34,11 +41,14 @@ export default function TimbreLibraryPage() {
         setStyleAllData(resStyle.data);
 
         const [trending, my] = await Promise.all([
-          getTranding(),
-          getMyTimble(),
+          getTranding({ page: 1 }),
+          getMyTimble({ page: 1 }),
         ]);
         setTrandingData(trending.data);
         setMyTimble(my.data);
+
+        // เก็บ hasMore ตาม selectedMenu ปัจจุบัน
+        setHasMore(trending.data.hasMore || my.data.hasMore || false);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
@@ -47,6 +57,55 @@ export default function TimbreLibraryPage() {
     };
     fetchData();
   }, []);
+
+  const handleLoadPrev = async () => {
+    if (page <= 1) return;
+    const prevPage = page - 1;
+    setPage(prevPage);
+    setIsLoadingMore(true);
+
+    try {
+      if (selectedMenu === "My Timble") {
+        const res = await getMyTimble({ page: prevPage });
+        setMyTimble(res.data);
+        setHasMore(res.data.hasMore);
+      }
+      if (selectedMenu === "Trending" || selectedMenu === "ARP") {
+        const res = await getTranding({ page: prevPage });
+        setTrandingData(res.data);
+        setHasMore(res.data.hasMore);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // load more
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+
+    try {
+      if (selectedMenu === "My Timble") {
+        const res = await getMyTimble({ page: nextPage });
+        setMyTimble(res.data); // replace ไม่ใช่ append
+        setHasMore(res.data.hasMore);
+      }
+      if (selectedMenu === "Trending" || selectedMenu === "ARP") {
+        const res = await getTranding({ page: nextPage });
+        setTrandingData(res.data); // replace ไม่ใช่ append
+        setHasMore(res.data.hasMore);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   // source map ตาม selectedMenu
   const getSource = () => {
@@ -79,9 +138,20 @@ export default function TimbreLibraryPage() {
   };
 
   const handleSetMenu = (menu) => {
+    cachedStateRef.current = {
+      myTimble,
+      trandingData,
+      page: 1,
+      hasMore: false,
+    };
+
     setSelectedMenu(menu);
     setSearchQuery("");
     setSearchResults(null);
+    setPage(1);
+    if (menu === "My Timble") setHasMore(myTimble?.hasMore || false);
+    if (menu === "Trending" || menu === "ARP")
+      setHasMore(trandingData?.hasMore || false);
   };
 
   const getData = () => {
@@ -89,6 +159,7 @@ export default function TimbreLibraryPage() {
       if (selectedMenu === "My Timble") return myTimble;
       if (selectedMenu === "Trending") return trandingData;
       if (selectedMenu === "ARP") return trandingData;
+      if (selectedMenu === "BASS") return null;
     })();
 
     if (searchResults !== null) {
@@ -136,6 +207,18 @@ export default function TimbreLibraryPage() {
     }
   };
 
+  const handleBack = () => {
+    if (cachedStateRef.current) {
+      setMyTimble(cachedStateRef.current.myTimble);
+      setTrandingData(cachedStateRef.current.trandingData);
+      setPage(1);
+      setHasMore(false);
+      setSearchResults(null);
+      cachedStateRef.current = null;
+    }
+    setSelectedMenu("All");
+  };
+
   return (
     <div className="w-[90%] mx-auto flex flex-col gap-4 min-h-screen text-white pb-20">
       <div className="text-[40px] font-bold mt-10">Library</div>
@@ -160,10 +243,16 @@ export default function TimbreLibraryPage() {
           title={selectedMenu}
           selectedMenu={selectedMenu}
           data={getData()}
-          onBack={() => setSelectedMenu("All")}
+          onBack={handleBack}
           styleAllData={styleAllData}
           isSearching={isSearching}
           onStyleSelect={handleStyleSelect}
+          onLoadMore={handleLoadMore}
+          onLoadPrev={handleLoadPrev}
+          hasMore={searchResults ? false : hasMore}
+          hasPrev={searchResults ? false : page > 1}
+          isLoadingMore={isLoadingMore}
+          currentPage={page}
         />
       )}
     </div>

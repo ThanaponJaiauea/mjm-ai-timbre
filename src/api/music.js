@@ -14,13 +14,21 @@ export const save_arp_settings = async data => await axios.post("/music/save_arp
 
 export const getMusicStyle = async () => await axios.get("/music/getMusicStyle");
 
-export const getMyTimble = async () => await axios.get("/music/getMyTimble");
+// export const getMyTimble = async () => await axios.get("/music/getMyTimble");
+
+export const getMyTimble = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  return await axios.get(`/music/getMyTimble?${query}`);
+};
 
 export const deleteMyTimble = async (id) => await axios.delete(`/music/${id}`);
 
-export const getTranding = async () => await axios.get("/music/getTranding");
+// export const getTranding = async () => await axios.get("/music/getTranding");
 
-
+export const getTranding = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  return await axios.get(`/music/getTranding?${query}`);
+};
 
 export const search = async (params = {}) => {
   const query = new URLSearchParams();
