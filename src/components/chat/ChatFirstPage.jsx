@@ -47,7 +47,6 @@ export default function ChatFirstPage({
   const [selectedIdea, setSelectedIdea] = useState(null);
 
   const [musicStyleData, setMusicStyleData] = useState([]);
-  console.log("musicStyleData", musicStyleData);
 
   const handleSignIn = () => {
     router.push("?auth=signin");
