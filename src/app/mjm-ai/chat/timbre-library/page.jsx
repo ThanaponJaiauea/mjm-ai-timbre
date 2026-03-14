@@ -12,6 +12,7 @@ import LibraryListView from "../../../../components/timbre-library/LibraryListVi
 import LibraryDashboard from "../../../../components/timbre-library/LibraryDashboard";
 import LibraryNavbar from "../../../../components/timbre-library/LibraryNavbar";
 import Loading from "../../../../components/loading/Loading";
+import AudioPlayerBar from "../../../../components/timbre-library/Audioplayerbar";
 import { useRef } from "react";
 
 export default function TimbreLibraryPage() {
@@ -20,6 +21,9 @@ export default function TimbreLibraryPage() {
   const [myTimble, setMyTimble] = useState(null);
   const [styleAllData, setStyleAllData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Player state
+  const [currentTrack, setCurrentTrack] = useState(null);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +51,6 @@ export default function TimbreLibraryPage() {
         setTrandingData(trending.data);
         setMyTimble(my.data);
 
-        // เก็บ hasMore ตาม selectedMenu ปัจจุบัน
         setHasMore(trending.data.hasMore || my.data.hasMore || false);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -82,7 +85,6 @@ export default function TimbreLibraryPage() {
     }
   };
 
-  // load more
   const handleLoadMore = async () => {
     if (isLoadingMore || !hasMore) return;
     setIsLoadingMore(true);
@@ -92,12 +94,12 @@ export default function TimbreLibraryPage() {
     try {
       if (selectedMenu === "My Timble") {
         const res = await getMyTimble({ page: nextPage });
-        setMyTimble(res.data); // replace ไม่ใช่ append
+        setMyTimble(res.data);
         setHasMore(res.data.hasMore);
       }
       if (selectedMenu === "Trending" || selectedMenu === "ARP") {
         const res = await getTranding({ page: nextPage });
-        setTrandingData(res.data); // replace ไม่ใช่ append
+        setTrandingData(res.data);
         setHasMore(res.data.hasMore);
       }
     } catch (e) {
@@ -107,7 +109,6 @@ export default function TimbreLibraryPage() {
     }
   };
 
-  // source map ตาม selectedMenu
   const getSource = () => {
     if (selectedMenu === "My Timble") return "my";
     if (selectedMenu === "Trending") return "trending";
@@ -127,8 +128,6 @@ export default function TimbreLibraryPage() {
     setIsSearching(true);
     try {
       const res = await search({ q, source: src });
-      console.log("handleSearch:", res.data.data);
-
       setSearchResults(res.data.data);
     } catch (e) {
       console.error(e);
@@ -175,7 +174,6 @@ export default function TimbreLibraryPage() {
   const handleDeleteMyTimble = async (id) => {
     try {
       await deleteMyTimble(id);
-      const my = await getMyTimble();
       setMyTimble((prev) => ({
         ...prev,
         data: prev.data.filter((item) => item.id !== id),
@@ -189,7 +187,6 @@ export default function TimbreLibraryPage() {
     const src = getSource();
     if (!src) return;
 
-    // clear → แสดง data เดิม
     if (!styleName) {
       setSearchResults(null);
       return;
@@ -198,7 +195,6 @@ export default function TimbreLibraryPage() {
     setIsSearching(true);
     try {
       const res = await search({ style_name: styleName, source: src });
-
       setSearchResults(res.data.data);
     } catch (e) {
       console.error(e);
@@ -220,7 +216,10 @@ export default function TimbreLibraryPage() {
   };
 
   return (
-    <div className="w-[90%] mx-auto flex flex-col gap-4 min-h-screen text-white pb-20">
+    // Add pb-20 when player is active so content isn't hidden behind the bar
+    <div
+      className={`w-[90%] mx-auto flex flex-col gap-4 min-h-screen text-white ${currentTrack ? "pb-32" : "pb-20"}`}
+    >
       <div className="text-[40px] font-bold mt-10">Library</div>
 
       <LibraryNavbar
@@ -237,6 +236,8 @@ export default function TimbreLibraryPage() {
           trandingData={trandingData}
           onSeeAll={handleSetMenu}
           onDelete={handleDeleteMyTimble}
+          onPlay={setCurrentTrack}
+          currentTrack={currentTrack}
         />
       ) : (
         <LibraryListView
@@ -253,6 +254,16 @@ export default function TimbreLibraryPage() {
           hasPrev={searchResults ? false : page > 1}
           isLoadingMore={isLoadingMore}
           currentPage={page}
+          onPlay={setCurrentTrack}
+          currentTrack={currentTrack}
+        />
+      )}
+
+      {/* Global Audio Player Bar */}
+      {currentTrack && (
+        <AudioPlayerBar
+          track={currentTrack}
+          onClose={() => setCurrentTrack(null)}
         />
       )}
     </div>

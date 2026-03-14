@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AudioLibraryList from "./AudioLibraryList";
-import { useEffect } from "react";
 
 export default function LibraryListView({
   title,
@@ -17,20 +16,18 @@ export default function LibraryListView({
   onLoadPrev,
   hasPrev,
   currentPage,
+  onPlay, // NEW
+  currentTrack, // NEW
 }) {
   const [selectedStyle, setSelectedStyle] = useState("");
   const styles = styleAllData?.items || [];
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
   return (
-    <div className="flex flex-col gap-6 mt-10 ">
+    <div className="flex flex-col gap-6 mt-10">
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <button
@@ -51,7 +48,6 @@ export default function LibraryListView({
         <div className="flex flex-wrap gap-3 py-4">
           {styles.map((style, index) => {
             const isActive = selectedStyle === style;
-
             return (
               <button
                 key={index}
@@ -62,11 +58,11 @@ export default function LibraryListView({
                   onStyleSelect(next);
                 }}
                 className={`cursor-pointer px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border
-          ${
-            isActive
-              ? "bg-transparent border-[#E759FF] text-[#E759FF] shadow-[0_0_10px_rgba(231,89,255,0.3)]"
-              : "bg-[#1A1A1A] border-[#2A2A2A] text-[#8F8F8F] hover:bg-[#252525] hover:text-white"
-          }`}
+                  ${
+                    isActive
+                      ? "bg-transparent border-[#E759FF] text-[#E759FF] shadow-[0_0_10px_rgba(231,89,255,0.3)]"
+                      : "bg-[#1A1A1A] border-[#2A2A2A] text-[#8F8F8F] hover:bg-[#252525] hover:text-white"
+                  }`}
               >
                 {style}
               </button>
@@ -97,6 +93,8 @@ export default function LibraryListView({
             hasPrev={hasPrev}
             isLoadingMore={isLoadingMore}
             currentPage={currentPage}
+            onPlay={onPlay}
+            currentTrack={currentTrack}
           />
         )}
       </div>

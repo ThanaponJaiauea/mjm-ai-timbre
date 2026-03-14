@@ -1,7 +1,5 @@
 "use client";
 
-/** @format */
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   icon_share,
@@ -15,9 +13,7 @@ const defaultBadgeStyle = {
   border: "1px solid #374151",
   borderRadius: "4px",
 };
-
 const defaultTextStyle = { color: "#9ca3af" };
-
 const selectedBadgeStyle = {
   background:
     "linear-gradient(black, black) padding-box, linear-gradient(to right, #E759FF, #6174FF) border-box",
@@ -26,7 +22,6 @@ const selectedBadgeStyle = {
   alignItems: "center",
   justifyContent: "center",
 };
-
 const selectedTextStyle = {
   backgroundImage: "linear-gradient(to right, #E759FF, #6174FF)",
   WebkitBackgroundClip: "text",
@@ -40,13 +35,11 @@ const modelData = [
   { title: "Share" },
   { title: "Move To Trash" },
 ];
-
 const menuIcons = {
   Download: icon_download2,
   Share: icon_share,
   "Move To Trash": icon_remove2,
 };
-
 const modelDataNoTrash = modelData.filter((el) => el.title !== "Move To Trash");
 
 export default function AudioLibraryList({
@@ -60,14 +53,18 @@ export default function AudioLibraryList({
   hasPrev = false,
   isLoadingMore = false,
   currentPage = 1,
+  onPlay,
+  currentTrack,
 }) {
   const musicList = data?.data || [];
   const displayList = limit ? musicList.slice(0, limit) : musicList;
   const [selectedId, setSelectedId] = useState(null);
-  const [playingId, setPlayingId] = useState(null);
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [durationsMap, setDurationsMap] = useState({});
   const menuRef = useRef(null);
+
+  // playingId synced from global currentTrack
+  const playingId = currentTrack?.id ?? null;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -80,7 +77,12 @@ export default function AudioLibraryList({
   }, []);
 
   const handleTogglePlay = (id) => {
-    setPlayingId((prev) => (prev === id ? null : id));
+    if (playingId === id) {
+      onPlay?.(null); // หยุด → ปิด player bar
+    } else {
+      const item = musicList.find((t) => t.id === id);
+      if (item) onPlay?.(item); // เปิด player bar
+    }
   };
 
   const formatDuration = (seconds) => {
@@ -113,6 +115,7 @@ export default function AudioLibraryList({
               onDurationLoaded={(id, dur) =>
                 setDurationsMap((prev) => ({ ...prev, [id]: dur }))
               }
+              displayTime={formatDuration(durationsMap[item.id])}
               badgeStyle={wavSelected ? selectedBadgeStyle : defaultBadgeStyle}
               textStyle={wavSelected ? selectedTextStyle : defaultTextStyle}
               menuItems={menuItems}
@@ -139,7 +142,6 @@ export default function AudioLibraryList({
         );
       })}
 
-      {/* Pagination */}
       {(hasPrev || hasMore) && (
         <div className="flex items-center justify-center gap-4 mt-6">
           <button

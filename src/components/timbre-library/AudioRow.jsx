@@ -22,52 +22,27 @@ export default function AudioRow({
   menuItems,
   menuIcons,
 }) {
-  const [duration, setDuration] = useState(null);
-  const [currentTime, setCurrentTime] = useState(0);
   const [midiMenuOpen, setMidiMenuOpen] = useState(false);
-  const audioRef = useRef(null);
 
   const isWav = type === "wav";
   const menuOpen = isWav ? isMenuOpen : midiMenuOpen;
 
-  // audio events (wav only)
+  // ── duration: ใช้ hidden audio element เพื่อดึง duration เท่านั้น ──
+  // ไม่ได้ใช้เล่นเสียง (AudioPlayerBar จัดการแทน)
+  const durationAudioRef = useRef(null);
   useEffect(() => {
-    if (!isWav) return;
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
+    if (!isWav || !item.wav_file_url) return;
+    const audio = new Audio();
+    audio.preload = "metadata";
+    audio.src = item.wav_file_url;
+    audio.addEventListener("loadedmetadata", () => {
       onDurationLoaded?.(item.id, audio.duration);
-    };
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleEnded = () => {
-      setCurrentTime(0);
-      onTogglePlay?.(null);
-    };
-
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("ended", handleEnded);
+    });
+    durationAudioRef.current = audio;
     return () => {
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("ended", handleEnded);
+      audio.src = "";
     };
-  }, []);
-
-  useEffect(() => {
-    if (!isWav) return;
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) {
-      audio.play();
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-      setCurrentTime(0);
-    }
-  }, [isPlaying]);
+  }, [item.wav_file_url]);
 
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -76,11 +51,8 @@ export default function AudioRow({
       .padStart(2, "0")}`;
   };
 
-  const shownTime = isWav
-    ? isPlaying
-      ? formatTime(currentTime)
-      : formatTime(duration)
-    : displayTime;
+  // แสดงเวลา: ถ้า wav ให้แสดงแค่ duration (เวลาเล่นจริงอยู่ที่ PlayerBar)
+  const shownTime = isWav ? displayTime : displayTime;
 
   const handleMenuToggle = (e) => {
     e.stopPropagation();
@@ -121,13 +93,11 @@ export default function AudioRow({
 
     if (el.title === "Share") {
       const shareUrl = isWav ? item.wav_file_url : item.midi_file_url;
-
       try {
         await navigator.clipboard.writeText(shareUrl);
       } catch (err) {
         console.error("Copy failed:", err);
       }
-
       try {
         if (navigator.share) {
           await navigator.share({ title: filename, url: shareUrl });
@@ -138,7 +108,6 @@ export default function AudioRow({
     }
 
     if (el.title === "Move To Trash") onDelete?.(item.id);
-
     handleMenuClose();
   };
 
@@ -146,14 +115,13 @@ export default function AudioRow({
     <div
       onClick={() => {
         onSelect();
+        // WAV เท่านั้นที่ trigger player bar
         if (isWav) onTogglePlay?.(item.id);
       }}
-      className={`cursor-pointer flex items-center justify-between p-3 hover:bg-[#252525] rounded-lg transition-all group ${isSelected ? "bg-[#292B2C]" : ""}`}
+      className={`cursor-pointer flex items-center justify-between p-3 hover:bg-[#252525] rounded-lg transition-all group ${
+        isSelected ? "bg-[#292B2C]" : ""
+      }`}
     >
-      {isWav && (
-        <audio ref={audioRef} src={item.wav_file_url} preload="metadata" />
-      )}
-
       {/* left */}
       <div className="flex items-center gap-4">
         <div className="relative w-12 h-12 flex-shrink-0">
@@ -163,7 +131,13 @@ export default function AudioRow({
             className="w-full h-full object-cover rounded-md opacity-80"
           />
           {isWav && (
-            <button className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePlay?.(item.id);
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+            >
               <Image
                 src={isPlaying ? icon_stop : icon_controlPlay}
                 alt={isPlaying ? "stop" : "play"}

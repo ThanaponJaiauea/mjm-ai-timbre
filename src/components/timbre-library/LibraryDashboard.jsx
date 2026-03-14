@@ -8,6 +8,8 @@ export default function LibraryDashboard({
   trandingData,
   onSeeAll,
   onDelete,
+  onPlay, // NEW
+  currentTrack, // NEW
 }) {
   return (
     <div className="flex flex-col gap-10 animate-in fade-in duration-500">
@@ -28,6 +30,8 @@ export default function LibraryDashboard({
             limit={2}
             showTrash={true}
             onDelete={onDelete}
+            onPlay={onPlay}
+            currentTrack={currentTrack}
           />
         ) : (
           <p>No data...</p>
@@ -35,7 +39,7 @@ export default function LibraryDashboard({
       </section>
 
       {/* Trending Section */}
-      <section>
+      <section className="overflow-hidden">
         <div className="flex items-center mb-6">
           <span className="text-[24px] font-semibold">Trending 🔥</span>
           <button
