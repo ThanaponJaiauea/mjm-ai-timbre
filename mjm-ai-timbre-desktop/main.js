@@ -155,19 +155,67 @@ ipcMain.handle('scan-vst', async () => {
   return plugins;
 });
 
+ipcMain.handle('open-vst', async (event, pluginPath) => {
+  console.log(`Attempting to open VST plugin: ${pluginPath}`);
+  try {
+    // VST plugins cannot be loaded directly as web pages
+    // They require a proper VST host application to load and display their native GUI
+    // For now, we'll show a placeholder window with plugin information
+    // and provide instructions for proper VST hosting
+    
+    const pluginName = path.basename(pluginPath);
+    const pluginDir = path.dirname(pluginPath);
+    
+    const vstWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      minWidth: 600,
+      minHeight: 400,
+      title: `VST Plugin: ${pluginName}`,
+      icon: ICON_PATH,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: false,
+        // เพิ่ม security options เพื่ออนุญาต iframe
+        webSecurity: false,  // ปิด web security (ใช้เฉพาะสำหรับ development)
+        allowRunningInsecureContent: true,
+        experimentalFeatures: true
+      },
+      backgroundColor: '#1a1a1a',
+    });
+
+    // Load the native VST host HTML file
+    const vstHostPath = path.join(__dirname, 'src', 'vst-host-native.html');
+    vstWindow.loadFile(vstHostPath, {
+        query: {
+            path: pluginPath,
+            name: pluginName,
+            directory: pluginDir
+        }
+    });
+
+    // Send plugin information to renderer for potential future use
+    vstWindow.webContents.on('did-finish-load', () => {
+      vstWindow.webContents.send('vst-plugin-loaded', {
+        path: pluginPath,
+        name: pluginName,
+        directory: pluginDir
+      });
+    });
+
+  } catch (error) {
+    console.error(`Failed to open VST plugin: ${error}`);
+    throw new Error(`VST Plugin Loading Failed: ${error.message}`);
+  }
+});
+
 ipcMain.handle('select-vst-folder', async () => {
   console.log('Opening folder selection dialog...');
   const plugins = await selectVstFolder();
   console.log(`Selected ${plugins.length} VST plugins from custom folder`);
   return plugins;
-});
-
-ipcMain.handle('get-app-version', () => {
-  return app.getVersion();
-});
-
-ipcMain.handle('get-platform', () => {
-  return os.platform();
 });
 
 app.whenReady().then(createWindow);

@@ -482,13 +482,13 @@ export default function Arpeggiator({
 
     // VST Install State
     const [showVstSearching, setShowVstSearching] = useState(false);
-    
+
     // Check if running in Electron desktop app
     const [isDesktopApp, setIsDesktopApp] = useState(false);
-    
+
     useEffect(() => {
         // Check if running in Electron
-        if (window.electron) {
+        if ((window as any).electron) {
             setIsDesktopApp(true);
         }
     }, []);
@@ -498,7 +498,7 @@ export default function Arpeggiator({
     const previewMasterGainRef = useRef<GainNode | null>(null);
     const previewFilterRef = useRef<BiquadFilterNode | null>(null);
     const previewCompressorRef = useRef<DynamicsCompressorNode | null>(null);
-    const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const previewTimeoutRef = useRef<any>(null);
     const isPreviewPlayingRef = useRef<boolean>(false);
     const previewTimbreArpRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
@@ -514,7 +514,7 @@ export default function Arpeggiator({
     const midiMainGainRef = useRef<GainNode | null>(null);
     const compressorRef = useRef<DynamicsCompressorNode | null>(null);
 
-    const timerIDRef = useRef<NodeJS.Timeout | null>(null);
+    const timerIDRef = useRef<any>(null);
     const nextNoteTimeRef = useRef(0.0);
     const noteIndexRef = useRef(0);
     const seqStepRef = useRef(0);
@@ -805,7 +805,7 @@ export default function Arpeggiator({
 
     const handleNoteOff = useCallback((midiNote: number) => {
         const interval = midiNote % 12;
-        
+
         if (!isHoldOn) {
             // Hold ปิด: ลบเฉพาะ momentary notes (โน๊ตที่ผู้ใช้กดค้างไว้)
             // ปล่อยมือ = โน๊ตหลุด (momentary mode)
@@ -914,7 +914,7 @@ export default function Arpeggiator({
                                 const notes = Array.isArray(midiNote) ? midiNote : [midiNote];
                                 const startTime = now + index * stepDuration;
                                 const noteDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
-                                
+
                                 notes.forEach(noteNum => {
                                     const osc = offlineContext.createOscillator();
                                     const gain = offlineContext.createGain();
@@ -993,6 +993,7 @@ export default function Arpeggiator({
     // Handle Download Desktop App Button Click
     const [isDownloading, setIsDownloading] = useState(false);
     const [vstPlugins, setVstPlugins] = useState<any[]>([]);
+    const [selectedVst, setSelectedVst] = useState<any>(null);
 
     const handleInstallVst = useCallback(() => {
         // ดาวน์โหลดจากโฟลเดอร์ public ในเครื่อง - เพิ่ม timestamp เพื่อ bypass cache
@@ -1014,8 +1015,8 @@ export default function Arpeggiator({
                     type: 'success',
                     title: '✅ DOWNLOAD STARTED',
                     message: 'Your download should have started.\n\n' +
-                             'If it didn\'t, please check your browser\'s download settings\n' +
-                             'or click the Download button again.'
+                        'If it didn\'t, please check your browser\'s download settings\n' +
+                        'or click the Download button again.'
                 });
             }, 3000);
         } else {
@@ -1026,20 +1027,20 @@ export default function Arpeggiator({
                 type: 'alert',
                 title: '⚠️ POPUP BLOCKED',
                 message: 'Your browser blocked the download popup.\n\n' +
-                         'Please allow popups for this site and try again.'
+                    'Please allow popups for this site and try again.'
             });
         }
     }, []);
 
     // Handle Scan VST Plugins
     const handleScanVst = useCallback(async () => {
-        if (!window.electronAPI) {
+        if (!isDesktopApp) {
             setModalState({
                 show: true,
                 type: 'alert',
                 title: '⚠️ DESKTOP APP REQUIRED',
                 message: 'VST scanning is only available in the Desktop App.\n\n' +
-                         'Please download and install the Desktop App to scan VST plugins.'
+                    'Please download and install the Desktop App to scan VST plugins.'
             });
             return;
         }
@@ -1047,7 +1048,7 @@ export default function Arpeggiator({
         setShowVstSearching(true);
 
         try {
-            const plugins = await window.electronAPI.scanVst();
+            const plugins = await (window as any).electronAPI.scanVst();
             setShowVstSearching(false);
             setVstPlugins(plugins);
 
@@ -1057,7 +1058,8 @@ export default function Arpeggiator({
                     type: 'alert',
                     title: '⚠️ NO VST PLUGINS FOUND',
                     message: 'No VST plugins were found in the default folders.\n\n' +
-                             'Please make sure you have VST2 (.dll) or VST3 (.vst3) plugins installed.'
+                        'Please make sure you have VST2 (.dll) or VST3 (.vst3) plugins installed.'
+
                 });
             } else {
                 setModalState({
@@ -1065,7 +1067,7 @@ export default function Arpeggiator({
                     type: 'success',
                     title: `✅ FOUND ${plugins.length} VST PLUGINS`,
                     message: `Successfully scanned and found ${plugins.length} VST plugin(s).\n\n` +
-                             `You can now load these plugins in the app.`
+                        `You can now load these plugins in the app.`
                 });
             }
         } catch (error) {
@@ -1075,10 +1077,10 @@ export default function Arpeggiator({
                 type: 'alert',
                 title: '❌ SCAN ERROR',
                 message: 'An error occurred while scanning for VST plugins.\n\n' +
-                         error instanceof Error ? error.message : 'Unknown error'
+                    `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
             });
         }
-    }, []);
+    }, [isDesktopApp]);
 
     // เลือก Timbre (generate และเล่นทันที)
     const selectTimbre = useCallback(async (timbreId: string) => {
@@ -1341,7 +1343,7 @@ export default function Arpeggiator({
                     try {
                         osc.disconnect();
                         gain.disconnect();
-                    } catch (e) {}
+                    } catch (e) { }
                 });
                 previewOscillatorsRef.current = [];
                 previewMasterGainRef.current = null;
@@ -1376,7 +1378,7 @@ export default function Arpeggiator({
         if (previewTimeoutRef.current) {
             try {
                 clearTimeout(previewTimeoutRef.current);
-            } catch (e) {}
+            } catch (e) { }
             previewTimeoutRef.current = null;
         }
 
@@ -1384,7 +1386,7 @@ export default function Arpeggiator({
         scheduledEventsRef.current.forEach(id => {
             try {
                 clearTimeout(id as unknown as number);
-            } catch (e) {}
+            } catch (e) { }
         });
         scheduledEventsRef.current = [];
 
@@ -1409,30 +1411,30 @@ export default function Arpeggiator({
                         try {
                             osc.disconnect();
                             gain.disconnect();
-                        } catch (e) {}
+                        } catch (e) { }
                     }, 30);
-                } catch (e) {}
+                } catch (e) { }
             });
 
             // Disconnect master gain, filter and compressor
             if (previewMasterGainRef.current) {
                 try {
                     previewMasterGainRef.current.disconnect();
-                } catch (e) {}
+                } catch (e) { }
                 previewMasterGainRef.current = null;
             }
 
             if (previewFilterRef.current) {
                 try {
                     previewFilterRef.current.disconnect();
-                } catch (e) {}
+                } catch (e) { }
                 previewFilterRef.current = null;
             }
 
             if (previewCompressorRef.current) {
                 try {
                     previewCompressorRef.current.disconnect();
-                } catch (e) {}
+                } catch (e) { }
                 previewCompressorRef.current = null;
             }
         }
@@ -1791,7 +1793,7 @@ export default function Arpeggiator({
 
             if (audioContextRef.current) {
                 nextNoteTimeRef.current = audioContextRef.current.currentTime + 0.05;
-                
+
                 // ใช้ setTimeout แทน worker (Next.js App Router ไม่รองรับ worker)
                 // Clear timer เก่าก่อนสร้างใหม่ (����้อ���กัน scheduler ซ้อน)
                 if (timerIDRef.current) {
@@ -1801,7 +1803,7 @@ export default function Arpeggiator({
                     if (!isPlaying) return;
                     const ctx = audioContextRef.current;
                     if (!ctx) return;
-                    
+
                     while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_TIME) {
                         scheduleNote(seqStepRef.current, nextNoteTimeRef.current);
                         nextNote();
@@ -1814,7 +1816,7 @@ export default function Arpeggiator({
             }
             timerIDRef.current = null;
         }
-        
+
         // Cleanup function
         return () => {
             if (timerIDRef.current) {
@@ -1826,11 +1828,14 @@ export default function Arpeggiator({
 
     useEffect(() => { if (masterGainRef.current) masterGainRef.current.gain.value = masterVolume; }, [masterVolume]);
 
-    const togglePlay = useCallback(() => { 
-        initializeAudio(); 
-        setIsPlaying(prev => !prev); 
+    const togglePlay = useCallback(() => {
+        initializeAudio();
+        setIsPlaying(prev => !prev);
     }, [initializeAudio]);
-    
+
+    const handleOpenVst = () => { };
+
+
     const toggleHold = useCallback(() => {
         const newHold = !isHoldOn;
         setIsHoldOn(newHold);
@@ -1966,7 +1971,7 @@ export default function Arpeggiator({
                 <div className="p-2 md:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 md:gap-3 lg:gap-4 relative z-10 w-full">
 
                     <div className="col-span-1 sm:col-span-2 lg:col-span-12 h-28 md:h-36 lg:h-40 bg-black rounded p-1 border-b border-zinc-700 shadow-[0_5px_15px_rgba(0,0,0,0.5)] relative group mb-1 md:mb-2">
-                        <div className="absolute top-1 left-1 md:top-2 md:left-2 text-[8px] md:text-[10px] text-zinc-500 font-mono z-30 tracking-wider">SEQUENCE MONITOR // <span className={isPlaying ? "text-[#2ed573] animate-pulse" : "text-red-500"}>{isPlaying ? "RUNNING" : "STOPPED"}</span> {scale === 'Freestyle' && <span className="text-[#ff0080] ml-2">🎹 FREESTYLE MODE</span>}</div>
+                        <div className="absolute top-1 left-1 md:top-2 md:left-2 text-[8px] md:text-[10px] text-zinc-500 font-mono tracking-wider">SEQUENCE MONITOR // <span className={isPlaying ? "text-[#2ed573] animate-pulse" : "text-red-500"}>{isPlaying ? "RUNNING" : "STOPPED"}</span> {scale === 'Freestyle' && <span className="text-[#ff0080] ml-2">🎹 FREESTYLE MODE</span>}</div>
                         <ArpDisplay sequence={arpSequence} currentStep={currentStep} />
                     </div>
 
@@ -2008,6 +2013,46 @@ export default function Arpeggiator({
                                             className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#ffa502] to-[#ff7f50] text-black border-[#cc8400] shadow-[0_0_8px_rgba(255,165,2,0.4)] hover:shadow-[0_0_12px_rgba(255,165,2,0.6)] transition-all"
                                         >
                                             🔍 Scan VST
+                                        </button>
+                                    </div>
+
+                                )}
+                                {vstPlugins.length > 0 && (
+                                    <div className="flex-1">
+                                        <div className="bg-[#1a1a1a] border border-[#333] rounded p-2">
+                                            <h3 className="text-[9px] font-bold text-[#ffa502] mb-2">VST PLUGINS FOUND</h3>
+                                            <div className="text-[8px] text-zinc-400 mb-2">
+                                                {vstPlugins.length} plugin(s) available
+                                            </div>
+                                             
+                                            <select
+                                                value={selectedVst ? selectedVst.path : ''}
+                                                onChange={(e) => {
+                                                    const selectedPath = e.target.value;
+                                                    const plugin = vstPlugins.find(p => p.path === selectedPath);
+                                                    setSelectedVst(plugin || null);
+                                                }}
+                                                className="w-full bg-[#222] border border-[#333] text-[8px] text-white p-1 rounded"
+                                            >
+                                                <option value="">Select VST Plugin</option>
+                                                {vstPlugins.map((plugin, index) => (
+                                                    <option key={index} value={plugin.path}>
+                                                        {plugin.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                if (selectedVst) {
+                                                    window.electronAPI.openVst(selectedVst.path);
+                                                } else {
+                                                    alert("Please select a VST plugin first.");
+                                                }
+                                            }}
+                                            className="w-full h-8 md:h-9 mt-2 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#ffa502] to-[#ff7f50] text-black border-[#cc8400] shadow-[0_0_8px_rgba(255,165,2,0.4)] hover:shadow-[0_0_12px_rgba(255,165,2,0.6)] transition-all"
+                                        >
+                                            🎛️ OPEN VST PLUGIN
                                         </button>
                                     </div>
                                 )}
@@ -2317,7 +2362,7 @@ export default function Arpeggiator({
                         </div>
                     </div>
                 )}
-                
+
                 {/* Loading Modal for Download */}
                 {isDownloading && (
                     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 backdrop-blur-sm">
@@ -2329,7 +2374,7 @@ export default function Arpeggiator({
                                 <div className="w-3 h-3 bg-[#2ed573] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
                             <div className="text-[10px] font-mono text-zinc-400">
-                                Starting your download...<br/>
+                                Starting your download...<br />
                                 Please wait
                             </div>
                         </div>
@@ -2369,11 +2414,10 @@ export default function Arpeggiator({
                                     <button
                                         key={cat}
                                         onClick={() => setActiveTimbreCategory(cat as TimbreCategory)}
-                                        className={`px-4 py-2 text-[10px] font-bold tracking-widest rounded transition-all whitespace-nowrap ${
-                                            activeTimbreCategory === cat
+                                        className={`px-4 py-2 text-[10px] font-bold tracking-widest rounded transition-all whitespace-nowrap ${activeTimbreCategory === cat
                                                 ? 'bg-[#2ed573] text-black shadow-[0_0_15px_rgba(46,213,115,0.4)]'
                                                 : 'bg-[#222] text-zinc-500 hover:text-white hover:bg-[#333]'
-                                        }`}
+                                            }`}
                                     >
                                         {cat === 'All' && '🎼'}
                                         {cat === 'Acoustic' && '🎹'}
@@ -2405,11 +2449,10 @@ export default function Arpeggiator({
                                             <button
                                                 key={timbre.id}
                                                 onClick={() => selectTimbre(timbre.id)}
-                                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 group ${
-                                                    selectedTimbreId === timbre.id
+                                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 group ${selectedTimbreId === timbre.id
                                                         ? 'border-[#2ed573] bg-[#2ed573]/10 shadow-[0_0_20px_rgba(46,213,115,0.3)]'
                                                         : 'border-[#333] bg-[#222] hover:border-[#555] hover:bg-[#2a2a2a]'
-                                                }`}
+                                                    }`}
                                             >
                                                 <div className="text-4xl mb-2">{timbre.icon}</div>
                                                 <div className="text-[11px] font-bold text-white mb-1">{timbre.name}</div>
@@ -2468,11 +2511,10 @@ export default function Arpeggiator({
                                         <button
                                             onClick={isPreviewPlaying ? stopPreviewTimbreArp : previewTimbreArp}
                                             disabled={!selectedTimbreId || generatedArpPattern.length === 0}
-                                            className={`px-6 py-3 text-[10px] font-bold tracking-widest rounded border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                                                isPreviewPlaying
+                                            className={`px-6 py-3 text-[10px] font-bold tracking-widest rounded border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isPreviewPlaying
                                                     ? 'bg-red-600 text-white border-red-800 shadow-[0_0_15px_rgba(255,0,0,0.5)] hover:bg-red-700'
                                                     : 'bg-[#2ed573] text-black border-[#1a9c50] hover:bg-[#00dfd8] shadow-[0_0_15px_rgba(46,213,115,0.3)]'
-                                            }`}
+                                                }`}
                                             title={isPreviewPlaying ? 'Stop preview' : 'Play preview'}
                                         >
                                             {isPreviewPlaying ? '⬛ STOP' : '▶ PREVIEW'}

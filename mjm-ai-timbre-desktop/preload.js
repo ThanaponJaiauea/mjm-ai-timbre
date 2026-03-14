@@ -5,6 +5,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // VST Scanner
   scanVst: () => ipcRenderer.invoke('scan-vst'),
+  openVst: (pluginPath) => ipcRenderer.invoke('open-vst', pluginPath),
   selectVstFolder: () => ipcRenderer.invoke('select-vst-folder'),
 
   // App Info
