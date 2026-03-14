@@ -1,6 +1,6 @@
 /** @format */
 
-import { MyUIMessagePart } from "./message-type";
+import {MyUIMessagePart} from "./message-type";
 
 export const mapDBPartToUIMessagePart = (part: any): MyUIMessagePart => {
   switch (part.type) {
@@ -43,41 +43,81 @@ export const mapDBPartToUIMessagePart = (part: any): MyUIMessagePart => {
       return {
         type: part.type,
       };
-    case "tool-aiRecommend":
+    case "tool-webSearch":
       if (!part.tool_state) {
-        throw new Error("tool_state is undefined");
+        throw new Error("webSearch_state is undefined");
       }
-
-      const base = {
-        type: "tool-ai-recommend" as const,
-        toolCallId: part.tool_tool_call_id!,
-        state: part.tool_state,
-      };
-
       switch (part.tool_state) {
         case "input-streaming":
-          return base;
-
+          return {
+            type: "tool-webSearch",
+            state: "input-streaming",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_webSearch_input!,
+          };
         case "input-available":
           return {
-            ...base,
-            input: part.tool_ai_recommend_input ?? {},
+            type: "tool-webSearch",
+            state: "input-available",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_webSearch_input!,
           };
-
         case "output-available":
           return {
-            ...base,
-            input: part.tool_ai_recommend_input ?? {},
-            output: part.tool_ai_recommend_output,
+            type: "tool-webSearch",
+            state: "output-available",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_webSearch_input!,
+            output: part.tool_webSearch_output!,
           };
-
         case "output-error":
           return {
-            ...base,
-            input: part.tool_ai_recommend_input ?? {},
-            errorText: part.tool_ai_recommend_errorText,
+            type: "tool-webSearch",
+            state: "output-error",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_webSearch_input!,
+            errorText: part.tool_errorText!,
           };
       }
+
+    case "tool-aiRecommend":
+      if (!part.tool_state) {
+        throw new Error("songSearch_state is undefined");
+      }
+      switch (part.tool_state) {
+        case "input-streaming":
+          return {
+            type: "tool-aiRecommend",
+            state: "input-streaming",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_ai_recommend_input!,
+          };
+        case "input-available":
+          return {
+            type: "tool-aiRecommend",
+            state: "input-available",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_ai_recommend_input!,
+          };
+        case "output-available":
+          return {
+            type: "tool-aiRecommend",
+            state: "output-available",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_ai_recommend_input!,
+            output: part.tool_ai_recommend_output!,
+          };
+        case "output-error":
+          return {
+            type: "tool-songSearch",
+            state: "output-error",
+            toolCallId: part.tool_toolCallId!,
+            input: part.tool_songSearch_input!,
+            errorText: part.tool_errorText!,
+          };
+      }
+
+
 
     default:
       throw new Error(`Unsupported part type: ${part.type}`);

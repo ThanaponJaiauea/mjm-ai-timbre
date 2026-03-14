@@ -223,6 +223,7 @@ export function Chat({ id, initialMessages }: Props) {
                               />
                             </div>
                           )}
+                          
                           {acid !== null && (
                             <div className="w-full overflow-auto">
                               <AcidSynth
