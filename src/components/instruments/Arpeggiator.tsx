@@ -1078,6 +1078,44 @@ export default function Arpeggiator({
         }
     }, [heldIntervals, musicalKey, octaveRange, sortNotes, pattern, sequencerSteps, rootNote]);
 
+    // เลือก Timbre และปิด Modal เพื่อนำไปใช้เล่นในหน้าหลัก
+    const selectTimbreAndClose = useCallback(async () => {
+        if (!selectedTimbreId) return;
+
+        const timbre = CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId);
+        if (!timbre) return;
+
+        // ถ้าไม่มีโน้ต ให้เตือนและปิด modal
+        if (heldIntervals.length === 0) {
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: 'NO NOTES',
+                message: 'No notes detected. Please press keys or enable HOLD to add notes, then select a timbre.',
+            });
+            stopPreviewTimbreArp();
+            setShowTimbreModal(false);
+            return;
+        }
+
+        // หยุด preview และปิด modal ก่อน
+        stopPreviewTimbreArp();
+        setShowTimbreModal(false);
+
+        // รอให้ modal ปิดเสร็จแล้วค่อย update waveform (เพื่อให้ UI re-render)
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Apply Timbre settings กับเสียงหลัก
+        setWaveform(timbre.waveform);
+        setTimbreArpSettings({
+            waveform: timbre.waveform,
+            rootNote: timbre.octaveShift > 0 ? rootNote + timbre.octaveShift * 12 : rootNote,
+        });
+
+        // Update paramsRef.current โดยตรงเพื่อให้เสียงหลักใช้ waveform ใหม่ทันที
+        paramsRef.current.waveform = timbre.waveform;
+    }, [selectedTimbreId, heldIntervals, rootNote]);
+
     // Generate ARP Pattern จาก Timbre ที่เลือก
     const generateArpFromTimbre = useCallback(() => {
         if (!selectedTimbreId) return;
@@ -1633,34 +1671,61 @@ export default function Arpeggiator({
         }
     };
 
-    const playOscillator = (midiNote: number | number[] | null, time: number) => {
+    const playOscillator = useCallback((midiNote: number | number[] | null, time: number) => {
         if (!audioContextRef.current || !masterGainRef.current || midiNote === null || typeof midiNote === 'undefined') return;
-        const { waveform, gateLength, velocity, bpm, timeDivision } = paramsRef.current;
+        const { waveform, gateLength, velocity, bpm, timeDivision, arpSequence } = paramsRef.current;
         const stepDuration = (60 / bpm) * TIME_DIVISIONS[timeDivision];
+
+        // ถ้ามี Timbre ที่เลือก ให้ใช้ settings ของ Timbre นั้น
+        const useTimbre = selectedTimbreId && timbreArpSettings.waveform;
+        const selectedTimbre = useTimbre ? CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId) : null;
+
+        // ใช้ waveform จาก Timbre ถ้ามี ถ้าไม่มีให้ใช้จากปุ่ม WAVEFORM
+        const oscWaveform = selectedTimbre ? selectedTimbre.waveform : waveform;
+
+        // ใช้ ADSR จาก Timbre ถ้ามี ถ้าไม่มีให้ใช้ค่า default (ใช้ multiplier เหมือน Preview)
+        const attack = selectedTimbre ? Math.max(0.001, selectedTimbre.attack * 0.3) : 0.005;
+        const decay = selectedTimbre ? Math.max(0.01, selectedTimbre.decay * 0.3) : 0.1;
+        const sustain = selectedTimbre ? selectedTimbre.sustain : 1.0;
+        const release = selectedTimbre ? Math.max(0.05, selectedTimbre.release * 0.5) : 0.1;
+
+        // คำนวณ max polyphony จาก arpSequence (เหมือน Preview)
+        const maxPolyphony = arpSequence.reduce((max: number, note) => {
+            if (note === null) return max;
+            const count = Array.isArray(note) ? note.length : 1;
+            return Math.max(count, max);
+        }, 1);
+        const perNoteGain = 0.7 / maxPolyphony;
 
         const trigger = (n: number) => {
             if (!Number.isFinite(n)) return;
             const ctx = audioContextRef.current!;
             const osc = ctx.createOscillator();
-            osc.type = waveform;
+            osc.type = oscWaveform;
             const freq = midiToFreq(n);
             osc.frequency.value = freq;
             const adsr = ctx.createGain();
 
+            // ADSR Envelope (ใช้ multiplier และ perNoteGain เหมือน Preview)
+            const peakGain = velocity * perNoteGain;
             adsr.gain.setValueAtTime(0, time);
-            adsr.gain.linearRampToValueAtTime(velocity, time + 0.005);
+            adsr.gain.linearRampToValueAtTime(peakGain, time + attack);
+            adsr.gain.linearRampToValueAtTime(peakGain * sustain, time + attack + decay);
 
             const gateDuration = stepDuration * (gateLength >= 128 ? 1.0 : gateLength / 127.0);
-            const adaptiveRelease = Math.max(0.01, Math.min(0.25, 5 / freq));
-
-            adsr.gain.setValueAtTime(velocity, time + gateDuration);
-            adsr.gain.linearRampToValueAtTime(0, time + gateDuration + adaptiveRelease);
+            adsr.gain.setValueAtTime(peakGain * sustain, time + gateDuration);
+            adsr.gain.linearRampToValueAtTime(0, time + gateDuration + release);
 
             osc.connect(adsr);
             adsr.connect(masterGainRef.current!);
             osc.start(time);
-            osc.stop(time + gateDuration + adaptiveRelease + 0.1);
-            osc.onended = () => { osc.disconnect(); adsr.disconnect(); };
+            osc.stop(time + gateDuration + release + 0.1);
+            osc.onended = () => {
+                try {
+                    osc.disconnect();
+                    adsr.disconnect();
+                } catch (e) {}
+            };
         };
 
         if (isVST && midiNote !== null) {
@@ -1672,7 +1737,7 @@ export default function Arpeggiator({
         }
 
         if (Array.isArray(midiNote)) midiNote.forEach(n => trigger(n)); else trigger(midiNote);
-    };
+    }, [waveform, gateLength, velocity, isVST, sendVSTMidi, selectedTimbreId, timbreArpSettings.waveform]);
 
     const nextNote = () => {
         const { bpm, timeDivision } = paramsRef.current;
@@ -1926,20 +1991,76 @@ export default function Arpeggiator({
                                     <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">WAVEFORM</div>
                                     <div className="grid grid-cols-4 gap-0.5 md:gap-1">
                                         {(['sine', 'square', 'sawtooth', 'triangle'] as const).map(w => (
-                                            <button key={w} onClick={() => setWaveform(w)} className={`h-7 md:h-8 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border transition-all duration-100 shadow-sm ${waveform === w ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]' : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'}`}>{w.slice(0, 3)}</button>
+                                            <button
+                                                key={w}
+                                                onClick={() => {
+                                                    if (selectedTimbreId) {
+                                                        setSelectedTimbreId(null);
+                                                        setTimbreArpSettings({});
+                                                    }
+                                                    setWaveform(w);
+                                                }}
+                                                disabled={!!selectedTimbreId}
+                                                className={`h-7 md:h-8 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border transition-all duration-100 shadow-sm ${
+                                                    selectedTimbreId
+                                                        ? 'bg-[#1a1a1a] text-[#444] border-[#222] cursor-not-allowed'
+                                                        : waveform === w
+                                                            ? 'bg-[#2ed573] text-black border-[#2ed573] shadow-[0_0_8px_rgba(46,213,115,0.4)]'
+                                                            : 'bg-[#333] text-[#888] border-[#111] hover:text-[#ccc] hover:bg-[#444]'
+                                                }`}
+                                            >
+                                                {w.slice(0, 3)}
+                                            </button>
                                         ))}
                                     </div>
+                                    {selectedTimbreId && (
+                                        <div className="text-[6px] md:text-[7px] text-[#2ed573] font-bold tracking-widest text-center mt-1">
+                                            🔒 LOCKED BY TIMBRE
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">TIMBRE</div>
+                                    <div className="text-[7px] md:text-[9px] text-zinc-500 font-bold tracking-widest text-center mb-0.5">TIMBRE SELECTOR</div>
                                     <button
                                         onClick={() => openTimbreModal('All')}
                                         className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#f5f5f5] to-[#d4a574] text-black border-[#b8956a] shadow-[0_0_8px_rgba(245,245,245,0.3)] hover:shadow-[0_0_15px_rgba(245,245,245,0.5)] transition-all flex items-center justify-center gap-2"
                                     >
                                         <span className="text-lg">🎼</span>
-                                        <span>Iconic Timbre</span>
+                                        <span>Open Library</span>
                                     </button>
                                 </div>
+                                {selectedTimbreId && (() => {
+                                    const selectedTimbre = CLASSIC_TIMBRES.find(t => t.id === selectedTimbreId);
+                                    return selectedTimbre ? (
+                                        <div className="flex-1 bg-[#222] border border-[#333] rounded-[2px] p-2 flex items-center gap-2 relative">
+                                            <span className="text-2xl">{selectedTimbre.icon}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[7px] md:text-[8px] text-zinc-500 font-bold tracking-widest">SELECTED</div>
+                                                <div className="text-[9px] md:text-[10px] font-bold text-white truncate">{selectedTimbre.name}</div>
+                                                <div className="text-[7px] md:text-[8px] text-zinc-400 flex items-center gap-1">
+                                                    <span className="uppercase">{selectedTimbre.waveform}</span>
+                                                    <span className="text-zinc-600">•</span>
+                                                    <span>Oct: {selectedTimbre.octaveShift > 0 ? '+' : ''}{selectedTimbre.octaveShift}</span>
+                                                </div>
+                                            </div>
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedTimbre.color }} />
+                                            <button
+                                                onClick={() => {
+                                                    // หยุด RUN ถ้ากำลังเล่นอยู่
+                                                    if (isPlaying) {
+                                                        togglePlay();
+                                                    }
+                                                    setSelectedTimbreId(null);
+                                                    setTimbreArpSettings({});
+                                                }}
+                                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] font-bold transition-all shadow-[0_0_8px_rgba(255,0,0,0.5)]"
+                                                title="Clear timbre selection"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ) : null;
+                                })()}
                                 <div className="flex-1">
                                     <button
                                         onClick={handleInstallVst}
@@ -2395,12 +2516,12 @@ export default function Arpeggiator({
                                     {/* Action Buttons */}
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={generateArpFromTimbre}
-                                            disabled={!selectedTimbreId || heldIntervals.length === 0}
-                                            className="px-6 py-3 bg-[#ffa502] text-black text-[10px] font-bold tracking-widest rounded border border-[#e67e22] hover:bg-[#ffb14d] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(255,165,2,0.3)] hover:shadow-[0_0_25px_rgba(255,165,2,0.5)]"
-                                            title="Generate ARP pattern from selected timbre"
+                                            onClick={selectTimbreAndClose}
+                                            disabled={!selectedTimbreId}
+                                            className="px-6 py-3 bg-[#2ed573] text-black text-[10px] font-bold tracking-widest rounded border border-[#1a9c50] hover:bg-[#00dfd8] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(46,213,115,0.3)] hover:shadow-[0_0_25px_rgba(46,213,115,0.5)]"
+                                            title="Select this timbre and close"
                                         >
-                                            ⚡ GENERATE
+                                            ✓ SELECT
                                         </button>
                                         <button
                                             onClick={isPreviewPlaying ? stopPreviewTimbreArp : previewTimbreArp}
