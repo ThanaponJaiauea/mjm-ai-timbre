@@ -984,9 +984,9 @@ export default function Arpeggiator({
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleInstallVst = useCallback(() => {
-        // ดาวน์โหลดจาก GitHub Releases - เปลี่ยน URL ตาม version จริง
-        // Format: https://github.com/{username}/{repo}/releases/download/{tag}/{filename}
-        const downloadUrl = `https://github.com/ThanaponJaiauea/mjm-ai-timbre/releases/download/v1.0.0/MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe`;
+        // ดาวน์โหลดจาก GitHub Releases - ใช้ 'latest' เพื่อดาวน์โหลดเวอร์ชันล่าสุดเสมอ
+        // ไม่ต้องแก้โค้ดเมื่อมีเวอร์ชันใหม่ แค่ upload ไฟล์เดิมชื่อเดิมขึ้น Release ใหม่
+        const downloadUrl = `https://github.com/ThanaponJaiauea/mjm-ai-timbre/releases/latest/download/MJM-AI-Timbre-Arpeggiator-Setup.exe`;
 
         // แสดง loading state ทันที
         setIsDownloading(true);
@@ -1004,8 +1004,8 @@ export default function Arpeggiator({
                     type: 'success',
                     title: '✅ DOWNLOAD STARTED',
                     message: 'Your download should have started.\n\n' +
-                             '📁 File: MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe\n\n' +
-                             '🔗 Source: GitHub Releases'
+                             '📁 File: MJM-AI-Timbre-Arpeggiator-Setup.exe\n\n' +
+                             '🔗 Source: GitHub Releases (Latest Version)'
                 });
             }, 3000);
         } else {
