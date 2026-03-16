@@ -47,7 +47,12 @@ A modern web and desktop application for exploring and designing sounds (timbre)
    pnpm install
    ```
 
-3. Set up your environment variables. (Check the `.env` file for required configurations like database or Ollama endpoint).
+3. Set up your environment variables:
+   - Copy the `.env.example` file and rename it to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Open the new `.env` file and configure the variables (e.g., `OLLAMA_SERVER`, `NEXT_PUBLIC_API_URL`) to match your local setup.
 
 4. Start the development server:
    ```bash
