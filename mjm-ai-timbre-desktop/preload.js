@@ -7,6 +7,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanVst: () => ipcRenderer.invoke('scan-vst'),
   selectVstFolder: () => ipcRenderer.invoke('select-vst-folder'),
 
+  // VST Loader
+  loadVst: (vstPath) => ipcRenderer.invoke('load-vst', vstPath),
+  unloadVst: () => ipcRenderer.invoke('unload-vst'),
+  getLoadedVst: () => ipcRenderer.invoke('get-loaded-vst'),
+
+  // VST Host (Open VST UI)
+  openVstWindow: (vstPath) => ipcRenderer.invoke('open-vst-window', vstPath),
+  downloadVstHost: () => ipcRenderer.invoke('download-vsthost'),
+
   // App Info
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   getPlatform: () => ipcRenderer.invoke('get-platform'),
@@ -15,6 +24,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isWindows: () => ipcRenderer.invoke('get-platform').then(p => p === 'win32'),
   isMac: () => ipcRenderer.invoke('get-platform').then(p => p === 'darwin'),
   isLinux: () => ipcRenderer.invoke('get-platform').then(p => p === 'linux'),
+
+  // Listen for main process logs
+  onMainLog: (callback) => ipcRenderer.on('main-log', (event, message) => callback(message)),
 });
 
 // Expose electron indicator

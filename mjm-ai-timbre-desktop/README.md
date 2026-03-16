@@ -6,9 +6,30 @@ A desktop application for the MJM AI Timbre Arpeggiator with VST plugin support.
 
 - 🎹 **Full Arpeggiator Controls** - BPM, Pattern, Waveform, Key & Scale
 - 🔌 **VST Plugin Support** - Scan and use VST2/VST3 plugins from your system
+- 🖥️ **Open VST in VSTHost** - Launch VST plugins directly in VSTHost
 - 🎼 **Genre Presets** - Trance, Synthwave, Techno, Ambient, and more
 - 💾 **Offline Mode** - Works without a browser connection
 - 🖥️ **Native Performance** - Built with Electron for cross-platform support
+
+## ⚠️ Important: VST Host Required
+
+To open VST plugins, you need a VST Host (free):
+
+### 🎯 Recommended: SaviHost (Auto-loads VSTs)
+
+1. Download from: https://www.hermannseib.com/english/savihost.htm
+2. Extract the ZIP file
+3. Copy `SaviHost.exe` and `SaviHost64.exe` to: `[app-folder]\vsthost\`
+4. Restart the app
+5. Click **🖥️** next to any VST - it will open automatically! ✅
+
+### 🔄 Alternative: VSTHost (Manual load)
+
+1. Download from: https://www.hermannseib.com/english/vsthost.htm
+2. Extract and copy `VSTHost.exe` to: `[app-folder]\vsthost\`
+3. **Note**: You must manually load VSTs via File > Open VST Plugin
+
+📖 Full guide: [`vsthost/INSTALL-VSTHOST.md`](vsthost/INSTALL-VSTHOST.md)
 
 ## Installation
 
@@ -61,6 +82,27 @@ A desktop application for the MJM AI Timbre Arpeggiator with VST plugin support.
 
 ## Usage
 
+### ⚠️ First Time Setup: Install VST Host
+
+Before using VST plugins, you must install a VST Host:
+
+**🎯 Recommended: SaviHost** (auto-loads VSTs!)
+
+1. **Download SaviHost** from: https://www.hermannseib.com/english/savihost.htm
+2. **Extract** the ZIP file
+3. **Copy** `SaviHost.exe` and `SaviHost64.exe` to:
+   - **Installed**: `C:\Program Files\MJM AI Timbre Arpeggiator\vsthost\`
+   - **Portable**: `[extracted-folder]\vsthost\`
+4. **Restart** the app
+
+**🔄 Alternative: VSTHost** (requires manual VST loading)
+
+1. Download from: https://www.hermannseib.com/english/vsthost.htm
+2. Extract and copy `VSTHost.exe` to the same folder
+3. Note: You must load VSTs manually via File > Open VST Plugin
+
+📖 Full guide: [`vsthost/INSTALL-VSTHOST.md`](vsthost/INSTALL-VSTHOST.md)
+
 ### Scanning VST Plugins
 
 1. Launch the application
@@ -74,10 +116,24 @@ A desktop application for the MJM AI Timbre Arpeggiator with VST plugin support.
 
 ### Using VST Plugins
 
-After scanning, your VST plugins will be listed. You can:
-- View all detected plugins
-- See the full path to each plugin
-- Use them within the arpeggiator
+After scanning, your VST plugins will be listed:
+
+1. **Open VST UI**: Click the **🖥️** button next to any plugin
+
+   **With SaviHost** (recommended):
+   - VST will open automatically! ✅
+   - You can now adjust the plugin's settings
+
+   **With VSTHost**:
+   - VSTHost will open (without VST loaded)
+   - Go to: **File > Open VST Plugin**
+   - Select your VST plugin manually
+
+2. **Load VST**: Click on a plugin name to load it in the arpeggiator
+   - The plugin will be marked as "loaded" (✅)
+   - Ready to use with the arpeggiator
+
+**Note**: A VST Host must be installed first (see setup above)
 
 ### Arpeggiator Controls
 
@@ -136,6 +192,49 @@ C:\Program Files (x86)\VstPlugins
 ```
 
 ## Troubleshooting
+
+### ❌ VST Host Not Found
+
+If you see "VST Host not found" error:
+
+**🎯 Recommended: Download SaviHost** (auto-loads VSTs!)
+
+1. Download from: https://www.hermannseib.com/english/savihost.htm
+2. Extract the ZIP file
+3. Copy `SaviHost.exe` to: `[app-folder]\vsthost\SaviHost.exe`
+4. Restart the app
+
+**🔄 Alternative: VSTHost** (manual load)
+
+1. Download from: https://www.hermannseib.com/english/vsthost.htm
+2. Extract and copy `VSTHost.exe` to: `[app-folder]\vsthost\VSTHost.exe`
+
+Or click the **"📥 Download"** button in the app
+
+### 🖥️ VST Won't Open
+
+**If using SaviHost:**
+1. Make sure SaviHost.exe is in the correct folder
+2. Check that VST matches the architecture (32-bit vs 64-bit)
+3. Try running the app as Administrator
+
+**If using VSTHost:**
+1. VSTHost opens but doesn't auto-load VSTs
+2. You must manually: **File > Open VST Plugin**
+3. Select your VST plugin file
+4. Consider switching to SaviHost for auto-loading!
+
+### 🎹 VST UI Not Showing
+
+**If using VSTHost:**
+1. Go to: **Options > Visuals**
+2. Check ✓ **"Show GUI"**
+3. Reload the VST plugin
+
+**If using SaviHost:**
+1. The VST window may be behind other windows
+2. Check taskbar for the VST window
+3. Try Alt+Tab to find it
 
 ### No VST Plugins Found
 
