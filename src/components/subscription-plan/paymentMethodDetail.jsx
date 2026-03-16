@@ -9,58 +9,102 @@ import {
 } from "../../../public/index";
 import Image from "next/image";
 
+// ── compress รูปให้ < 1MB ก่อน upload ──
+const compressImage = (file, maxSizeKB = 900) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+
+        // ย่อขนาดถ้ารูปใหญ่เกิน 1920px
+        const MAX_DIM = 1920;
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+        // ลด quality จนขนาด < maxSizeKB
+        let quality = 0.85;
+        const tryCompress = () => {
+          canvas.toBlob(
+            (blob) => {
+              if (blob.size <= maxSizeKB * 1024 || quality <= 0.1) {
+                const compressed = new File(
+                  [blob],
+                  file.name.replace(/\.[^.]+$/, ".jpg"),
+                  {
+                    type: "image/jpeg",
+                  },
+                );
+                resolve(compressed);
+              } else {
+                quality = Math.max(0.1, quality - 0.1);
+                tryCompress();
+              }
+            },
+            "image/jpeg",
+            quality,
+          );
+        };
+
+        tryCompress();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function PaymentMethodDetail({
   price,
   onBack,
   subscriptionPlan,
-  onSuccess,
+  onSuccess, 
 }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
 
-    if (selectedFile) {
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-
-      if (!allowedTypes.includes(selectedFile.type)) {
-        alert("กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ (PNG, JPG) เท่านั้นครับ");
-        setFile(null);
-        e.target.value = "";
-        return;
-      }
-
-      setFile(selectedFile);
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowedTypes.includes(selectedFile.type)) {
+      alert("กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ (PNG, JPG, WEBP) เท่านั้นครับ");
+      e.target.value = "";
+      return;
     }
+
+    setFile(selectedFile);
   };
 
   const handleSubmit = async () => {
     if (!file) return;
-
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("price", String(price).replace(/,/g, ""));
-    formData.append("subscriptionPlan", subscriptionPlan);
-
     try {
+      // ── compress ก่อน upload ──
+      const compressed = await compressImage(file);
+
+      const formData = new FormData();
+      formData.append("image", compressed);
+      formData.append("price", String(price).replace(/,/g, ""));
+      formData.append("subscriptionPlan", subscriptionPlan);
+
       const data = await createPayment(formData);
       console.log("Success:", data);
 
-      if (onSuccess) {
-        onSuccess();
-      }
-
       setFile(null);
+      onSuccess?.();
       onBack();
     } catch (err) {
       console.error(
@@ -119,7 +163,9 @@ export default function PaymentMethodDetail({
 
       <div
         onClick={() => !loading && fileInputRef.current.click()}
-        className={`mt-6 border-2 border-dashed ${file ? "border-purple-500" : "border-white/10"} rounded-2xl p-8 flex flex-col items-center justify-center hover:border-purple-500/50 transition-colors ${loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+        className={`mt-6 border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-colors
+          ${file ? "border-purple-500" : "border-white/10 hover:border-purple-500/50"}
+          ${loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         {file ? (
           <div className="w-full flex items-center justify-around">
@@ -128,26 +174,25 @@ export default function PaymentMethodDetail({
                 src={icon_file_image}
                 width={26}
                 height={26}
-                alt="upload icon"
+                alt="file icon"
               />
               <p className="text-purple-400 text-sm font-medium truncate max-w-[300px]">
-                Payment Slip {file.name}
+                Payment Slip: {file.name}
               </p>
             </div>
-
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setFile(null);
                 fileInputRef.current.value = "";
               }}
-              className="w-[10%] flex items-center justify-end gap-1 text-[10px] cursor-pointer"
+              className="w-[10%] flex items-center justify-end cursor-pointer"
             >
               <Image
                 src={icon_remove}
                 width={18}
                 height={18}
-                alt="upload icon"
+                alt="remove icon"
               />
             </button>
           </div>
@@ -167,11 +212,8 @@ export default function PaymentMethodDetail({
       <button
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className={`w-full mt-6 py-3 rounded-full font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
-          isSubmitDisabled
-            ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
-            : "bg-white text-black hover:bg-gray-200"
-        }`}
+        className={`w-full mt-6 py-3 rounded-full font-bold transition-all active:scale-95 flex items-center justify-center gap-2
+          ${isSubmitDisabled ? "bg-gray-600/50 text-gray-400 cursor-not-allowed" : "bg-white text-black hover:bg-gray-200"}`}
       >
         {loading ? (
           <>
@@ -188,12 +230,12 @@ export default function PaymentMethodDetail({
                 r="10"
                 stroke="currentColor"
                 strokeWidth="4"
-              ></circle>
+              />
               <path
                 className="opacity-75"
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
+              />
             </svg>
             Processing...
           </>
