@@ -12,6 +12,18 @@ export type TimeDivision = '1/4' | '1/8' | '1/16' | '1/32';
 export type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
 export type Scale = 'Major' | 'Minor' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Locrian' | 'Harmonic Minor' | 'Melodic Minor' | 'Pentatonic Major' | 'Pentatonic Minor' | 'Blues' | 'Chromatic' | 'Freestyle';
 export type TimbreCategory = 'Analog' | 'Digital' | 'Acoustic' | 'Synth' | 'Bass' | 'Lead' | 'Pad' | 'FX' | 'Electric';
+
+declare global {
+    interface Window {
+        electron?: { [key: string]: any };
+        electronAPI?: {
+            onMainLog: (callback: (message: string) => void) => void;
+            scanVst: () => Promise<any[]>;
+            openVstWindow: (path: string) => Promise<{ host: string; requiresManualLoad: boolean }>;
+        };
+    }
+}
+
 export type TimbreType = 'Piano' | 'Synth' | 'Strings' | 'Brass' | 'Guitar' | 'Bass' | 'Drums' | 'Organ' | 'Choir' | 'Bell' | 'Pluck' | 'Arp' | 'Sweep' | 'Lead' | 'Pad';
 export type ArpState = { noteIndex: number; direction: 'up' | 'down' };
 export interface TimbrePreset {
@@ -1097,8 +1109,8 @@ export default function Arpeggiator({
                 show: true,
                 type: 'alert',
                 title: '❌ SCAN ERROR',
-                message: 'An error occurred while scanning for VST plugins.\n\n' +
-                         error instanceof Error ? error.message : 'Unknown error'
+                message: `An error occurred while scanning for VST plugins.\n\n${
+                         error instanceof Error ? error.message : 'Unknown error'}`
             });
         }
     }, []);
@@ -1168,8 +1180,8 @@ export default function Arpeggiator({
                 show: true,
                 type: 'alert',
                 title: '❌ OPEN ERROR',
-                message: 'Failed to open VST plugin.\n\n' +
-                         error instanceof Error ? error.message : 'Unknown error'
+                message: `Failed to open VST plugin.\n\n${
+                         error instanceof Error ? error.message : 'Unknown error'}`
             });
         }
     }, [vstPlugins]);
