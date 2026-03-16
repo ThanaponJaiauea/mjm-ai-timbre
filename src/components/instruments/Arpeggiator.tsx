@@ -984,8 +984,9 @@ export default function Arpeggiator({
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleInstallVst = useCallback(() => {
-        // ดาวน์โหลดจากโฟลเดอร์ public ในเครื่อง - เพิ่ม timestamp เพื่อ bypass cache
-        const downloadUrl = `/MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe?t=${Date.now()}`;
+        // ดาวน์โหลดจาก GitHub Releases - เปลี่ยน URL ตาม version จริง
+        // Format: https://github.com/{username}/{repo}/releases/download/{tag}/{filename}
+        const downloadUrl = `https://github.com/ThanaponJaiauea/mjm-ai-timbre/releases/download/v1.0.0/MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe`;
 
         // แสดง loading state ทันที
         setIsDownloading(true);
@@ -1004,9 +1005,7 @@ export default function Arpeggiator({
                     title: '✅ DOWNLOAD STARTED',
                     message: 'Your download should have started.\n\n' +
                              '📁 File: MJM-AI-Timbre-Arpeggiator-Setup-1.0.0.exe\n\n' +
-                             '⚠️ Note: If the file icon shows as Inno Setup on first download,\n' +
-                             'this is Windows cache. The file is correct!\n\n' +
-                             'To fix: Clear Windows icon cache or download again.'
+                             '🔗 Source: GitHub Releases'
                 });
             }, 3000);
         } else {

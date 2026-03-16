@@ -52,3 +52,6 @@ next-env.d.ts
 /mjm-ai-timbre-desktop/icon-square.png
 /mjm-ai-timbre-desktop/icon.ico
 /mjm-ai-timbre-desktop/icon-copy.ico
+
+# installer files - do not deploy to hosting
+/public/*.exe
