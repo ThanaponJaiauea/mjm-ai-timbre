@@ -74,14 +74,12 @@ const scanVstPlugins = () => {
       try {
         const files = fs.readdirSync(vstPath);
         const platform = os.platform();
-        
+
         for (const file of files) {
-          const isVst = 
-            (platform === 'win32' && (file.endsWith('.dll') || file.endsWith('.vst3'))) ||
-            (platform === 'darwin' && (file.endsWith('.vst') || file.endsWith('.vst3'))) ||
-            (platform === 'linux' && (file.endsWith('.so') || file.endsWith('.vst3')));
-          
-          if (isVst) {
+          // Only scan for VST3 format (.vst3 on all platforms)
+          const isVst3 = file.endsWith('.vst3');
+
+          if (isVst3) {
             found.push({
               name: file,
               path: path.join(vstPath, file),
@@ -108,13 +106,9 @@ const selectVstFolder = async () => {
   if (!result.canceled && result.filePaths.length > 0) {
     const folder = result.filePaths[0];
     const files = fs.readdirSync(folder);
-    const platform = os.platform();
-    
-    const vsts = files.filter(file => 
-      (platform === 'win32' && (file.endsWith('.dll') || file.endsWith('.vst3'))) ||
-      (platform === 'darwin' && (file.endsWith('.vst') || file.endsWith('.vst3'))) ||
-      (platform === 'linux' && (file.endsWith('.so') || file.endsWith('.vst3')))
-    ).map(file => ({
+
+    // Only scan for VST3 format (.vst3 on all platforms)
+    const vsts = files.filter(file => file.endsWith('.vst3')).map(file => ({
       name: file,
       path: path.join(folder, file),
       folder: folder

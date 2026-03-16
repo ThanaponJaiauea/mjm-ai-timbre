@@ -1013,11 +1013,6 @@ export default function Arpeggiator({
     // Handle Download Desktop App Button Click
     const [isDownloading, setIsDownloading] = useState(false);
     const [vstPlugins, setVstPlugins] = useState<any[]>([]);
-    const [loadedVst, setLoadedVst] = useState<any | null>(null);
-    const [selectedVst, setSelectedVst] = useState<number | null>(null);
-    const [vstAudioContext, setVstAudioContext] = useState<AudioContext | null>(null);
-    const [vstOscillators, setVstOscillators] = useState<OscillatorNode[]>([]);
-    const [vstGain, setVstGain] = useState<GainNode | null>(null);
     const [isOpeningVst, setIsOpeningVst] = useState(false);
 
     const handleInstallVst = useCallback(() => {
@@ -1108,73 +1103,8 @@ export default function Arpeggiator({
         }
     }, []);
 
-    // Handle Load VST Plugin
-    const handleLoadVst = useCallback(async (pluginIndex: number) => {
-        if (!window.electronAPI) {
-            setModalState({
-                show: true,
-                type: 'alert',
-                title: '⚠️ DESKTOP APP REQUIRED',
-                message: 'VST loading is only available in the Desktop App.'
-            });
-            return;
-        }
-
-        const plugin = vstPlugins[pluginIndex];
-        if (!plugin) return;
-
-        try {
-            setLoadedVst({ ...plugin, loading: true });
-            const result = await window.electronAPI.loadVst(plugin.path);
-            setLoadedVst({ ...plugin, loaded: true, loading: false });
-            setSelectedVst(pluginIndex);
-            setModalState({
-                show: true,
-                type: 'success',
-                title: `✅ VST LOADED`,
-                message: `Successfully loaded: ${plugin.name}\n\n` +
-                         `You can now use this VST plugin.`
-            });
-        } catch (error) {
-            setLoadedVst(null);
-            setSelectedVst(null);
-            setModalState({
-                show: true,
-                type: 'alert',
-                title: '❌ LOAD ERROR',
-                message: 'Failed to load VST plugin.\n\n' +
-                         error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    }, [vstPlugins]);
-
-    // Handle Unload VST Plugin
-    const handleUnloadVst = useCallback(async () => {
-        if (!window.electronAPI || !loadedVst) return;
-
-        try {
-            await window.electronAPI.unloadVst();
-            setLoadedVst(null);
-            setSelectedVst(null);
-            setModalState({
-                show: true,
-                type: 'success',
-                title: `✅ VST UNLOADED`,
-                message: `Successfully unloaded: ${loadedVst.name}`
-            });
-        } catch (error) {
-            setModalState({
-                show: true,
-                type: 'alert',
-                title: '❌ UNLOAD ERROR',
-                message: 'Failed to unload VST plugin.\n\n' +
-                         error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    }, [loadedVst]);
-
-    // Handle Open VST UI
-    const handleOpenVstUi = useCallback(async (pluginIndex: number) => {
+    // Handle Open VST UI directly (no load step)
+    const handleOpenVstDirect = useCallback(async (pluginIndex: number) => {
         if (!window.electronAPI) {
             setModalState({
                 show: true,
@@ -1212,7 +1142,6 @@ export default function Arpeggiator({
                     confirmText: '📋 Copy Path',
                     cancelText: 'OK',
                     onConfirm: async () => {
-                        // Copy VST path to clipboard
                         if (navigator.clipboard) {
                             await navigator.clipboard.writeText(plugin.path);
                             setModalState({
@@ -1225,47 +1154,23 @@ export default function Arpeggiator({
                     }
                 });
             } else {
-                // Auto-loaded (SaviHost or VSTHost with PowerShell)
                 setModalState({
                     show: true,
                     type: 'success',
                     title: `✅ VST OPENED`,
-                    message: `Opened ${plugin.name} in ${result.host}.\n\n` +
-                             `The VST interface should now be visible!\n\n` +
-                             `🎹 Plugin: ${plugin.path}\n\n` +
-                             `💡 If UI doesn't appear, check ${result.host} window!`
+                    message: `Successfully opened: ${plugin.name}\n\n` +
+                             `The VST interface should now be visible.`
                 });
             }
         } catch (error) {
             setIsOpeningVst(false);
-
-            if (error instanceof Error && error.message.includes('VST Host not found')) {
-                setModalState({
-                    show: true,
-                    type: 'alert',
-                    title: '⚠️ VST HOST NOT FOUND',
-                    message: 'A VST Host is required to open VST plugins.\n\n' +
-                             '🎯 Recommended: SaviHost (auto-loads VSTs)\n' +
-                             '📍 Alternative: VSTHost (manual load)\n\n' +
-                             'Click "Download" to get SaviHost (free).',
-                    confirmText: '📥 Download',
-                    cancelText: 'Cancel',
-                    onConfirm: async () => {
-                        const { shell } = window.require ? window.require('electron') : { shell: { openExternal: () => {} } };
-                        if (shell.openExternal) {
-                            shell.openExternal('https://www.hermannseib.com/english/savihost.htm');
-                        }
-                    }
-                });
-            } else {
-                setModalState({
-                    show: true,
-                    type: 'alert',
-                    title: '❌ OPEN ERROR',
-                    message: 'Failed to open VST.\n\n' +
-                             error instanceof Error ? error.message : 'Unknown error'
-                });
-            }
+            setModalState({
+                show: true,
+                type: 'alert',
+                title: '❌ OPEN ERROR',
+                message: 'Failed to open VST plugin.\n\n' +
+                         error instanceof Error ? error.message : 'Unknown error'
+            });
         }
     }, [vstPlugins]);
 
@@ -1629,6 +1534,13 @@ export default function Arpeggiator({
         previewOscillatorsRef.current = [];
         isPreviewPlayingRef.current = false;
         setIsPreviewPlaying(false);
+    }, []);
+
+    // ปิด Timbre Modal และหยุดเสียงทั้งหมด
+    const closeTimbreModal = useCallback(() => {
+        stopPreviewTimbreArp();
+        stopAllMidiPlayback();
+        setShowTimbreModal(false);
     }, []);
 
     // Export เป็น MIDI
@@ -2210,16 +2122,6 @@ export default function Arpeggiator({
                                                 </button>
                                             </div>
                                         )}
-                                        {loadedVst && (
-                                            <div className="flex-1">
-                                                <button
-                                                    onClick={handleUnloadVst}
-                                                    className="w-full h-8 md:h-9 rounded-[2px] text-[8px] md:text-[9px] font-bold uppercase border bg-gradient-to-r from-[#ff4757] to-[#ff6b81] text-white border-[#cc3344] shadow-[0_0_8px_rgba(255,71,87,0.4)] hover:shadow-[0_0_12px_rgba(255,71,87,0.6)] transition-all"
-                                                >
-                                                    ⏏️ Unload
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </div>
@@ -2237,50 +2139,33 @@ export default function Arpeggiator({
                                         {vstPlugins.map((plugin, index) => (
                                             <div key={plugin.path} className="flex gap-1">
                                                 <button
-                                                    onClick={() => { handleLoadVst(index); setShowVstList(false); }}
-                                                    disabled={loadedVst !== null && selectedVst !== index}
+                                                    onClick={() => { handleOpenVstDirect(index); setShowVstList(false); }}
+                                                    disabled={isOpeningVst}
                                                     className={`
                                                         flex-1 text-left px-3 py-2 text-[9px] font-mono tracking-tight border border-[#333] rounded transition-all
-                                                        ${selectedVst === index && loadedVst?.loaded
-                                                            ? 'bg-[#2ed573] text-black border-[#2ed573]'
-                                                            : 'bg-[#1a1a1a] text-zinc-400 border-[#333] hover:bg-[#222] hover:text-white'
-                                                        }
-                                                        ${loadedVst !== null && selectedVst !== index ? 'opacity-30 cursor-not-allowed' : ''}
+                                                        ${isOpeningVst ? 'opacity-50 cursor-not-allowed' : 'bg-[#1a1a1a] text-zinc-400 border-[#333] hover:bg-[#222] hover:text-white'}
                                                     `}
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <span className="truncate font-bold">
                                                             {plugin.name}
                                                         </span>
-                                                        {selectedVst === index && loadedVst?.loaded && (
-                                                            <span className="text-[10px] ml-1">✅</span>
-                                                        )}
                                                     </div>
                                                     <div className="text-[7px] text-zinc-600 truncate mt-1">
                                                         {plugin.folder}
                                                     </div>
                                                 </button>
-                                                <button
-                                                    onClick={() => handleOpenVstUi(index)}
+                                                {/* <button
+                                                    onClick={() => { handleOpenVstDirect(index); setShowVstList(false); }}
                                                     disabled={isOpeningVst}
                                                     className="px-3 py-2 bg-[#3498db] text-white text-[9px] font-bold border border-[#2980b9] rounded hover:bg-[#2980b9] transition-all disabled:opacity-50"
                                                     title="Open VST Interface"
                                                 >
                                                     {isOpeningVst ? '⏳' : '🖥️'}
-                                                </button>
+                                                </button> */}
                                             </div>
                                         ))}
                                     </div>
-                                    {loadedVst && (
-                                        <div className="mt-4 p-3 bg-[#1a1a1a] border border-[#2ed573] rounded">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-[#2ed573] animate-pulse"></div>
-                                                <div className="flex-1">
-                                                    <div className="text-[8px] text-[#2ed573] font-bold">🎹 {loadedVst.name}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         )}
@@ -2613,7 +2498,7 @@ export default function Arpeggiator({
                 {showTimbreModal && (
                     <div
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
-                        onClick={() => setShowTimbreModal(false)}
+                        onClick={closeTimbreModal}
                     >
                         <div
                             className="bg-[#1a1a1a] border-2 border-[#333] rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.8)] max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col"
@@ -2629,7 +2514,7 @@ export default function Arpeggiator({
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => setShowTimbreModal(false)}
+                                    onClick={closeTimbreModal}
                                     className="text-zinc-500 hover:text-white transition-colors text-2xl"
                                 >
                                     ✕

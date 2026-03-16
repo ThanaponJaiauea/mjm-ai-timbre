@@ -1384,6 +1384,13 @@ export default function Arpeggiator({
         setIsPreviewPlaying(false);
     }, []);
 
+    // ปิด Timbre Modal และหยุดเสียงทั้งหมด
+    const closeTimbreModal = useCallback(() => {
+        stopPreviewTimbreArp();
+        stopAllMidiPlayback();
+        setShowTimbreModal(false);
+    }, []);
+
     // Export เป็น MIDI
     const exportTimbreMidi = useCallback(() => {
         if (generatedArpPattern.length === 0) {
@@ -2270,7 +2277,7 @@ export default function Arpeggiator({
                 {showTimbreModal && (
                     <div
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
-                        onClick={() => setShowTimbreModal(false)}
+                        onClick={closeTimbreModal}
                     >
                         <div
                             className="bg-[#1a1a1a] border-2 border-[#333] rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.8)] max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col"
@@ -2286,7 +2293,7 @@ export default function Arpeggiator({
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => setShowTimbreModal(false)}
+                                    onClick={closeTimbreModal}
                                     className="text-zinc-500 hover:text-white transition-colors text-2xl"
                                 >
                                     ✕
