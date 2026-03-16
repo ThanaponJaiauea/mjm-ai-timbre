@@ -2,11 +2,29 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { spawn } = require('child_process');
 
 // Path to app icon (use .ico for Windows)
 const ICON_PATH = path.join(__dirname, 'icon.ico');
 
 let mainWindow;
+let loadedVstPlugin = null; // Track currently loaded VST plugin
+let vstHostProcess = null; // Track VSTHost.exe process
+let vstHostPathCache = null; // Cache VSTHost path
+
+// Helper: Send log from main process to renderer
+function sendLogToRenderer(channel, data) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, data);
+  }
+}
+
+// Override console.log to also send to renderer
+const originalConsoleLog = console.log;
+console.log = function(...args) {
+  originalConsoleLog.apply(console, args);
+  sendLogToRenderer('main-log', args.join(' '));
+};
 
 // Default VST paths by platform
 const getVstPaths = () => {
@@ -168,6 +186,467 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-platform', () => {
   return os.platform();
+});
+
+// Load VST Plugin
+ipcMain.handle('load-vst', async (event, vstPath) => {
+  console.log(`Loading VST plugin: ${vstPath}`);
+  
+  try {
+    // Note: Actual VST loading requires a VST host library like @julusian/vst or node-vst
+    // For now, we'll store the path and simulate loading
+    // In production, you would use a proper VST hosting library
+    
+    if (!fs.existsSync(vstPath)) {
+      throw new Error(`VST file not found: ${vstPath}`);
+    }
+    
+    loadedVstPlugin = {
+      path: vstPath,
+      name: path.basename(vstPath),
+      loaded: true,
+      loadedAt: new Date().toISOString()
+    };
+    
+    console.log(`VST plugin loaded: ${loadedVstPlugin.name}`);
+    return { success: true, plugin: loadedVstPlugin };
+  } catch (error) {
+    console.error(`Failed to load VST: ${error.message}`);
+    throw error;
+  }
+});
+
+// Unload VST Plugin
+ipcMain.handle('unload-vst', async () => {
+  console.log('Unloading VST plugin...');
+  
+  try {
+    if (loadedVstPlugin) {
+      console.log(`Unloaded: ${loadedVstPlugin.name}`);
+      loadedVstPlugin = null;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to unload VST: ${error.message}`);
+    throw error;
+  }
+});
+
+// Get loaded VST info
+ipcMain.handle('get-loaded-vst', async () => {
+  return loadedVstPlugin;
+});
+
+// Open VST in VSTHost
+ipcMain.handle('open-vst-window', async (event, vstPath) => {
+  console.log(`Opening VST in VSTHost: ${vstPath}`);
+
+  try {
+    const platform = os.platform();
+
+    if (platform !== 'win32') {
+      throw new Error('VSTHost is only available on Windows');
+    }
+
+    console.log(`[__dirname: ${__dirname}]`);
+    console.log(`[process.resourcesPath: ${process.resourcesPath}]`);
+    console.log(`[process.execPath: ${process.execPath}]`);
+    console.log(`[process.platform: ${process.platform}]`);
+    console.log(`[process.env.PORTABLE_EXECUTABLE_DIR: ${process.env.PORTABLE_EXECUTABLE_DIR || 'N/A'}]`);
+
+    // Determine if we're in development or production mode
+    // In dev mode: __dirname contains the project folder
+    // In production: __dirname contains resources/app.asar or similar
+    const isDev = __dirname.includes('mjm-ai-timbre-desktop') && !__dirname.includes('app.asar');
+    console.log(`\n[Mode Detection] isDev: ${isDev}`);
+    console.log(`  __dirname includes project folder: ${__dirname.includes('mjm-ai-timbre-desktop')}`);
+    console.log(`  __dirname includes app.asar: ${__dirname.includes('app.asar')}`);
+
+    // Get base path for VSTHost search
+    const getBasePaths = () => {
+      const paths = [];
+
+      console.log(`\n[Mode] ${isDev ? '🔧 DEVELOPMENT' : '📦 PRODUCTION/INSTALLED'}`);
+      console.log(`[__dirname] ${__dirname}`);
+      console.log(`[process.cwd()] ${process.cwd()}`);
+
+      if (isDev) {
+        // Development mode: vsthost is in project root
+        console.log('[Path Strategy] Using development paths');
+        
+        // Try multiple dev paths
+        const devPaths = [
+          path.join(__dirname, 'vsthost'),           // main.js is in project root
+          path.join(process.cwd(), 'vsthost'),       // cwd is project root
+          path.join(__dirname, '..', 'vsthost'),     // if main.js is in subfolder
+        ];
+        
+        console.log('[Dev Paths to check]:');
+        for (const p of devPaths) {
+          const exists = fs.existsSync(p);
+          console.log(`  ${p} - ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+          if (exists) paths.push(p);
+        }
+        
+        if (paths.length === 0) {
+          console.log('⚠️  No vsthost folder found in dev paths!');
+          paths.push(...devPaths); // Add anyway for fallback
+        }
+      } else {
+        // Production/Installed mode
+        console.log('[Path Strategy] Using production paths');
+
+        // Strategy 1: App installation directory (where the .exe is)
+        const exeDir = path.dirname(process.execPath);
+        const vsthostInExeDir = path.join(exeDir, 'vsthost');
+        paths.push(vsthostInExeDir);
+        console.log(`  [EXE Dir] ${exeDir}`);
+        console.log(`  [EXE Dir vsthost] ${vsthostInExeDir}`);
+        console.log(`  [EXE Dir vsthost exists] ${fs.existsSync(vsthostInExeDir) ? '✅ YES' : '❌ NO'}`);
+
+        // Strategy 2: resourcesPath (Electron standard for unpacked resources)
+        if (process.resourcesPath) {
+          // In production, resources are unpacked to resources/app/
+          const resourcesAppVsthost = path.join(process.resourcesPath, 'app', 'vsthost');
+          const resourcesVsthost = path.join(process.resourcesPath, 'vsthost');
+          paths.push(resourcesAppVsthost, resourcesVsthost);
+          console.log(`  [Resources Path] ${process.resourcesPath}`);
+          console.log(`  [Resources/app vsthost] ${resourcesAppVsthost}`);
+          console.log(`  [Resources/app vsthost exists] ${fs.existsSync(resourcesAppVsthost) ? '✅ YES' : '❌ NO'}`);
+          console.log(`  [Resources vsthost] ${resourcesVsthost}`);
+          console.log(`  [Resources vsthost exists] ${fs.existsSync(resourcesVsthost) ? '✅ YES' : '❌ NO'}`);
+        }
+
+        // Strategy 3: Portable executable directory
+        if (process.env.PORTABLE_EXECUTABLE_DIR) {
+          paths.push(
+            path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'vsthost')
+          );
+          console.log(`  [Portable Dir] ${process.env.PORTABLE_EXECUTABLE_DIR}`);
+        }
+      }
+
+      // Check which paths exist
+      console.log('\n[Searching VSTHost paths]:');
+      const existing = [];
+      const checked = new Set();
+
+      for (const p of paths) {
+        const normalized = path.normalize(p);
+        if (checked.has(normalized)) continue;
+        checked.add(normalized);
+
+        const exists = fs.existsSync(p);
+        console.log(`  ${p} - ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+        if (exists) {
+          existing.push(p);
+          // List files in found folder
+          try {
+            const files = fs.readdirSync(p);
+            const exeFiles = files.filter(f => f.toLowerCase().endsWith('.exe'));
+            console.log(`    Files (${files.length} total): ${exeFiles.join(', ') || 'no EXE files'}`);
+          } catch (e) {
+            console.log(`    Error reading: ${e.message}`);
+          }
+        }
+      }
+
+      console.log(`\n[Valid Paths] ${existing.length} found`);
+
+      // If no paths exist, return all for fallback search
+      if (existing.length === 0) {
+        console.log('\n⚠️  No vsthost folder found! Will search for executables directly...');
+      }
+
+      return existing.length > 0 ? existing : paths;
+    };
+
+    const basePaths = getBasePaths();
+    console.log('[Searching VSTHost in paths:]', basePaths);
+
+    // Debug: List all files in found vsthost folders
+    for (const basePath of basePaths) {
+      if (fs.existsSync(basePath)) {
+        const files = fs.readdirSync(basePath);
+        console.log(`\n[vsthost folder: ${basePath}]`);
+        console.log(`  Files: ${files.join(', ')}`);
+      }
+    }
+
+    // Fallback: If no vsthost folder found, search for vsthost.exe directly
+    const findVSTHostExecutable = () => {
+      const searchPaths = [];
+      const exeDir = path.dirname(process.execPath);
+
+      // Search in common locations
+      searchPaths.push(
+        path.join(exeDir, 'vsthost', 'VSTHost.exe'),
+        path.join(exeDir, 'vsthost', 'vsthost.exe'),
+        path.join(exeDir, 'resources', 'vsthost', 'VSTHost.exe'),
+        path.join(exeDir, 'resources', 'vsthost', 'vsthost.exe')
+      );
+
+      if (process.resourcesPath) {
+        searchPaths.push(
+          path.join(process.resourcesPath, 'vsthost', 'VSTHost.exe'),
+          path.join(process.resourcesPath, 'vsthost', 'vsthost.exe'),
+          path.join(process.resourcesPath, 'app', 'vsthost', 'VSTHost.exe'),
+          path.join(process.resourcesPath, 'app', 'vsthost', 'vsthost.exe')
+        );
+      }
+
+      // Development mode: search in project root
+      if (isDev) {
+        const projectRoot = process.cwd();
+        searchPaths.push(
+          path.join(projectRoot, 'vsthost', 'VSTHost.exe'),
+          path.join(projectRoot, 'vsthost', 'vsthost.exe'),
+          path.join(projectRoot, 'vsthost', 'savihost.exe'),
+          path.join(projectRoot, 'vsthost', 'SaviHost.exe'),
+          path.join(projectRoot, 'vsthost', 'SaviHost64.exe'),
+          path.join(projectRoot, 'vsthost', 'savihost64.exe')
+        );
+        console.log(`\n[Dev Mode] Searching in project root: ${projectRoot}`);
+      }
+
+      console.log('\n[Fallback Search] Looking for VST Host executables:');
+      for (const p of searchPaths) {
+        const exists = fs.existsSync(p);
+        console.log(`  ${p} - ${exists ? '✅ FOUND' : '❌ NOT FOUND'}`);
+        if (exists) return p;
+      }
+
+      return null;
+    };
+
+    // ALSO add project root paths directly in dev mode (before fallback)
+    if (isDev) {
+      const projectVsthostPath = path.join(process.cwd(), 'vsthost');
+      console.log(`\n[Dev Mode] Adding project vsthost path: ${projectVsthostPath}`);
+      if (fs.existsSync(projectVsthostPath)) {
+        basePaths.push(projectVsthostPath);
+        console.log(`✅ Added project vsthost path to basePaths`);
+        
+        // List files
+        const files = fs.readdirSync(projectVsthostPath);
+        const exeFiles = files.filter(f => f.toLowerCase().endsWith('.exe'));
+        console.log(`   Files: ${exeFiles.join(', ')}`);
+      } else {
+        console.log(`⚠️  Project vsthost path not found: ${projectVsthostPath}`);
+      }
+    }
+
+    // Check for VST Hosts - Try SaviHost first (auto-loads VST), then VSTHost
+    const hostConfigs = [
+        {
+            name: 'SaviHost',
+            paths: [], // Will be populated dynamically
+            args: (vstPath) => [vstPath],  // SaviHost supports command-line loading!
+            showUI: true,
+            note: null,
+            autoLoad: true,
+            type: 'cli',
+        },
+        {
+            name: 'VSTHost',
+            paths: [], // Will be populated dynamically
+            args: (vstPath) => [],  // VSTHost doesn't support CLI - use PowerShell automation
+            showUI: false,
+            note: null,
+            autoLoad: false,
+            type: 'powershell',  // Use PowerShell automation
+        },
+    ];
+
+    // Populate VSTHost and SaviHost paths from basePaths
+    for (const basePath of basePaths) {
+      // SaviHost variants (check multiple names)
+      hostConfigs.find(h => h.name === 'SaviHost').paths.push(
+        path.join(basePath, 'SaviHost64.exe'),
+        path.join(basePath, 'SaviHost.exe'),
+        path.join(basePath, 'savihost.exe'),
+        path.join(basePath, 'savihost64.exe')
+      );
+      // VSTHost variants
+      hostConfigs.find(h => h.name === 'VSTHost').paths.push(
+        path.join(basePath, 'VSTHost.exe'),
+        path.join(basePath, 'vsthost.exe')
+      );
+    }
+
+    // Fallback: If no paths found, search for executables directly
+    if (hostConfigs.every(c => c.paths.length === 0)) {
+      console.log('\n⚠️  No vsthost folders found! Using fallback search...');
+      const exePath = findVSTHostExecutable();
+      if (exePath) {
+        const exeDir = path.dirname(exePath);
+        const exeName = path.basename(exePath).toLowerCase().includes('savihost') ? 'SaviHost' : 'VSTHost';
+        console.log(`[Fallback] Found ${exeName} at ${exePath}`);
+        
+        const config = hostConfigs.find(h => h.name === exeName);
+        if (config) {
+          config.paths.push(exePath);
+        }
+      }
+    }
+
+    let hostPath = null;
+    let hostName = '';
+    let hostArgs = [];
+    let hostConfig = null;
+
+    // Search for available hosts - try SaviHost first (auto-load), then VSTHost
+    console.log('[Searching for VST Host...]');
+    for (const config of hostConfigs) {
+      console.log(`\nChecking ${config.name}...`);
+      for (const p of config.paths) {
+        const exists = fs.existsSync(p);
+        console.log(`  ${p} - ${exists ? '✅ FOUND' : '❌ NOT FOUND'}`);
+        if (exists) {
+          hostPath = p;
+          hostName = config.name;
+          hostArgs = config.args(vstPath);
+          hostConfig = config;
+          console.log(`Selected: ${hostName} at ${hostPath}`);
+          break;
+        }
+      }
+      if (hostPath) break;
+    }
+
+    if (!hostPath) {
+      throw new Error('VST Host not found.\n\nPlease download SaviHost (recommended) or VSTHost:\n- SaviHost: https://www.hermannseib.com/english/savihost.htm\n- VSTHost: https://www.hermannseib.com/english/vsthost.htm\n\nExtract and place the .exe file in:\n[app-folder]\\vsthost\\');
+    }
+
+    // Launch VST Host with VST plugin
+    const launchHost = (exePath, name, args, config) => {
+      return new Promise((resolve, reject) => {
+        try {
+          // VSTHost - just launch it (user will load VST manually)
+          if (config?.type === 'powershell') {
+            console.log(`\n[Launching] ${name}`);
+            console.log(`[VSTHost EXE] ${exePath}`);
+            console.log(`[VST Path for manual load] ${vstPath}`);
+
+            // Launch VSTHost using start command
+            const { exec } = require('child_process');
+            const startCommand = `start "" "${exePath}"`;
+            console.log(`[Command] ${startCommand}`);
+            
+            exec(startCommand, (err, stdout, stderr) => {
+              if (err) {
+                console.error(`[${name}] Launch error: ${err.message}`);
+                console.error(`[${name}] Stderr: ${stderr}`);
+                reject(new Error(`Failed to launch ${name}: ${stderr || err.message}`));
+              } else {
+                console.log(`[${name}] Launched successfully!`);
+                // User must load VST manually
+                resolve({
+                  success: true,
+                  message: `${name} opened!\n\n📂 To load your VST:\n1. In ${name}, press Ctrl+Shift+P\n2. Select: ${path.basename(vstPath)}\n3. Click Open\n\nVST Path: ${vstPath}`,
+                  host: name,
+                  hostPath: exePath,
+                  vstPath: vstPath,
+                  requiresManualLoad: true
+                });
+              }
+            });
+
+            return;
+          }
+        } catch (e) {
+          console.error(`[launchHost] Unexpected error: ${e.message}`);
+          reject(new Error(`Failed to launch VST Host: ${e.message}`));
+          return;
+        }
+        
+        // Standard CLI launch (for SaviHost)
+        console.log(`\n[Launching] ${name} with CLI`);
+        console.log(`[Arguments] ${args.join(' ')}`);
+        
+        const argsString = args.map(a => `"${a}"`).join(' ');
+        const command = args.length > 0
+          ? `start "" "${exePath}" ${argsString}`
+          : `start "" "${exePath}"`;
+        console.log(`[Command] ${command}`);
+
+        const { exec } = require('child_process');
+        exec(command, (err, stdout, stderr) => {
+          if (err) {
+            console.error(`[${name}] Error: ${err.message}`);
+            console.error(`[${name}] Stderr: ${stderr}`);
+            
+            // Check for side-by-side configuration error (missing Visual C++)
+            if (stderr && stderr.includes('side-by-side')) {
+              resolve({
+                success: false,
+                error: 'VISUAL_C_MISSING',
+                host: name,
+                vstPath: vstPath,
+                message: `${name} requires Visual C++ Redistributable\n\n` +
+                         `Please install and try again:\n` +
+                         `https://aka.ms/vs/17/release/vc_redist.x64.exe`
+              });
+            } else {
+              reject(new Error(`Failed to launch ${name}: ${stderr || err.message}`));
+            }
+          } else {
+            console.log(`[${name}] Launched successfully!`);
+            resolve({
+              success: true,
+              message: config?.note
+                ? `${name} opened. ${config.note} (${path.basename(vstPath)})`
+                : `Opened ${path.basename(vstPath)} in ${name}`,
+              host: name,
+              hostPath: exePath,
+              vstPath: vstPath,
+              requiresManualLoad: config?.autoLoad === false
+            });
+          }
+        });
+      });
+    };
+
+    // Try to launch the selected host
+    const result = await launchHost(hostPath, hostName, hostArgs, hostConfig);
+    
+    // If SaviHost failed due to missing Visual C++, try VSTHost as fallback
+    if (result.success === false && result.error === 'VISUAL_C_MISSING' && hostName === 'SaviHost') {
+      console.log('\n[SaviHost] Failed - trying VSTHost as fallback...');
+      
+      // Find VSTHost
+      const vstHostConfig = hostConfigs.find(h => h.name === 'VSTHost');
+      if (vstHostConfig) {
+        for (const p of vstHostConfig.paths) {
+          if (fs.existsSync(p)) {
+            console.log(`[Fallback] Found VSTHost at ${p}`);
+            const vstHostArgs = vstHostConfig.args(vstPath);
+            return await launchHost(p, 'VSTHost', vstHostArgs, vstHostConfig);
+          }
+        }
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`Failed to open VST: ${error.message}`);
+    throw error;
+  }
+});
+
+// Download VSTHost
+ipcMain.handle('download-vsthost', async () => {
+  const vstHostUrl = 'https://www.hermannseib.com/english/vsthost.htm';
+  
+  // Open download page in default browser
+  const { shell } = require('electron');
+  await shell.openExternal(vstHostUrl);
+  
+  return {
+    success: true,
+    message: 'Opening VSTHost download page...\n\nDownload and install VSTHost, then try opening VST again.'
+  };
 });
 
 app.whenReady().then(createWindow);

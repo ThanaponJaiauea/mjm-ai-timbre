@@ -207,6 +207,47 @@ if (fs.existsSync(resourcesSrc)) {
   console.log('✅ resources/app copied (excluding dist, node_modules, dist-installer)');
 }
 
+// คัดลอกโฟลเดอร์ vsthost (รวม VSTHost.exe)
+const vsthostSrc = path.join(__dirname, '..', 'vsthost');
+const vsthostDest = path.join(appDest, 'vsthost');
+console.log(`\n📦 Copying vsthost folder...`);
+console.log(`   Source: ${vsthostSrc}`);
+console.log(`   Dest: ${vsthostDest}`);
+
+if (fs.existsSync(vsthostSrc)) {
+  const srcFiles = fs.readdirSync(vsthostSrc);
+  console.log(`   Source files: ${srcFiles.length} files`);
+  console.log(`   EXE files: ${srcFiles.filter(f => f.endsWith('.exe')).join(', ')}`);
+  
+  fse.copySync(vsthostSrc, vsthostDest);
+  
+  // Verify copy
+  if (fs.existsSync(vsthostDest)) {
+    const vsthostFiles = fs.readdirSync(vsthostDest);
+    console.log(`✅ vsthost folder copied (${vsthostFiles.length} files)`);
+    
+    // List important files
+    const exeFiles = vsthostFiles.filter(f => f.endsWith('.exe'));
+    console.log(`   EXE files: ${exeFiles.join(', ') || '⚠️ NONE'}`);
+    
+    if (exeFiles.some(f => f.toLowerCase().includes('vsthost'))) {
+      console.log('   ✅ VSTHost.exe included!');
+    } else {
+      console.log('   ⚠️  VSTHost.exe NOT found!');
+    }
+    if (exeFiles.some(f => f.toLowerCase().includes('savihost'))) {
+      console.log('   ✅ SaviHost.exe included!');
+    } else {
+      console.log('   ⚠️  SaviHost.exe NOT found (optional)!');
+    }
+  } else {
+    console.log('   ❌ ERROR: vsthost folder not copied!');
+  }
+} else {
+  console.log('   ⚠️  vsthost folder NOT found in source!');
+  console.log(`   Expected at: ${vsthostSrc}`);
+}
+
 // คัดลอกโฟลเดอร์ dist (ไฟล์ที่ build จาก Vite)
 const distSrc = path.join(__dirname, '..', 'dist');
 const distDest = path.join(appDest, 'resources', 'app', 'dist');

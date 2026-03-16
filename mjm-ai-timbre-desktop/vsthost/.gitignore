@@ -1,0 +1,16 @@
+# Don't commit VSTHost binaries!
+# Users must download VSTHost separately from:
+# https://www.hermannseib.com/english/vsthost.htm
+#
+# After downloading, extract and copy to this folder:
+# - VSTHost.exe (required)
+# - VSTHostBridge64.exe (optional)
+# - VSTHostBridge.exe (optional)
+
+*.exe
+*.dll
+
+# Keep documentation
+!.gitignore
+!README.md
+!INSTALL-VSTHOST.md
