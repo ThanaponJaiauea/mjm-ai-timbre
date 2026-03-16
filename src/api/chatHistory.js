@@ -19,3 +19,14 @@ export const getChatHistory = async () => await axios.get("/chat/");
 export const getChatMessages = async chatId => await axios.get(`/chat/messages?chatId=${chatId}`);
 
 export const deleteChat = async chatId => await axios.delete(`/chat/?chatId=${chatId}`);
+
+export const updateArpOutput = async (
+  { messageId, partIndex, arpSettings },
+  token,
+) => {
+  return axios.patch(
+    "/chat/parts/arp-output",
+    { messageId, partIndex, arpSettings },
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+};
