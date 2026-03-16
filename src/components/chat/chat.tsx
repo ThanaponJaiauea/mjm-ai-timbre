@@ -239,7 +239,6 @@ export function Chat({ id, initialMessages }: Props) {
                             }}
                           />
 
-                          {/* ✅ โชว์ Arpeggiator เฉพาะเมื่อ displayArp มีค่า */}
                           {displayArp !== null && (
                             <div className="w-full overflow-auto">
                               <Arpeggiator
