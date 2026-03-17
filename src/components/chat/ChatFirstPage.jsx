@@ -68,6 +68,10 @@ export default function ChatFirstPage({
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!value) setSelectedIdea(null);
+  }, [value]);
+
   return (
     <section className="flex flex-col items-center relative w-full p-4">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -124,7 +128,10 @@ export default function ChatFirstPage({
                 return (
                   <button
                     key={idx}
-                    onClick={() => setSelectedIdea(idx)}
+                    onClick={() => {
+                      setSelectedIdea(idx);
+                      onChange(idea.title);
+                    }}
                     className={`
           cursor-pointer px-6 py-2 rounded-full text-[14px] transition-all duration-200
           bg-[#181818] border border-white/10 hover:border-white/30
