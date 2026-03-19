@@ -212,7 +212,6 @@ export function Chat({ id, initialMessages }: Props) {
                                 [partKey]: newArp,
                               }))
                             }
-                            arp={displayArp}
                             selectStyle={selectStyle}
                             // ✅ เมื่อ generate เสร็จ: mark partKey, update arpMap, save ลง DB
                             onArpGenerated={async (arpData: ArpSettings) => {

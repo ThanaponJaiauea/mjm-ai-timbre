@@ -31,7 +31,7 @@ import {
 
 const getNavData = (
   handleNewChat: () => void,
-  openToggleSidebar: () => void
+  openToggleSidebar: () => void,
 ): { navMain: NavItemType[] } => ({
   navMain: [
     {
@@ -57,7 +57,7 @@ const getNavData = (
       isShowSubmenu: false,
     },
     {
-      title: "downloadApp",
+      title: "DownloadApp",
       url: "/mjm-ai/chat/download",
       icon: icon_download,
       isShowSubmenu: false,
@@ -150,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navData = React.useMemo(
     () => getNavData(handleNewChat, openToggleSidebar),
-    [handleNewChat, openToggleSidebar]
+    [handleNewChat, openToggleSidebar],
   );
 
   return (
